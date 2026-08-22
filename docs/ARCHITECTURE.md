@@ -323,15 +323,32 @@ This completes all seven Hermetic Hall module engines (Mentalism through
 Gender) — every one now persists through the Sovereign Runtime's
 local+remote sync instead of localStorage-only or no persistence at all.
 
-**Remaining for Phase 8**: two components outside the seven-principle
-sequence — `ReclamationModuleEngine.jsx` (the persistence engine for
-non-Hermetic-Hall faculties, which already talks to Supabase directly via
-`saveUserProgress`/`loadUserProgress` rather than being broken, so this
-would be a structural migration onto the runtime's typed domains rather
-than a bug fix) and `HermeticCurriculumModule.jsx` (a different,
-non-standard persistence shape within Hermetic Hall itself, per
-`SOVEREIGN_STATE_MAP.md` §1) — each still needs its own scoped,
-individually-verified pass.
+**Deliberately skipped for this pass:** `HermeticCurriculumModule.jsx`.
+Unlike the seven modules above, this one is not broken: it already
+persists to Supabase per-module (`useReclamationModuleProgress` →
+`saveUserProgress`/`loadUserProgress`, keyed by `module.id`) with a
+`localStorage` mirror as an offline fallback, plus a separate
+`saveCompletion` write (response-table row + journal entry) and analytics
+events on load/save/complete. What `SOVEREIGN_STATE_MAP.md` §1 flags for
+it is schema hygiene, not data loss: it reuses `rec_uni_user_progress`
+columns (`active_scene`, `listened_track_ids`, `declaration_json`) that
+`ReclamationModuleEngine.jsx` uses for different meanings elsewhere
+(curriculum-section-index vs. 5-scene-index, lesson ids vs. track ids) —
+confusing for anything reading across modules generically, but each
+module gets its own row, so it isn't actively corrupting data today.
+Asked the user how to handle it given the added risk of rewriting a
+working save/completion/analytics flow for consistency rather than fixing
+a bug; the answer was to leave it as-is and treat any future migration as
+a deliberate, planned structural pass (e.g. once a later phase actually
+needs the runtime's typed domains here) rather than a drive-by fix
+alongside the other five.
+
+**Remaining for Phase 8**: `ReclamationModuleEngine.jsx` — the persistence
+engine for non-Hermetic-Hall faculties. Same category as
+`HermeticCurriculumModule.jsx`: it already talks to Supabase directly via
+`saveUserProgress`/`loadUserProgress` and isn't broken, so migrating it
+would be a structural migration onto the runtime's typed domains, not a
+bug fix, and needs the same kind of scoping conversation before starting.
 
 ## Current architecture (active today)
 

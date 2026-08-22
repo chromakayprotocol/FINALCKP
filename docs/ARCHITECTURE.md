@@ -1035,6 +1035,128 @@ step readout updated to the last section while the completion count
 correctly did not advance past what real criteria allow. Only the same
 pre-existing sandbox network noise appeared.
 
+## Phase 17: Cloudflare Consolidation
+
+This phase is different from every one before it: it's the first to
+touch a real, live Cloudflare account rather than only committing code
+to this branch. That changed what "for real" had to mean, and it's
+worth recording exactly what was and wasn't possible, rather than
+letting either half blur.
+
+**What the live account inventory found.** Reading it directly (via the
+Cloudflare MCP tools) rather than assuming from the guide:
+- One real R2 bucket, `chromakeyprotocol`.
+- One real, working Worker, `chroma-key-media-gateway` — the deployed
+  form of `frontend/r2-worker`, byte-for-byte matching what's in this
+  repo. It's fully public/unauthenticated, bound to
+  `media.chromakeyprotocol.com`, and serves the Act III visualizer
+  preview catalog (`frontend/src/lib/supabase/tracks.js`'s
+  `r2_audio_key`/`visualizer_schema_baseline` schema) — confirmed via
+  `supabase/migrations/20260711180539_visualizer_schema_baseline.sql`
+  this is a genuinely separate schema/catalog from the paid Protocol
+  audio, not a security gap: the paid catalog
+  (`backend/supabase_schema.sql`'s `tracks.audio_storage_path`) is
+  gated behind `backend/server.py`'s `stream_audio`/`download_audio`,
+  which require an authenticated user and, for downloads, a paid tier.
+- Five other Workers in the account (`chromakeyprotocolproduction`,
+  `ckpproductionbackend`, `chroma-key-protocol`, `finalckp`,
+  `r2-worker`) all still hold the default `wrangler init`/dashboard
+  "Hello world" template — dead scaffolding, not live functionality.
+  Left alone: this session's Cloudflare access has no Worker-delete
+  tool, and deleting infrastructure nobody asked about isn't something
+  to do on a guess. Noted here so a human can clean them up.
+
+**What was actually buildable.** The target architecture says Cloudflare
+Workers should take over "any edge/protected-API logic the backend
+currently owns." Rather than attempt that whole surface at once (auth,
+Stripe-style checkout, Redis rate limiting, Protocol journal endpoints —
+each its own real design decision), this pass built the one piece that's
+both edge-natural and already has a live public counterpart to contrast
+against: **authenticated media serving**. `frontend/protected-media-worker/`
+is a new Worker that replicates `backend/server.py`'s
+`stream_audio`/`download_audio` gating exactly — not a rewrite of the
+rules, a port of them:
+- **Auth**: the same call the backend's own `verify_supabase_access_token`
+  makes — `GET {SUPABASE_URL}/auth/v1/user` with the caller's bearer
+  token — not a reimplemented JWT verifier. (`src/supabaseClient.js`)
+- **Gating**: `canStream` (any verified user, matching `stream_audio`'s
+  "any authenticated user" rule) and `canDownload` (admin, full tier, or
+  owns-all-albums, or license tier scoped to Act III — matching
+  `download_audio`'s exact precedence). (`src/gating.js`)
+- **Storage**: the same R2 bucket, read via `track.audio_storage_path` —
+  the exact column the backend reads — with real byte-range support
+  (`src/index.js`'s `serveObject`, ported from `chroma-key-media-gateway`'s
+  existing Range/ETag handling), which the backend's boto3-buffer-the-
+  whole-file approach doesn't have. That's a genuine improvement Workers
+  give for free here, not scope creep — it's the same endpoint, just
+  edge-native.
+
+One deliberate, documented behavior gap from the backend: this Worker
+does not auto-provision a missing `users` row the way
+`app_user_from_supabase_user()` does on the backend. A verified-but-
+not-yet-locally-provisioned user can still stream (matching the
+backend's real rule — streaming only needs *authentication*, not a
+local row) but can't download (matching the backend's real *outcome*
+for a freshly auto-provisioned free-tier user too, just without
+duplicating the insert). By the time someone is requesting gated audio,
+the frontend's existing Supabase-first auth flow has already caused
+that row to exist in practice, so this is a real, narrow, named
+simplification — not a faked upstream layer.
+
+**What could not be done, and why.** The user asked for this to be built
+and deployed for real, not designed and left. Actually deploying turned
+out to need more than code:
+- This session's Cloudflare access (via the Cloudflare Developer
+  Platform MCP tools) covers D1, KV, R2, Hyperdrive, and *read-only*
+  Worker inspection (list/get/get-code) — there is no tool to create or
+  update a Worker's deployed code.
+- `wrangler` itself has no stored Cloudflare credentials in this
+  container (`wrangler whoami` → not authenticated; no
+  `CLOUDFLARE_API_TOKEN` in the environment).
+- The repo already has a real, working precedent for this exact
+  problem: `.github/workflows/deploy.yml` deploys Cloudflare Pages
+  using `secrets.CLOUDFARE_API_TOKEN`/`CLOUDFARE_ACCOUNT_ID` (that
+  spelling, matching the secret names already configured in this repo).
+  So rather than stopping at "I can't deploy," this phase wired up the
+  same real mechanism: a new **manual-only**
+  (`workflow_dispatch`, never on push) workflow,
+  `.github/workflows/deploy-protected-media-worker.yml`, that installs,
+  tests, and deploys `frontend/protected-media-worker` using those same
+  credentials.
+- That workflow needs one more secret this session has no way to
+  obtain or should ever ask for in chat: `SUPABASE_SERVICE_ROLE_KEY`
+  (the same value as `backend/.env`'s `SUPABASE_KEY` — required because
+  `users`/`tracks` carry no RLS policies, so only the service role can
+  read them, same as the backend itself). The workflow fails loudly and
+  intentionally at a dedicated check step when that secret is absent,
+  rather than deploying a Worker whose every gating check would
+  silently 401 against Supabase. See
+  `frontend/protected-media-worker/README.md` for exactly what a human
+  needs to add before this can go live.
+
+**Explicitly not done, and why it's not this phase's call**: wiring this
+Worker in as the frontend's actual audio path (replacing
+`backend/server.py`'s endpoints) is a live cutover of a real,
+purchase-gated feature — precisely the kind of decision this migration's
+own sequencing rule reserves for an explicit go-ahead, not something to
+fold into "build the Worker." The Worker is additive: nothing about
+`/api/audio/*` or the frontend's calls to it changed.
+
+Verification: `npx vitest run` inside
+`frontend/protected-media-worker` — 32/32 passing, covering the gating
+rules in isolation, the Supabase REST calls against a fake `fetch` (bad
+token, missing fields, network failure, not-yet-provisioned user, REST
+errors), and the full request handler against a fake R2 bucket (OPTIONS/
+method/path handling, auth failures, streaming vs. download gating for
+every tier, Range requests, a 404 for a track with no
+`audio_storage_path`). `npx wrangler deploy --dry-run` confirmed the
+Worker bundles cleanly and both bindings (`env.MEDIA` → the real
+`chromakeyprotocol` R2 bucket, `env.SUPABASE_URL` → the real project
+URL, which is public/non-secret — it's the same value already shipped
+to the frontend as `VITE_SUPABASE_URL`) resolve against the real
+account. The new GitHub Actions workflow's YAML was validated with
+`yaml.safe_load`. No live deploy was performed or claimed.
+
 ## Phase 19: testing the system as an OS
 
 Every earlier phase's tests proved one function or one reducer case in

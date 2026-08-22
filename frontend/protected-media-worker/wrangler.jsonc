@@ -1,0 +1,29 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "chroma-key-protected-media",
+  "main": "src/index.js",
+  "compatibility_date": "2026-07-01",
+  // Deliberately no `routes` entry: this Worker is not wired to any
+  // live domain. It deploys to its own *.workers.dev subdomain only, so
+  // it can be built and verified for real without affecting
+  // media.chromakeyprotocol.com (chroma-key-media-gateway) or the live
+  // frontend, which still calls backend/server.py's /api/audio/*
+  // endpoints for gated audio. See docs/ARCHITECTURE.md's Phase 17
+  // section for the cutover decision this intentionally stops short of.
+  "r2_buckets": [
+    {
+      "binding": "MEDIA",
+      "bucket_name": "chromakeyprotocol"
+    }
+  ],
+  // Not secret — the same value already shipped to the frontend as
+  // VITE_APP_SUPABASE_URL. The service-role key is the only real
+  // secret this Worker needs; set it with:
+  //   npx wrangler secret put SUPABASE_SERVICE_ROLE_KEY
+  "vars": {
+    "SUPABASE_URL": "https://jmlqrqrikpukxxbstuoe.supabase.co"
+  },
+  "observability": {
+    "enabled": true
+  }
+}

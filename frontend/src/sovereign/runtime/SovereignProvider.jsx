@@ -195,7 +195,8 @@ export function SovereignProvider({
         dispatchAction(actions.completeStep(moduleId, stepId, criteria)),
       recordReflection: (moduleId, promptId, response) =>
         dispatchAction(actions.recordReflection(moduleId, promptId, response)),
-      selectConcept: (conceptId) => dispatchAction(actions.selectConcept(conceptId)),
+      selectConcept: (conceptId, moduleId) =>
+        dispatchAction(actions.selectConcept(conceptId, moduleId)),
       connectConcepts: (fromConceptId, toConceptId, relationship) =>
         dispatchAction(actions.connectConcepts(fromConceptId, toConceptId, relationship)),
       executeProtocol: (protocolId, payload, moduleId) =>

@@ -62,7 +62,10 @@ export function mapActionToEvents(action, { prevState, nextState }) {
     }
 
     case SOVEREIGN_ACTION_TYPES.SELECT_CONCEPT: {
-      push(SOVEREIGN_EVENT_TYPES.CONCEPT_SELECTED, { conceptId: action.payload.conceptId });
+      push(SOVEREIGN_EVENT_TYPES.CONCEPT_SELECTED, {
+        conceptId: action.payload.conceptId,
+        moduleId: action.payload.moduleId ?? null,
+      });
       break;
     }
 

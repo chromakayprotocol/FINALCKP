@@ -43,6 +43,11 @@ create table if not exists public.sovereign_module_state (
   estimated_remaining integer,
   interaction_count integer not null default 0,
   synthesis_readiness numeric not null default 0,
+  -- Phase 10 (Concept Graph): concept ids selected while this module was
+  -- active. A concept itself is a global, once-only fact about the user
+  -- (see sovereign_concepts' own unique(user_id, concept_id) below) — this
+  -- is which module gets credit for it, not a second copy of the concept.
+  selected_concepts text[] not null default '{}',
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   unique (user_id, module_id)

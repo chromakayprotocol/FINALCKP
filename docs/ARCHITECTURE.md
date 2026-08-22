@@ -489,6 +489,73 @@ Migrating it — and deciding what happens to its fully independent
 this happens) — is real scope for a dedicated future pass, not a
 same-session follow-on to the `AudioProvider` wiring.
 
+## Phase 10 (first increment): scoping concept selection per module
+
+`SOVEREIGN_STATE_MAP.md` doesn't cover a "Concept Graph" state category at
+all — Phase 2's inventory predates it, and the live app's closest analog
+(`modules/sovereign/matrx-alchemizr/`, Act III's lyric-tagging tool, with
+its own five `TAG_CATEGORIES` and its own `alchemizrReducer.js`) is a
+different, self-contained feature, not a source this phase draws from.
+What *is* concretely evidenced is a placeholder the Phase 4 step machine
+had been carrying since it was built: `KEY_CONCEPTS`'s completion
+criterion checked `concepts.selected.length > 0` — *any* concept selected
+*anywhere* in the whole session — with a code comment explicitly flagging
+it as a stand-in "until Phase 10 (Concept Graph) scopes concept selection
+per module." That's what this increment closes.
+
+Fixed by tracking, on each module's own state (`SovereignModuleState`,
+alongside `viewedSteps`/`completedSteps`), which concepts were selected
+while *that* module was active (`selectedConcepts: []`) — rather than
+reshaping the top-level `concepts.selected` list itself into something
+module-keyed. That choice follows a constraint already latent in the
+Phase 7 SQL schema: `sovereign_concepts` has `unique(user_id, concept_id)`
+— a concept, once selected, is one global fact about the user, matching
+`concepts.selected`'s existing global-dedup behavior. Module-scoping which
+*step* gets credit for a selection is a different, additive concern, so it
+lives on the module record instead. `selectConcept(conceptId, moduleId)`
+now takes an optional second argument (defaulting to `null`, an unscoped
+selection); the reducer updates the global list as before *and*, when a
+moduleId is given, credits it to that module. `useSovereign()`'s
+`concepts.selectConcept` defaults the moduleId to the currently active
+module (same fallback pattern `synthesis.executeProtocol` already used),
+so a caller mid-module doesn't have to pass it explicitly.
+`sovereignSteps.js`'s `KEY_CONCEPTS` criterion now reads
+`module.selectedConcepts.length > 0`. `CONCEPT_SELECTED`'s event payload
+gained the same `moduleId` field concept-adjacent events already had.
+
+Extended, not narrowed: the still-unapplied Phase 7 migration SQL gained a
+`selected_concepts text[]` column on `sovereign_module_state` (safe to
+edit — nothing has been applied to a live database yet), and
+`sovereignRemoteMapping.js`'s `moduleStateToRow`/`rowToModuleState` carry
+it. `sovereignReconciliation.js` needed no changes: `reconcileModules`
+already merges whole module records by recency, so the new field rides
+along automatically.
+
+One correctness bug surfaced and fixed while wiring this in for real:
+three existing tests (`walkToReflectionGate` in
+`mapActionToEvents.test.js`, and one test each in `sovereignSteps.test.js`
+and `sovereignRemoteMapping.test.js`) called `selectConcept('shadow-work')`
+with no moduleId, which the *old*, global-only criterion happened to
+satisfy for every module at once — exactly the bug this phase exists to
+close. Updated them to pass the module they're actually walking through,
+and added a dedicated regression test (`sovereignSteps.test.js`) asserting
+a concept selected for one module does *not* satisfy a different module's
+KEY_CONCEPTS step, which would have caught the old behavior directly.
+
+Verification: 5 new tests (3 reducer, 1 steps regression, 1 event-mapping)
+plus 3 existing tests fixed for the new module-scoping. Full suite:
+193/199 — same 6 pre-existing unrelated failures, 0 introduced. `npx
+esbuild` bundle-checked all `sovereign/*/index.js` barrels plus
+`audioprovider.jsx`. Nothing here touches live UI — same "standalone
+scaffolding first" posture as Phases 3-7 before Phase 8's live wiring.
+
+**Not attempted in this pass**: the rest of what "Concept Graph" likely
+means per the migration guide — an actual authored graph of concepts
+(nodes with real identities/metadata, not just opaque ids a caller
+invents), a browsing UI, and `CONCEPT_OPENED` (still pending — no "viewed
+without selecting" action exists). This increment only closes the one
+concretely-evidenced gap the codebase itself had already flagged.
+
 ## Current architecture (active today)
 
 ```

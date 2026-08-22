@@ -81,11 +81,18 @@ export function sovereignReducer(state, action) {
     }
 
     case SOVEREIGN_ACTION_TYPES.SELECT_CONCEPT: {
-      const { conceptId } = action.payload;
+      const { conceptId, moduleId } = action.payload;
       const selected = state.concepts.selected.includes(conceptId)
         ? state.concepts.selected
         : [...state.concepts.selected, conceptId];
-      return { ...state, concepts: { ...state.concepts, selected } };
+      const withSelection = { ...state, concepts: { ...state.concepts, selected } };
+      if (!moduleId) return withSelection;
+      return updateModule(withSelection, moduleId, (existing) => ({
+        ...existing,
+        selectedConcepts: existing.selectedConcepts.includes(conceptId)
+          ? existing.selectedConcepts
+          : [...existing.selectedConcepts, conceptId],
+      }));
     }
 
     case SOVEREIGN_ACTION_TYPES.CONNECT_CONCEPTS: {

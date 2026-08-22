@@ -46,7 +46,7 @@ const STEPS_BEFORE_REFLECTION = [
 /** Walks a module through every step that gates REFLECTION/PROTOCOL/ARTIFACT — steps lock in order, so those can't complete without this. */
 function walkToReflectionGate(state, moduleId) {
   let next = state;
-  next = sovereignReducer(next, selectConcept('shadow-work')); // satisfies KEY_CONCEPTS
+  next = sovereignReducer(next, selectConcept('shadow-work', moduleId)); // satisfies KEY_CONCEPTS
   for (const stepId of STEPS_BEFORE_REFLECTION) {
     next = sovereignReducer(next, advanceStep(moduleId, stepId));
   }
@@ -162,9 +162,25 @@ describe('mapActionToEvents', () => {
   it('maps concept actions to CONCEPT_SELECTED / CONCEPT_CONNECTED', () => {
     const selected = dispatchAndMap(createInitialState(), selectConcept('shadow-work'));
     expect(types(selected.events)).toEqual([SOVEREIGN_EVENT_TYPES.CONCEPT_SELECTED]);
+    expect(selected.events[0].payload).toEqual({ conceptId: 'shadow-work', moduleId: null });
 
     const connected = dispatchAndMap(selected.nextState, connectConcepts('a', 'b', 'CAUSES'));
     expect(types(connected.events)).toEqual([SOVEREIGN_EVENT_TYPES.CONCEPT_CONNECTED]);
+  });
+
+  it('CONCEPT_SELECTED carries the moduleId it was credited to, and completes that module\'s KEY_CONCEPTS step', () => {
+    let state = createInitialState();
+    ({ nextState: state } = dispatchAndMap(state, startModule('mentalism')));
+    ({ nextState: state } = dispatchAndMap(state, advanceStep('mentalism', SOVEREIGN_STEP_IDS.INTRO)));
+    ({ nextState: state } = dispatchAndMap(state, advanceStep('mentalism', SOVEREIGN_STEP_IDS.PRINCIPLE)));
+
+    const { events } = dispatchAndMap(state, selectConcept('shadow-work', 'mentalism'));
+    expect(types(events)).toEqual([
+      SOVEREIGN_EVENT_TYPES.CONCEPT_SELECTED,
+      SOVEREIGN_EVENT_TYPES.STEP_COMPLETED,
+    ]);
+    expect(events[0].payload).toEqual({ conceptId: 'shadow-work', moduleId: 'mentalism' });
+    expect(events[1].payload).toEqual({ moduleId: 'mentalism', stepId: SOVEREIGN_STEP_IDS.KEY_CONCEPTS });
   });
 
   it('play() emits MEDIA_STARTED only on the real not-playing -> playing transition', () => {

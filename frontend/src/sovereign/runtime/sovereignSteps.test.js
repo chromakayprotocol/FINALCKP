@@ -54,6 +54,25 @@ describe('sovereignSteps', () => {
     expect(statusOf(steps, SOVEREIGN_STEP_IDS.KEY_CONCEPTS)).toBe(SOVEREIGN_STEP_STATUSES.LOCKED);
   });
 
+  it('requires a concept selected for THIS module, not just anywhere in the session, to complete KEY_CONCEPTS (Phase 10)', () => {
+    let state = sovereignReducer(createInitialState(), startModule('mentalism'));
+    state = sovereignReducer(state, startModule('correspondence'));
+    state = sovereignReducer(state, advanceStep('mentalism', SOVEREIGN_STEP_IDS.INTRO));
+    state = sovereignReducer(state, advanceStep('mentalism', SOVEREIGN_STEP_IDS.PRINCIPLE));
+    state = sovereignReducer(state, advanceStep('correspondence', SOVEREIGN_STEP_IDS.INTRO));
+    state = sovereignReducer(state, advanceStep('correspondence', SOVEREIGN_STEP_IDS.PRINCIPLE));
+
+    // Selecting a concept while working through correspondence must not
+    // silently satisfy mentalism's KEY_CONCEPTS step too.
+    state = sovereignReducer(state, selectConcept('as-within-so-without', 'correspondence'));
+
+    expect(isStepComplete(state, 'correspondence', SOVEREIGN_STEP_IDS.KEY_CONCEPTS)).toBe(true);
+    expect(isStepComplete(state, 'mentalism', SOVEREIGN_STEP_IDS.KEY_CONCEPTS)).toBe(false);
+
+    state = sovereignReducer(state, selectConcept('shadow-work', 'mentalism'));
+    expect(isStepComplete(state, 'mentalism', SOVEREIGN_STEP_IDS.KEY_CONCEPTS)).toBe(true);
+  });
+
   it('requires a committed reflection, not just navigation, to complete the REFLECTION step', () => {
     let state = sovereignReducer(createInitialState(), startModule('mentalism'));
     state = sovereignReducer(state, advanceStep('mentalism', SOVEREIGN_STEP_IDS.REFLECTION));
@@ -117,7 +136,7 @@ describe('sovereignSteps', () => {
     ]) {
       state = sovereignReducer(state, advanceStep('mentalism', stepId));
     }
-    state = sovereignReducer(state, selectConcept('shadow-work'));
+    state = sovereignReducer(state, selectConcept('shadow-work', 'mentalism'));
     state = sovereignReducer(
       state,
       recordReflection('mentalism', SOVEREIGN_STEP_IDS.REFLECTION, 'a real reflection'),

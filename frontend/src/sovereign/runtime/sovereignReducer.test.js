@@ -75,6 +75,28 @@ describe('sovereignReducer', () => {
     expect(state.concepts.selected).toEqual(['shadow-work']);
   });
 
+  it('crediting a concept selection to a module updates both the global list and that module, without creating the module implicitly if no moduleId is given', () => {
+    const state = sovereignReducer(createInitialState(), selectConcept('shadow-work'));
+
+    expect(state.concepts.selected).toEqual(['shadow-work']);
+    expect(state.curriculum.modules).toEqual({});
+  });
+
+  it('crediting a concept selection to a module records it on that module without duplicating', () => {
+    let state = sovereignReducer(createInitialState(), selectConcept('shadow-work', 'mentalism'));
+    state = sovereignReducer(state, selectConcept('shadow-work', 'mentalism'));
+
+    expect(state.concepts.selected).toEqual(['shadow-work']);
+    expect(state.curriculum.modules.mentalism.selectedConcepts).toEqual(['shadow-work']);
+  });
+
+  it('a concept selected for one module does not credit a different module', () => {
+    const state = sovereignReducer(createInitialState(), selectConcept('shadow-work', 'mentalism'));
+
+    expect(state.curriculum.modules.mentalism.selectedConcepts).toEqual(['shadow-work']);
+    expect(state.curriculum.modules.correspondence).toBeUndefined();
+  });
+
   it('records a concept connection', () => {
     const state = sovereignReducer(createInitialState(), connectConcepts('a', 'b', 'CAUSES'));
 

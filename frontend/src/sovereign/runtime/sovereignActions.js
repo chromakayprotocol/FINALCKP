@@ -50,8 +50,14 @@ export const completeStep = (moduleId, stepId, criteria = {}) =>
 export const recordReflection = (moduleId, promptId, response) =>
   withMeta(SOVEREIGN_ACTION_TYPES.RECORD_REFLECTION, { moduleId, promptId, response });
 
-export const selectConcept = (conceptId) =>
-  withMeta(SOVEREIGN_ACTION_TYPES.SELECT_CONCEPT, { conceptId });
+/* moduleId is optional (a concept can be selected outside any curriculum
+   module context, e.g. from a future standalone concept-graph browser) —
+   when present, the reducer also credits it to that module's own
+   selectedConcepts, which is what the Phase 4 step machine's KEY_CONCEPTS
+   criterion checks (Phase 10, closing the placeholder sovereignSteps.js
+   flagged: concept selection used to only be checked globally). */
+export const selectConcept = (conceptId, moduleId = null) =>
+  withMeta(SOVEREIGN_ACTION_TYPES.SELECT_CONCEPT, { conceptId, moduleId });
 
 export const connectConcepts = (fromConceptId, toConceptId, relationship) =>
   withMeta(SOVEREIGN_ACTION_TYPES.CONNECT_CONCEPTS, {

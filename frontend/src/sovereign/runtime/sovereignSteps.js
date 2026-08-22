@@ -74,10 +74,12 @@ export const SOVEREIGN_STEPS = [
     id: SOVEREIGN_STEP_IDS.KEY_CONCEPTS,
     order: 3,
     label: 'Key Concepts',
-    // Placeholder until Phase 10 (Concept Graph) scopes concept selection
-    // per module — for now this only requires at least one concept selected
-    // anywhere in the session.
-    isComplete: (ctx) => ctx.concepts.selected.length > 0,
+    // Module-scoped as of Phase 10 (Concept Graph): requires a concept
+    // selected while *this* module was active (module.selectedConcepts),
+    // not just anywhere in the session — see sovereignState.js's
+    // createModuleState() for why that's tracked on the module rather
+    // than derived from the global concepts.selected list.
+    isComplete: (ctx) => ctx.module.selectedConcepts.length > 0,
   },
   {
     id: SOVEREIGN_STEP_IDS.WHY_IT_MATTERS,

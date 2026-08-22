@@ -54,7 +54,12 @@ export function useSovereign() {
       reflection: { ...selectReflection(state), recordReflection: actions.recordReflection },
       concepts: {
         ...selectConcepts(state),
-        selectConcept: actions.selectConcept,
+        // Defaults to the active module, same fallback pattern as
+        // synthesis.executeProtocol below — a caller can still pass an
+        // explicit moduleId (or null, for an unscoped selection) to
+        // override it.
+        selectConcept: (conceptId, moduleId) =>
+          actions.selectConcept(conceptId, moduleId ?? activeModule?.moduleId ?? null),
         connectConcepts: actions.connectConcepts,
       },
       synthesis: {

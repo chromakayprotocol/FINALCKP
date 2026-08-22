@@ -31,6 +31,7 @@ export function moduleStateToRow(userId, moduleState) {
     estimated_remaining: moduleState.estimatedRemaining,
     interaction_count: moduleState.interactionCount,
     synthesis_readiness: moduleState.synthesisReadiness,
+    selected_concepts: moduleState.selectedConcepts,
   };
 }
 
@@ -47,6 +48,7 @@ export function rowToModuleState(row) {
     estimatedRemaining: row.estimated_remaining ?? null,
     interactionCount: row.interaction_count ?? 0,
     synthesisReadiness: row.synthesis_readiness ?? 0,
+    selectedConcepts: row.selected_concepts ?? [],
   };
 }
 

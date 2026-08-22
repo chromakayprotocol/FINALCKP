@@ -37,6 +37,16 @@ export function createModuleState(moduleId) {
     interactionCount: 0,
     synthesisReadiness: 0,
     status: 'available',
+    // Phase 10 (Concept Graph): which globally-unique concepts (see the
+    // top-level `concepts` domain) were selected while this module was
+    // active. Kept on the module rather than as a per-module slice of
+    // `concepts.selected` because a concept, once selected, is one global
+    // fact about the user (mirrors the `unique(user_id, concept_id)`
+    // constraint on the `sovereign_concepts` table) — a second module
+    // can't "re-select" a concept someone already selected elsewhere, but
+    // it can still credit itself for the selections that happened on its
+    // own watch.
+    selectedConcepts: [],
   };
 }
 

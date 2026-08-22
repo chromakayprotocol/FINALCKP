@@ -71,12 +71,16 @@ export const sealArtifact = () => withMeta(SOVEREIGN_ACTION_TYPES.SEAL_ARTIFACT)
 /* Media Runtime (Phase 9) — the single owner of "what's playing" state.
    These describe *what happened*, not how a particular player UI got
    there: loadTrack() swaps the active track (resetting position/duration,
-   same as a new `<audio src>` would), play()/pause() toggle playback,
-   seek() is a discrete user jump (distinct from the continuous
-   advancePosition() ticks a playing track emits every frame — only seek
-   is event-worthy). selectAnchor()/selectMediaConcept() track which lyric
-   anchor or concept is "live" for whatever's currently playing, for the
-   Concept Graph (Phase 10) to consume later. */
+   same as a new `<audio src>` would) but deliberately leaves isPlaying
+   untouched — a queue player advancing to the next track (skip, or
+   auto-advance on end) expects playback to continue uninterrupted, same
+   as real players; a caller that wants the loaded track to start paused
+   dispatches pause() itself. play()/pause() toggle playback, seek() is a
+   discrete user jump (distinct from the continuous advancePosition()
+   ticks a playing track emits every frame — only seek is event-worthy).
+   selectAnchor()/selectMediaConcept() track which lyric anchor or concept
+   is "live" for whatever's currently playing, for the Concept Graph
+   (Phase 10) to consume later. */
 export const loadTrack = (trackId) => withMeta(SOVEREIGN_ACTION_TYPES.LOAD_TRACK, { trackId });
 
 export const play = () => withMeta(SOVEREIGN_ACTION_TYPES.PLAY);

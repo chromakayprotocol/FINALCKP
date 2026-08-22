@@ -141,7 +141,6 @@ export function sovereignReducer(state, action) {
           currentTrackId: trackId,
           position: 0,
           duration: 0,
-          isPlaying: false,
         },
       };
     }

@@ -420,16 +420,74 @@ suite: 187/193 tests pass — same 6 pre-existing failures as before
 0 introduced. `npx esbuild` bundle-checked all three `sovereign/*/index.js`
 barrels.
 
-**Not done in this pass, deliberately**: nothing in the live app
-dispatches these actions yet. `AudioProvider` and `AudioVisualizerCore.jsx`
-still own their playback state independently, and `useAudioAnalyzer` is
-still only ever instantiated against `AudioVisualizerCore`'s own element.
-Wiring either or both of them to become consumers of the runtime — and
-deciding what happens to the second, fully independent `<audio>` element
-in `AudioVisualizerCore.jsx` — is a live-code change with real playback-UX
-risk (unlike Phase 8's persistence-layer swaps, this touches what the user
-actually hears), so it's being treated as its own scoped increment rather
-than folded into this one.
+### Phase 9, second increment: wiring `AudioProvider`
+
+Attempting the actual live-wiring surfaced a real design gap: `loadTrack`
+as first built always reset `isPlaying` to `false`, matching Reclamation
+University's "load a step, wait for explicit play" pattern — but that
+would have broken `AudioProvider`'s continuous queue playback (skip /
+auto-advance-on-end both just change the current track and expect
+playback to keep going, the way every real media player behaves). Since
+nothing live depended on the old reset-to-false behavior yet, fixed
+`loadTrack` to leave `isPlaying` untouched — a caller that wants a freshly
+loaded track to start paused now has to call `pause()` itself. Updated
+its test coverage: one test for "load while paused stays paused", a new
+one for "load while playing keeps playing."
+
+With that fixed, `context/audioprovider.jsx` (`AudioProvider`/`useAudio`)
+now dispatches its playback primitives — `isPlaying`, `currentTime`
+(-> `position`), `duration`, `volume` — through the Sovereign Runtime's
+reducer via a bare `useReducer(sovereignReducer, createInitialState())`,
+instead of five parallel `useState` calls. Deliberately **not** mounted
+through `<SovereignProvider>`: that component's automatic local+remote
+persistence is designed for per-module curriculum state, and `AudioProvider`
+is mounted once at the true app root (`index.jsx`, wrapping all of `<App/>`)
+— routing it through the full provider would start syncing this always-
+mounted component's other, empty domains (identity/curriculum/reflection/
+concepts/artifact) to Supabase on every signed-in page load, for a concern
+that has nothing to do with any of them. Using the reducer directly gets
+the shared, tested state-transition logic and invariants without that
+unwanted dependency. The `queue`/`currentTrackIndex` playlist concept
+stays local `useState`, unchanged — the runtime's `media` domain only
+models "what's currently playing," not a playlist, so there's no matching
+concept to migrate it to. `useAudio()`'s public return shape is byte-for-
+byte unchanged, so its one live consumer (`ReclamationCodex.jsx`) needed
+no changes at all. Also fixed one latent mismatch caught while doing this:
+the mount effect hard-sets `audio.volume = 0.78` but nothing previously
+told the exposed `volume` value to match — added the matching
+`setVolume(0.78)` dispatch so the displayed volume can't drift from the
+actual playing volume.
+
+Verification: `npx esbuild` bundle-checked `audioprovider.jsx`; full test
+suite 188/194 (same 6 pre-existing failures, 0 introduced); headless
+Chromium load of `/` (the true app root — if `AudioProvider` crashed,
+nothing in the app would render) and of `/protocol/3`
+(`ReclamationCodex`'s route), both loading cleanly with only the same
+pre-existing sandbox network noise seen on every other route checked this
+session, and `/protocol/3` correctly redirecting to `/login` for an
+unauthenticated visitor. **Not verified**: actual audio playback — no
+speakers or real user interaction available in this sandboxed environment,
+and this is exactly the kind of thing that can't be confirmed by absence
+of console errors alone (e.g., whether the queue truly keeps playing
+uninterrupted across a track boundary). Flagging this explicitly rather
+than overclaiming: the fix above was found and reasoned through via static
+analysis of the diff, not confirmed by hearing it work.
+
+**Deliberately not attempted in this pass**: `AudioVisualizerCore.jsx`.
+Reviewed it in detail and found it's a substantially bigger lift than
+`AudioProvider`: `isPlaying` and the selected track are controlled by its
+*parent* (`VisualizerCorePage.jsx`) via props/callbacks rather than owned
+internally; its local state includes several fields with no equivalent in
+the runtime's media schema at all (`isMuted`, `isShuffle`, `playbackRate`,
+`showSettings`, `trackPage`, fullscreen state); and its DOM `<audio>`
+event handlers (`onLoadedData`/`onPlaying`/`onTimeUpdate`/`onEnded`) are
+tightly interleaved with the `useAudioAnalyzer` start/stop calls in ways
+that would need careful re-sequencing to route through dispatch safely.
+Migrating it — and deciding what happens to its fully independent
+`<audio>` element relative to `AudioProvider`'s (`SOVEREIGN_STATE_MAP.md`
+§8's "two non-communicating stacks" finding is only half-resolved until
+this happens) — is real scope for a dedicated future pass, not a
+same-session follow-on to the `AudioProvider` wiring.
 
 ## Current architecture (active today)
 

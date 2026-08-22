@@ -131,7 +131,7 @@ describe('sovereignReducer', () => {
     expect(state).toBe(initial);
   });
 
-  it('loading a track resets position/duration and does not auto-play', () => {
+  it('loading a track resets position/duration but leaves isPlaying alone', () => {
     let state = sovereignReducer(createInitialState(), loadTrack('track-1'));
     state = sovereignReducer(state, seek(42));
     state = sovereignReducer(state, loadTrack('track-2'));
@@ -139,7 +139,18 @@ describe('sovereignReducer', () => {
     expect(state.media.currentTrackId).toBe('track-2');
     expect(state.media.position).toBe(0);
     expect(state.media.duration).toBe(0);
+    // Loading a fresh track never auto-plays: play() must still be called
+    // for a paused player.
     expect(state.media.isPlaying).toBe(false);
+  });
+
+  it('loading a new track while already playing keeps playing (queue advance / skip)', () => {
+    let state = sovereignReducer(createInitialState(), loadTrack('track-1'));
+    state = sovereignReducer(state, play());
+    state = sovereignReducer(state, loadTrack('track-2'));
+
+    expect(state.media.currentTrackId).toBe('track-2');
+    expect(state.media.isPlaying).toBe(true);
   });
 
   it('cannot play without a loaded track', () => {

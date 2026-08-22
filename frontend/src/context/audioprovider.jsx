@@ -2,11 +2,25 @@ import {
   createContext,
   useContext,
   useEffect,
+  useReducer,
   useRef,
   useState,
 } from "react";
+import { sovereignReducer } from "../sovereign/runtime/sovereignReducer";
+import { createInitialState } from "../sovereign/runtime/sovereignState";
+import {
+  loadTrack as loadTrackAction,
+  play as playAction,
+  pause as pauseAction,
+  seek as seekAction,
+  advancePosition as advancePositionAction,
+  setDuration as setDurationAction,
+  setVolume as setVolumeAction,
+} from "../sovereign/runtime/sovereignActions";
 
 const AudioContextState = createContext(null);
+
+const DEFAULT_VOLUME = 0.78;
 
 export function AudioProvider({ children }) {
   const audioRef = useRef(new Audio());
@@ -15,10 +29,21 @@ export function AudioProvider({ children }) {
   const [queue, setQueue] = useState([]);
   const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
 
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [currentTime, setCurrentTime] = useState(0);
-  const [duration, setDuration] = useState(0);
-  const [volume, setVolumeState] = useState(0.78);
+  /* Playback primitives (isPlaying/position/duration/volume) route through
+     the Sovereign Runtime's media reducer (Phase 9) instead of parallel
+     useState, so this provider shares the same tested state-transition
+     logic and invariants (e.g. play() no-ops without a loaded track) as
+     every other Sovereign media consumer. This dispatches against the
+     bare reducer directly rather than mounting <SovereignProvider>: that
+     component's automatic local+remote persistence is designed for
+     per-module curriculum state, and would otherwise start syncing this
+     always-mounted, app-root provider's other (empty) domains to Supabase
+     on every signed-in page load for no reason. The queue/track list
+     itself isn't part of the runtime's media domain — that only models
+     "what's currently playing," not a playlist — so it stays local state
+     here, same as before. */
+  const [mediaState, dispatchMedia] = useReducer(sovereignReducer, createInitialState());
+  const { isPlaying, position: currentTime, duration, volume } = mediaState.media;
 
   const currentTrack = queue[currentTrackIndex];
 
@@ -31,8 +56,7 @@ export function AudioProvider({ children }) {
     audio.crossOrigin = track.audio_cross_origin || "anonymous";
 
     if (audio.getAttribute("src") !== track.audio_url) {
-      setCurrentTime(0);
-      setDuration(0);
+      dispatchMedia(loadTrackAction(track.id));
       audio.src = track.audio_url;
       audio.load();
     }
@@ -42,19 +66,20 @@ export function AudioProvider({ children }) {
 
   useEffect(() => {
     const audio = audioRef.current;
-    audio.volume = 0.78;
+    audio.volume = DEFAULT_VOLUME;
     audio.preload = "auto";
+    dispatchMedia(setVolumeAction(DEFAULT_VOLUME));
 
     const updateTime = () => {
-      setCurrentTime(audio.currentTime);
+      dispatchMedia(advancePositionAction(audio.currentTime));
     };
 
     const updateDuration = () => {
-      setDuration(audio.duration || 0);
+      dispatchMedia(setDurationAction(audio.duration || 0));
     };
 
     const updateVolume = () => {
-      setVolumeState(audio.volume);
+      dispatchMedia(setVolumeAction(audio.volume));
     };
 
     const onEnded = () => {
@@ -86,7 +111,7 @@ export function AudioProvider({ children }) {
     if (isPlaying) {
       audioRef.current.play().catch((err) => {
         console.error(err);
-        setIsPlaying(false);
+        dispatchMedia(pauseAction());
       });
     }
   }, [currentTrack, isPlaying]);
@@ -123,7 +148,7 @@ export function AudioProvider({ children }) {
     if (loadAudioTrack(track)) {
       try {
         await audio.play();
-        setIsPlaying(true);
+        dispatchMedia(playAction());
       } catch (err) {
         console.error(err);
       }
@@ -135,20 +160,21 @@ export function AudioProvider({ children }) {
 
     if (audio.paused) {
       audio.play();
-      setIsPlaying(true);
+      dispatchMedia(playAction());
     } else {
       audio.pause();
-      setIsPlaying(false);
+      dispatchMedia(pauseAction());
     }
   }
 
   function seek(time) {
     audioRef.current.currentTime = time;
+    dispatchMedia(seekAction(time));
   }
 
   function setVolume(nextVolume) {
     const normalized = Math.max(0, Math.min(1, Number(nextVolume) || 0));
-    setVolumeState(normalized);
+    dispatchMedia(setVolumeAction(normalized));
   }
 
   function nextTrack() {

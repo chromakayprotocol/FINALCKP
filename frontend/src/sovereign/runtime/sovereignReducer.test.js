@@ -135,6 +135,26 @@ describe('sovereignReducer', () => {
     expect(state.artifact.sealedAt).not.toBeNull();
   });
 
+  it('the first draft creates no revision; a redraft snapshots the prior draft as a revision (Phase 14)', () => {
+    let state = sovereignReducer(createInitialState(), generateArtifact({ title: 'v1' }));
+    expect(state.artifact.revisions).toEqual([]);
+
+    state = sovereignReducer(state, generateArtifact({ title: 'v2' }));
+    expect(state.artifact.revisions).toHaveLength(1);
+    expect(state.artifact.revisions[0]).toMatchObject({
+      revisionId: 'revision-0',
+      previousDraft: { title: 'v1' },
+    });
+    expect(state.artifact.draft).toEqual({ title: 'v2' });
+
+    state = sovereignReducer(state, generateArtifact({ title: 'v3' }));
+    expect(state.artifact.revisions).toHaveLength(2);
+    expect(state.artifact.revisions[1]).toMatchObject({
+      revisionId: 'revision-1',
+      previousDraft: { title: 'v2' },
+    });
+  });
+
   it('merges identity fields without clobbering the rest', () => {
     const state = sovereignReducer(createInitialState(), setIdentity({ userId: 'u1', level: 2 }));
 

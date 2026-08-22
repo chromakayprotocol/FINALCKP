@@ -130,16 +130,21 @@ create table if not exists public.sovereign_domain_mappings (
   unique (user_id, concept_id, domain, role)
 );
 
--- One row per user: the current Living Artifact document. Phase 14 (the
--- Artifact Compiler) will define its richer internal schema
--- (ArtifactDocument/Section/Block/Decision/Revision) — draft_json is
--- deliberately opaque jsonb until then.
+-- One row per user: the current Living Artifact document. draft_json now
+-- holds a real ArtifactDocument (sections/blocks/decisions — Phase 14's
+-- Artifact Compiler, frontend/src/sovereign/artifact/artifactSchema.js),
+-- but stays jsonb rather than normalized columns since the schema is
+-- still expected to grow (new block/decision kinds) and a document is
+-- always read/written whole, never queried by its internal fields.
 create table if not exists public.sovereign_artifacts (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references auth.users(id) on delete cascade unique,
   status text not null default 'empty'
     check (status in ('empty', 'draft', 'sealed')),
   draft_json jsonb,
+  -- ArtifactRevision[] — snapshots of draft_json taken each time a
+  -- redraft replaces an existing one. Also jsonb for the same reason.
+  revisions_json jsonb not null default '[]'::jsonb,
   sealed_at timestamptz,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()

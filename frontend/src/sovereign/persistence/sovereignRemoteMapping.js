@@ -174,13 +174,19 @@ export function artifactToRow(userId, artifact) {
     user_id: userId,
     status: artifact.status,
     draft_json: artifact.draft,
+    revisions_json: artifact.revisions ?? [],
     sealed_at: artifact.sealedAt,
   };
 }
 
 export function rowToArtifact(row) {
   if (!row) return null;
-  return { status: row.status, draft: row.draft_json ?? null, sealedAt: row.sealed_at ?? null };
+  return {
+    status: row.status,
+    draft: row.draft_json ?? null,
+    revisions: row.revisions_json ?? [],
+    sealedAt: row.sealed_at ?? null,
+  };
 }
 
 export function sessionSnapshotToRow(userId, state) {

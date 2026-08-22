@@ -82,7 +82,10 @@ describe('fetchRemoteState', () => {
         select: { data: [{ concept_id: 'shadow-work', domain: 'psychology', role: 'cause', mapped_at: 't1' }], error: null },
       },
       sovereign_artifacts: {
-        selectSingle: { data: { status: 'sealed', draft_json: { title: 'x' }, sealed_at: 't1' }, error: null },
+        selectSingle: {
+          data: { status: 'sealed', draft_json: { title: 'x' }, revisions_json: [], sealed_at: 't1' },
+          error: null,
+        },
       },
     });
 
@@ -95,7 +98,7 @@ describe('fetchRemoteState', () => {
     expect(data.concepts).toEqual(['shadow-work']);
     expect(data.connections).toEqual([{ fromConceptId: 'a', toConceptId: 'b', relationship: 'CAUSES', createdAt: 't1' }]);
     expect(data.domainMappings).toEqual([{ conceptId: 'shadow-work', domain: 'psychology', role: 'cause', mappedAt: 't1' }]);
-    expect(data.artifact).toEqual({ status: 'sealed', draft: { title: 'x' }, sealedAt: 't1' });
+    expect(data.artifact).toEqual({ status: 'sealed', draft: { title: 'x' }, revisions: [], sealedAt: 't1' });
 
     // Every query was scoped to this user.
     expect(supabase.calls.every((call) => call.op !== 'select' || call.value === 'u1')).toBe(true);

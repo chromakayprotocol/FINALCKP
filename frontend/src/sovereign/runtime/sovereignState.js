@@ -96,6 +96,10 @@ export function createInitialState() {
     artifact: {
       status: 'empty', // empty | draft | sealed
       draft: null,
+      // Phase 14: a snapshot of `draft` taken each time generateArtifact()
+      // replaces an existing draft (a revision) — see ArtifactRevision in
+      // sovereign/artifact/artifactSchema.js.
+      revisions: [],
       sealedAt: null,
     },
   };

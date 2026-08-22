@@ -1,6 +1,7 @@
 import { SOVEREIGN_ACTION_TYPES } from './sovereignActions';
 import { createModuleState } from './sovereignState';
 import { isValidDomain, isValidDomainRole } from './sovereignDomains';
+import { createArtifactRevision } from '../artifact/artifactSchema';
 
 function getOrCreateModule(modules, moduleId) {
   return modules[moduleId] ?? createModuleState(moduleId);
@@ -165,9 +166,19 @@ export function sovereignReducer(state, action) {
     }
 
     case SOVEREIGN_ACTION_TYPES.GENERATE_ARTIFACT: {
+      // A redraft (a prior draft already existed) is a revision — this is
+      // also "User Revision" from Phase 14's pipeline: there's no separate
+      // edit action, since ARTIFACT_EDITED (Phase 6) already distinguishes
+      // this exact case from the first draft.
+      const revisions = state.artifact.draft
+        ? [
+            ...state.artifact.revisions,
+            createArtifactRevision(state.artifact.draft, state.artifact.revisions.length, action.meta.timestamp),
+          ]
+        : state.artifact.revisions;
       return {
         ...state,
-        artifact: { ...state.artifact, status: 'draft', draft: action.payload.draft },
+        artifact: { ...state.artifact, status: 'draft', draft: action.payload.draft, revisions },
       };
     }
 

@@ -24,6 +24,8 @@ import {
   whatRelationshipsDidIEstablish,
   whatProtocolDidIChoose,
 } from '../synthesis/sovereignSynthesis';
+import { compileArtifactDocument } from '../artifact/artifactSchema';
+import { exportArtifactToMarkdown } from '../artifact/artifactExport';
 
 /**
  * The one way app code reads or mutates Sovereign state. Each domain bundles
@@ -118,6 +120,14 @@ export function useSovereign() {
         ...selectArtifact(state),
         generateArtifact: actions.generateArtifact,
         sealArtifact: actions.sealArtifact,
+        // The Artifact Compiler (Phase 14): compiles a fresh
+        // ArtifactDocument from the current Synthesis State and dispatches
+        // it as a (re)draft in one call — generateArtifact() already
+        // tracks the revision history (see GENERATE_ARTIFACT in
+        // sovereignReducer.js), so calling this again mid-journey is how
+        // "User Revision" via re-compiling looks in practice.
+        compileFromSynthesis: () => actions.generateArtifact(compileArtifactDocument(buildSynthesisState(state))),
+        exportMarkdown: () => exportArtifactToMarkdown(selectArtifact(state).draft),
       },
       session: {
         ...selectSession(state),

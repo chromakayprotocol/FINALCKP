@@ -811,6 +811,83 @@ redirecting to `/login`.
 posture as every phase since Phase 3. Phase 14 (the Artifact Compiler)
 is the guide's stated next consumer of `SynthesisState`/the graph.
 
+## Phase 14: the Artifact Compiler
+
+The guide's pipeline: Sovereign State -> Artifact Schema -> Renderer ->
+Editable Canvas -> User Revision -> Seal -> Export. Two of those stages
+are UI (Renderer, Editable Canvas — Phase 16, Visual Interaction Layer)
+and out of scope here; Seal already existed (`sealArtifact()`, Phase 3).
+This phase builds the rest: the Schema, the Compiler that produces it
+from Synthesis State, User Revision, and Export.
+
+New `frontend/src/sovereign/artifact/` (a fourth top-level directory,
+alongside `runtime/`, `events/`, `persistence/`, `synthesis/`).
+`artifactSchema.js` defines the four schema pieces the guide names —
+`createArtifactDocument`/`Section`/`Block`/`Decision` — plus a fifth,
+`createArtifactRevision`, tracked separately from the document itself
+(see below) rather than as a field inside it. `compileArtifactDocument(synthesisState)`
+is the literal Compiler: Sovereign State -> Artifact Schema, a pure
+function producing a fresh `ArtifactDocument` from a Phase 13
+`SynthesisState`, with every block and decision carrying a `sourceRef`
+back to where it came from (a concept id, or a `moduleId:promptId`
+reflection key). It compiles two sections today ("What I Identified" from
+`selectedConcepts`, "Reflections" from committed reflection responses)
+and two kinds of decisions (`concept-retained`, from each committed
+reflection's `retainedConcepts` — a rejected candidate never appears, the
+same distinction Phase 13's `whatDidIReject`/`whatDidIReclaim` draw;
+`protocol-chosen`, from `protocolDecisions`). Calling it twice with the
+same input produces an equal document — pure, like every derivation since
+Phase 11's `buildDomainMatrix`.
+
+**User Revision** deliberately isn't a new action. `generateArtifact()`
+already existed (Phase 3) and Phase 6 already distinguished a first draft
+(`ARTIFACT_STARTED`) from a redraft (`ARTIFACT_EDITED`) by whether a prior
+draft existed — that distinction *is* "is this a revision," so
+`GENERATE_ARTIFACT`'s reducer case now also snapshots the prior draft into
+`artifact.revisions` (a new field, sibling to `draft`/`status`/`sealedAt`)
+whenever a redraft actually replaces one, via `createArtifactRevision`.
+Calling `generateArtifact()` again with an edited copy — whether typed by
+hand or produced by re-running the compiler — is what "editing before
+sealing" looks like at the state layer; a canvas UI (Phase 16) would just
+be a nicer way to produce that edited copy.
+
+**Export**: `artifactExport.js`'s `exportArtifactToMarkdown(document)` —
+pure, format-only, doesn't care whether the document is sealed or still a
+draft. Renders each non-empty section as a heading with its blocks as a
+list, and decisions under their own heading with a human-readable label
+per kind. Other formats (PDF, a Cloudflare-hosted page) are Phase 17's
+concern once there's somewhere real to serve them from; Markdown alone is
+enough to prove Export is real.
+
+Persistence: `sovereign_artifacts` (still unapplied to any live database)
+gained a `revisions_json jsonb` column, matching `draft_json`'s reasoning
+(the schema is still expected to grow, and a document is always read/
+written whole) rather than normalized columns; `artifactToRow`/
+`rowToArtifact` carry it, defaulting missing values the same way
+Phase 10/12's additions did. `sovereignReconciliation.js` needed no
+changes — `reconcileArtifact` already picks a whole artifact object by
+status-priority, so `revisions` rides along with whichever side wins.
+
+`useSovereign()`'s `artifact` bundle gained `compileFromSynthesis()`
+(compiles from the current Synthesis State and dispatches it as a
+(re)draft in one call) and `exportMarkdown()` (exports the current draft),
+so a future caller doesn't need to import from `sovereign/synthesis` or
+`sovereign/artifact` directly.
+
+Verification: 18 new tests (7 schema/compiler, 5 export, 3 reducer
+revision-tracking, 2 remote-mapping/sync fixed for the new column, 1
+default-for-a-pre-Phase-14-row case). Full suite: 252/258 — same 6
+pre-existing unrelated failures, 0 introduced. `npx esbuild`
+bundle-checked all five `sovereign/*/index.js` barrels; since this phase
+touched `sovereignReducer.js`/`useSovereign.js` again, re-bundle-checked
+`VibrationModuleExperience.jsx` directly and did a headless-browser load
+of the app root and one live Hermetic Hall route — clean, same
+pre-existing sandbox network noise only.
+
+**Not attempted in this pass**: no Renderer or Editable Canvas (Phase 16);
+no PDF/hosted export (Phase 17); nothing live calls any of this yet, same
+posture as every phase since Phase 3.
+
 ## Current architecture (active today)
 
 ```

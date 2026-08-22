@@ -190,9 +190,21 @@ describe('sovereignRemoteMapping', () => {
   });
 
   it('round-trips the artifact singleton', () => {
-    const artifact = { status: 'sealed', draft: { title: 'x' }, sealedAt: '2026-01-01T00:00:00.000Z' };
+    const artifact = {
+      status: 'sealed',
+      draft: { title: 'x' },
+      revisions: [{ revisionId: 'revision-0', previousDraft: { title: 'draft 1' }, revisedAt: '2026-01-01T00:00:00.000Z' }],
+      sealedAt: '2026-01-01T00:00:00.000Z',
+    };
     const row = artifactToRow('user-1', artifact);
     expect(rowToArtifact(row)).toEqual(artifact);
+  });
+
+  it('defaults revisions to an empty array for an artifact that predates Phase 14', () => {
+    const artifact = { status: 'draft', draft: { title: 'x' }, sealedAt: null };
+    const row = artifactToRow('user-1', artifact);
+    expect(row.revisions_json).toEqual([]);
+    expect(rowToArtifact(row).revisions).toEqual([]);
   });
 
   it('rowToArtifact returns null for a missing row (no artifact created yet)', () => {

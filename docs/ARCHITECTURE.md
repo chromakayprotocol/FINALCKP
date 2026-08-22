@@ -1035,6 +1035,94 @@ step readout updated to the last section while the completion count
 correctly did not advance past what real criteria allow. Only the same
 pre-existing sandbox network noise appeared.
 
+## Phase 19: testing the system as an OS
+
+Every earlier phase's tests proved one function or one reducer case in
+isolation. This phase's guide text asks a different question — "does the
+composed system behave like an OS?" — naming five journeys verbatim
+(interruption/resume, cross-module memory, media synchronization, artifact
+synthesis, persistence failure). Rather than rendering `SovereignProvider`
+itself (there is no jsdom/testing-library anywhere in this codebase, so
+component-render tests aren't available), the new
+`frontend/src/sovereign/sovereignOSJourneys.test.js` builds each journey
+by composing the same real functions every other test file already
+trusts — the reducer, the local-persistence pair, the Supabase sync/
+reconciliation functions, and the synthesis/artifact derivations — the
+same integration-by-composition approach Phase 15's live Playwright pass
+and Phase 16's demo page used for the parts that do need a browser.
+
+**Test A — interruption/resume.** Dispatches `startReflection` +
+`updateReflection` + `extractConcepts` (deliberately stopping short of
+`commitReflection`), round-trips the resulting state through
+`savePersistedState`/`loadPersistedState` (Phase 3's local-first
+autosave), and asserts the reloaded entry is still `status: 'draft'` with
+its `candidateConcepts` intact and `retainedConcepts` still empty — an
+interrupted reflection survives as exactly what it was, not silently
+promoted to committed. A second case does the same for two modules
+started but not finished, proving persistence isn't scoped to only the
+most-recently-active module.
+
+**Test B — cross-module memory.** Starts module A, selects a concept
+there, switches the active module to B, and asserts the concept is still
+present in the global `concepts.selected` and still attributed to module
+A via `curriculum.modules['A'].selectedConcepts` (Phase 10's per-module
+scoping) — and explicitly absent from `curriculum.modules['B']
+.selectedConcepts`, not fabricated onto B just because B is now active. A
+second case confirms
+`buildSynthesisState`/`whatDidIIdentify` (Phase 13) surface that same
+concept regardless of which module is currently active, since synthesis
+reads across the whole journey, not the active module.
+
+**Test C — media synchronization.** Loads a track, selects an anchor, and
+selects a media concept, then reads `state.media.activeConcept` back and
+manually composes it into `extractConcepts`/`commitReflection`. The test
+carries an explicit comment that this composition is the caller's job —
+the runtime does not automatically fold an active media concept into a
+reflection. This is Phase 13's documented gap restated as a test: proving
+the real (missing) behavior honestly, rather than asserting an
+auto-linkage that was never built.
+
+**Test D — artifact synthesis.** The one true end-to-end run: start a
+module, walk it to the reflection gate, advance through REFLECTION,
+extract two candidate concepts, commit the reflection retaining only one
+of them, advance through PROTOCOL, execute a protocol, advance through
+ARTIFACT, compile the artifact document from `buildSynthesisState`,
+generate and seal the artifact, advance through SUMMARY. Asserts
+`isModuleComplete` is true, `artifact.status === 'sealed'`, and — the
+sharper assertion — that `artifact.draft.decisions` contains the
+retained concept and the chosen protocol but contains **nothing**
+mentioning the rejected candidate concept. Proves the compiler (Phase 14)
+actually respects the reflect → retain/reject distinction end to end,
+not just that it produces *some* decisions.
+
+**Test E — persistence failure.** Reproduces `SovereignProvider.jsx`'s
+real `runInitialSync()` failure branch exactly (`hydrate({session:
+{...state.session, syncStatus: 'error'}})` on a Supabase error, no
+reconciliation attempted) using the same `createFakeSupabase` fake used
+by `sovereignSupabaseSync.test.js`, then asserts local dispatch
+(`selectConcept`) still works after that — sync failing never blocks the
+app. A second case simulates offline local work plus a differing remote
+snapshot and runs it through the real `reconcileSovereignState` (Phase 7),
+asserting both sides' concepts survive the merge and
+`session.syncStatus` ends `'synced'`.
+
+**Also fixed in this pass**: the ARTIFACT step's comment in
+`sovereignSteps.js`, discovered stale while re-reading step criteria for
+Test D. It still said "Placeholder until Phase 14... defines the
+relationship between a per-module artifact review and the single
+cross-journey Living Artifact" — Phase 14 has since landed and
+deliberately left that relationship unchanged (one global artifact slot,
+not per-module), so the comment was rewritten to state that as settled
+fact rather than an open question.
+
+Verification: `npx vitest run src/sovereign/sovereignOSJourneys.test.js`
+— 8/8 passing on first run. Full suite: 260/266 — the same 6 pre-existing
+unrelated failures as every prior phase, 0 introduced. `npx esbuild
+--bundle` on the new test file's full dependency chain (runtime, synthesis,
+artifact, persistence, reconciliation) — clean, only the same benign
+`import.meta`/iife warnings from `services/supabase/client.js` seen on
+every previous bundle-check.
+
 ## Current architecture (active today)
 
 ```

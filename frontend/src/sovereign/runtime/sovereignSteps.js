@@ -122,10 +122,10 @@ export const SOVEREIGN_STEPS = [
     id: SOVEREIGN_STEP_IDS.ARTIFACT,
     order: 10,
     label: 'Artifact',
-    // Placeholder until Phase 14 (Artifact Compiler) defines the
-    // relationship between a per-module artifact review and the single
-    // cross-journey Living Artifact — reads the one artifact slot the
-    // runtime currently has.
+    // Phase 14 (Artifact Compiler) kept the relationship this step reads
+    // unchanged: there is one cross-journey Living Artifact, not a
+    // per-module artifact, so this step completes when that single slot
+    // has been sealed at all — not scoped to this module.
     isComplete: (ctx) => ctx.artifact.status === 'sealed',
   },
   {

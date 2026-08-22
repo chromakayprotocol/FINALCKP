@@ -1,14 +1,16 @@
 import SovereignOS from '../../components/sovereign-os/SovereignOS';
 import { useSovereign } from '../../sovereign/runtime';
+import ConceptGraphView from '../../components/sovereign-os/ConceptGraphView';
+import ScrollLinkedProgress from '../../components/sovereign-os/ScrollLinkedProgress';
 
 /**
- * A staging page for the Sovereign OS Shell (Phase 15) — not linked from
- * anywhere in the live app, reachable only at its own route
- * (/qa/sovereign-os). Exists to verify the shell actually reflects live
- * state as it changes, not just that it renders once: every button here
- * dispatches a real Sovereign Runtime action, and the shell's Module/
- * Concept/Media/Synthesis regions should update in response without the
- * shell itself re-mounting.
+ * A staging page for the Sovereign OS Shell (Phase 15) and the Visual
+ * Interaction Layer (Phase 16) — not linked from anywhere in the live
+ * app, reachable only at its own route (/qa/sovereign-os). Exists to
+ * verify these actually reflect live state as it changes, not just that
+ * they render once: every button here dispatches a real Sovereign
+ * Runtime action, and the shell's panels plus the two visual components
+ * below should update in response.
  *
  * This is deliberately not wired into any real Reclamation University
  * route — see SovereignOSShell.jsx's header comment for why that's a
@@ -67,6 +69,42 @@ function DemoWorkspace() {
         >
           Execute a protocol
         </button>
+        <button
+          type="button"
+          className="rounded-lg border border-red-500/30 px-3 py-1.5 text-xs uppercase tracking-wide text-red-200 hover:bg-red-500/10"
+          disabled={!module}
+          onClick={() => concepts.selectConcept('projection')}
+        >
+          Select &quot;projection&quot;
+        </button>
+        <button
+          type="button"
+          className="rounded-lg border border-red-500/30 px-3 py-1.5 text-xs uppercase tracking-wide text-red-200 hover:bg-red-500/10"
+          onClick={() => concepts.connectConcepts('shadow-work', 'projection', 'CAUSES')}
+        >
+          Connect shadow-work → projection (CAUSES)
+        </button>
+        <button
+          type="button"
+          className="rounded-lg border border-red-500/30 px-3 py-1.5 text-xs uppercase tracking-wide text-red-200 hover:bg-red-500/10"
+          onClick={() => concepts.mapConceptToDomain('shadow-work', 'psychology', 'cause')}
+        >
+          Map shadow-work → psychology (cause)
+        </button>
+      </div>
+
+      <div>
+        <h2 className="mb-2 text-[10px] font-semibold uppercase tracking-[0.28em] text-red-300/70">
+          Concept Graph (Phase 16)
+        </h2>
+        <ConceptGraphView />
+      </div>
+
+      <div>
+        <h2 className="mb-2 text-[10px] font-semibold uppercase tracking-[0.28em] text-red-300/70">
+          Scroll-Linked Progression (Phase 16)
+        </h2>
+        <ScrollLinkedProgress />
       </div>
     </div>
   );

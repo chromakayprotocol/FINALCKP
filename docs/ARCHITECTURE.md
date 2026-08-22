@@ -959,6 +959,82 @@ beyond the existing `SovereignModulePanel`-style dark/red Tailwind
 aesthetic (that's Phase 16's job); a real navigation beyond the seven
 Hermetic Hall modules (no non-Hall faculties, no cross-Act navigation).
 
+## Phase 16: the Visual Interaction Layer
+
+The guide lists seven elements ("SVG causal-chain animations,
+scroll-linked progression, interactive concept nodes, dynamic hover
+states, animated state transitions, visual progress, audio-reactive
+surfaces") and draws one architectural line through all of them: visuals
+must consume real runtime state (`scroll position -> current step ->
+runtime -> event -> progress`), not drive `scroll position -> CSS
+animation` in isolation. This pass built two real components covering
+five of the seven elements, added to the `/qa/sovereign-os` staging page
+from Phase 15 — chosen over attempting all seven shallowly, since a
+component that doesn't actually read/dispatch real state would just be
+the "merely animated" interface the guide is explicitly steering away
+from.
+
+**`ConceptGraphView.jsx`** (interactive concept nodes, dynamic hover
+states, SVG causal-chain animation): renders one SVG circle per
+`concepts.selected` id (no placeholder/sample nodes — an empty selection
+renders an empty state, not mock data) and one line per
+`concepts.connections` entry. A connection whose `relationship` matches
+`/cause/i` gets a red, dashed, animated stroke (a `stroke-dashoffset`
+keyframe in the new `sovereignOSVisuals.css`, disabled under
+`prefers-reduced-motion`) — a real visual distinction for a real causal
+edge, not decoration on state that doesn't exist. Hovering or clicking a
+node highlights it and its directly-connected neighbors (dimming the
+rest) and opens a detail panel reading that concept's actual Domain
+Matrix placements via Phase 11's `domainsForConcept()`.
+
+**`ScrollLinkedProgress.jsx`** (scroll-linked progression, visual
+progress, animated state transitions): the guide's diagram implemented
+literally. One section per real curriculum step
+(`sovereignSteps.js`'s `SOVEREIGN_STEPS`); an `IntersectionObserver`
+reports which section is actually in view and dispatches the *real*
+`module.advanceStep(stepId)` — the same action any other step UI would
+call — not a scroll-percentage kept in local component state. The
+progress bar's width (with a CSS `transition` so it animates rather than
+jumping) reads `module.steps`' genuine completion status, which matters:
+scrolling past a step only marks it *viewed*, so a step whose real
+criterion needs more than that (a committed reflection, a protocol
+execution, a sealed artifact — Phase 4) does **not** silently complete
+just because the user scrolled past its section. Verified live: scrolling
+straight to the last section correctly dispatched `advanceStep` for it
+(confirmed via the "currently scrolled to" readout changing), while the
+completion count stayed exactly where Phase 4's real criteria say it
+should — proof the component didn't quietly reintroduce "next is
+complete," the exact anti-pattern Phase 4 was built to rule out.
+
+**Not attempted in this pass**: **audio-reactive surfaces** — the
+runtime's `media` domain (Phase 9) tracks only `isPlaying`/`position`/
+`duration`, not frequency data; that still lives in
+`useAudioAnalyzer.js`'s own local hook, deliberately not migrated when
+`AudioVisualizerCore.jsx` was left alone in Phase 9. Building a
+"real-runtime-state-driven" audio-reactive surface would mean either
+inventing frequency state the runtime doesn't have, or building it
+against the one local hook that isn't Sovereign state — either way, the
+kind of faked-upstream-layer problem the guide's sequencing rule warns
+against, so it's left as a named gap rather than faked. **Animated state
+transitions** beyond the progress bar (e.g. a value fade when a panel's
+text changes) and a force-directed (rather than simple circular) graph
+layout are cosmetic refinement, not a new architectural point, and were
+left out to keep the phase scoped to what actually demonstrates the
+guide's real-state-vs-CSS-only distinction.
+
+Verification: `npx esbuild` bundle-checked the three new/changed files.
+Full suite: 252/258 — same 6 pre-existing unrelated failures, 0
+introduced (no new unit tests — same UI/no-jsdom rationale as Phase 15).
+Live-browser walkthrough on `/qa/sovereign-os`: confirmed the graph's
+empty state, then selected two concepts, connected them with a `CAUSES`
+relationship, and mapped one into a domain — the SVG rendered exactly 2
+node circles and 1 edge line carrying the causal animation class, and
+hovering the node surfaced its real domain mapping in the detail panel.
+Scrolled the progression container to its end and confirmed the in-view
+step readout updated to the last section while the completion count
+correctly did not advance past what real criteria allow. Only the same
+pre-existing sandbox network noise appeared.
+
 ## Current architecture (active today)
 
 ```

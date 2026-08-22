@@ -888,6 +888,77 @@ pre-existing sandbox network noise only.
 no PDF/hosted export (Phase 17); nothing live calls any of this yet, same
 posture as every phase since Phase 3.
 
+## Phase 15: the Sovereign OS Shell
+
+The first UI phase since Phase 8, and a different kind of change from
+everything built between them — Phases 9-14 were all standalone
+runtime/persistence layers with zero live consumers; this is a real,
+rendered interface. Built to the guide's structure:
+
+```
+SovereignOS
+├── Navigation
+├── Module Context
+├── Main Workspace
+├── Concept Context
+├── Media Runtime
+└── Synthesis Status
+```
+
+`frontend/src/components/sovereign-os/SovereignOSShell.jsx` renders all
+six regions and reads `useSovereign()` directly, so every region is live
+— Navigation lists the seven Hermetic Hall modules and calls
+`curriculum.startModule()`; Module Context shows the active module's
+status/step-completion/synthesis readiness; Main Workspace is a
+`children` slot; Concept Context, Media Runtime, and Synthesis Status
+read the `concepts`/`media`/`synthesis`+`artifact` bundles respectively.
+`SovereignOS.jsx` is the outer wrapper — mounts a `SovereignProvider`
+(namespaced to the signed-in user, same pattern every Phase 8 component
+uses) and renders the shell inside it, so "Shell = persistent, Module =
+contextual, State = continuous" is literally true for whatever's mounted
+as its `children`: switching modules, selecting concepts, or starting
+playback anywhere sharing that provider updates every region at once
+without the shell re-mounting.
+
+**Deliberately not wired into the live Reclamation University route
+tree.** Making the shell genuinely "survive module transitions" for the
+seven already-shipped Hermetic Hall components would mean hoisting one
+shared `SovereignProvider` above all of them and migrating every one of
+those live wrappers away from mounting their own — a cross-cutting
+routing/layout change to shipped code, categorically riskier than
+anything since Phase 8's individual persistence swaps, and it deserves
+its own scoped pass and explicit sign-off rather than folding into an
+already-large phase. Instead, verified the shell for real via a new,
+non-colliding, unlinked staging route: `/qa/sovereign-os` (added the same
+way `/qa/sovereign` already exists in this app — unauthenticated,
+reachable directly, not linked from anywhere live), rendering
+`SovereignOSDemo.jsx` — a Main Workspace with buttons that dispatch real
+actions (`startModule`, `selectConcept`, `loadTrack`+`play`,
+`executeProtocol`).
+
+Verification: `npx esbuild` bundle-checked the three new files plus
+`App.jsx` itself (with the new route wired in). Full suite: 252/258 —
+same 6 pre-existing unrelated failures, 0 introduced (no new unit tests —
+this is UI, and this codebase has never had jsdom/testing-library
+installed for component rendering, so verification here follows the same
+bundle-check + live-browser standard used for every other UI change this
+session). The live-browser check was the substantive one: loaded
+`/qa/sovereign-os`, confirmed Module Context correctly shows "No module
+active" before anything happens, then clicked through all four demo
+buttons in sequence and confirmed each one's effect showed up in its
+*own* panel — starting Mentalism updated Module Context, selecting a
+concept updated Concept Context, loading+playing a track updated Media
+Runtime, executing a protocol incremented Synthesis Status's protocol
+count from 0 to 1 — proving the shared context genuinely propagates
+across sibling components, not just that the page renders once. Only the
+same pre-existing sandbox network noise appeared.
+
+**Not attempted in this pass**: replacing or wrapping any live route with
+this shell (the deferred follow-up described above); any visual polish
+beyond the existing `SovereignModulePanel`-style dark/red Tailwind
+aesthetic (that's Phase 16's job); a real navigation beyond the seven
+Hermetic Hall modules (no non-Hall faculties, no cross-Act navigation).
+
 ## Current architecture (active today)
 
 ```

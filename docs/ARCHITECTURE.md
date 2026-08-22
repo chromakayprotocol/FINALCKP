@@ -721,6 +721,96 @@ passing tests and the existing REFLECTION_COMMITTED-via-`recordReflection`
 path mean, which is exactly the kind of breaking change this pass
 deliberately avoided.
 
+## Phase 13: the Synthesis Engine
+
+Per the guide: "only once reflections + concepts + decisions exist should
+synthesis begin" — Phases 10-12 built exactly those, so this phase adds
+**no new mutable state**. `frontend/src/sovereign/synthesis/` (a new
+top-level directory alongside `runtime/`, `events/`, `persistence/`,
+matching the guide's own naming for this as a distinct engine) is pure
+derivation over state that already exists — the same pattern
+`buildDomainMatrix()` (Phase 11) and `evaluateModuleSteps()` (Phase 4)
+already established.
+
+`buildSynthesisState(state)` collects what the guide lists — completed
+modules, reflections, selected concepts, concept relationships, protocol
+decisions, domain mappings. Two guide-listed inputs are deliberately
+**not** collected: "user declarations" (no runtime state models a
+declaration at all — that still lives entirely in
+`ReclamationModuleEngine.jsx`'s own local state, left alone in Phase 8
+since it already works) and "media references" (the media domain, Phase
+9, tracks only what's *currently* playing, not a history of a journey's
+media). Inventing that data here to check a box would be exactly the
+"downstream layer on a faked upstream one" the guide's sequencing rule
+warns against — both are real, named gaps for whichever future phase
+actually builds that state.
+
+`buildSynthesisGraph(synthesisState)` relates those pieces as nodes and
+edges rather than leaving them as five flat lists — module/concept/
+protocol/reflection nodes; `REFLECTED_IN`, `RECLAIMED`, `REJECTED`,
+`CHOSE_PROTOCOL`, the connection's own relationship type, and
+`DOMAIN_<ROLE>` edges. The `REJECTED` edge only fires for a candidate
+concept that never entered the Concept Graph via *any* path (checked
+against `concepts.selected`, not just that one reflection) — a concept
+rejected in one reflection but reclaimed via another must never show as
+rejected.
+
+The six questions from the guide are individually testable functions,
+not a generic query API:
+- `whatDidIIdentify` — every selected concept.
+- `whatPatternsDidIFind` — a concept recurring across more than one
+  Domain Matrix (domain, role) pairing. Deliberately *not* the same data
+  as relationships below (both could otherwise read `concepts.connections`
+  and give redundant answers to two different guide questions) — a
+  pattern is "the same idea keeps showing up across contexts," which the
+  Domain Matrix, not the connection graph, actually encodes.
+- `whatDidIReject` — every reflection candidate that never made it into
+  `concepts.selected` by any path.
+- `whatDidIReclaim` — concepts retained specifically through a
+  reflection's Decision stage (`commitReflection`'s `retainedConcepts`),
+  distinct from concept selection in general.
+- `whatRelationshipsDidIEstablish` — the literal `concepts.connections`
+  graph edges.
+- `whatProtocolDidIChoose` — every recorded protocol execution.
+
+Also gave real meaning to `SovereignModuleState.synthesisReadiness`, a
+field that has been declared, persisted, and round-tripped since Phase 3
+without anything ever computing or reading it. `moduleSynthesisReadiness(state,
+moduleId)` is the fraction of the 11 real steps `evaluateModuleSteps()`
+reports complete — writing this while implementing it surfaced a real
+distinction worth documenting: `module.completedSteps` (set only by the
+separate, lower-level `completeStep()` action) is **not** what
+`evaluateModuleSteps()` actually reads to determine real completion — the
+criteria-based system built in Phase 4 evaluates each step's own
+condition (viewed, a committed reflection, a protocol execution, a sealed
+artifact) directly from state, never consulting `completedSteps` at all.
+`completeStep()`/`module.completedSteps` is effectively a vestigial,
+disconnected primitive nothing in the real step-completion flow calls —
+readiness is deliberately computed from the real criteria, not that
+array, and is exposed live (`useSovereign().module.synthesisReadiness`)
+rather than written back into the stored, still-unused field.
+
+`useSovereign()`'s `synthesis` bundle now exposes `synthesisState`,
+`synthesisGraph`, and all six question functions as live computed values
+alongside the existing `executeProtocol`.
+
+Verification: 16 new tests in a new `sovereignSynthesis.test.js` covering
+readiness (including the `completedSteps`-is-ignored distinction above),
+`buildSynthesisState`'s collection (and that a merely-started module
+isn't miscounted as completed), graph edge construction (including the
+cross-reflection REJECTED/RECLAIMED non-collision case), and all six
+questions independently. Full suite: 238/244 — same 6 pre-existing
+unrelated failures, 0 introduced. `npx esbuild` bundle-checked all four
+`sovereign/*/index.js` barrels; since this phase touched `useSovereign.js`
+again, re-bundle-checked `VibrationModuleExperience.jsx` directly and did
+a headless-browser load of the app root and one live Hermetic Hall route
+— clean, same pre-existing sandbox network noise only, correctly
+redirecting to `/login`.
+
+**Not attempted in this pass**: nothing live calls any of this yet — same
+posture as every phase since Phase 3. Phase 14 (the Artifact Compiler)
+is the guide's stated next consumer of `SynthesisState`/the graph.
+
 ## Current architecture (active today)
 
 ```

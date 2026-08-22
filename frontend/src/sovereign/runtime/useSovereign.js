@@ -13,6 +13,17 @@ import {
 } from './sovereignSelectors';
 import { evaluateModuleSteps } from './sovereignSteps';
 import { buildDomainMatrix } from './sovereignDomains';
+import {
+  moduleSynthesisReadiness,
+  buildSynthesisState,
+  buildSynthesisGraph,
+  whatDidIIdentify,
+  whatPatternsDidIFind,
+  whatDidIReject,
+  whatDidIReclaim,
+  whatRelationshipsDidIEstablish,
+  whatProtocolDidIChoose,
+} from '../synthesis/sovereignSynthesis';
 
 /**
  * The one way app code reads or mutates Sovereign state. Each domain bundles
@@ -36,6 +47,7 @@ export function useSovereign() {
       module: activeModule && {
         ...activeModule,
         steps: evaluateModuleSteps(state, activeModule.moduleId),
+        synthesisReadiness: moduleSynthesisReadiness(state, activeModule.moduleId),
         advanceStep: (stepId) => actions.advanceStep(activeModule.moduleId, stepId),
         completeStep: (stepId, criteria) =>
           actions.completeStep(activeModule.moduleId, stepId, criteria),
@@ -88,6 +100,19 @@ export function useSovereign() {
         ...selectSynthesis(state),
         executeProtocol: (protocolId, payload, moduleId) =>
           actions.executeProtocol(protocolId, payload, moduleId ?? activeModule?.moduleId),
+        // The Synthesis Engine (Phase 13) — pure derivations over state
+        // that already exists, recomputed whenever state changes. See
+        // sovereign/synthesis/sovereignSynthesis.js for what each of these
+        // actually reads and why "patterns" and "relationships" are kept
+        // genuinely distinct rather than both aliasing concepts.connections.
+        synthesisState: buildSynthesisState(state),
+        synthesisGraph: buildSynthesisGraph(buildSynthesisState(state)),
+        whatDidIIdentify: whatDidIIdentify(state),
+        whatPatternsDidIFind: whatPatternsDidIFind(state),
+        whatDidIReject: whatDidIReject(state),
+        whatDidIReclaim: whatDidIReclaim(state),
+        whatRelationshipsDidIEstablish: whatRelationshipsDidIEstablish(state),
+        whatProtocolDidIChoose: whatProtocolDidIChoose(state),
       },
       artifact: {
         ...selectArtifact(state),

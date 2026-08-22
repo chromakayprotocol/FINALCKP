@@ -277,12 +277,32 @@ gap as the prior modules). Full suite: 129/134 tests pass, same 5
 pre-existing unrelated failures as before (no dedicated test file exists
 for this component).
 
-**Remaining for Phase 8**: four module engines
+**Done:** `CauseEffectModuleExperience.jsx` (Hermetic Hall Module VI) — same
+localStorage-only pattern as Polarity/Rhythm (`STORE_KEY`
+`ckp-hermetic-hall-module-6`), same fix: hydrate/save payload unchanged
+(`activeIndex`, `visited`, `engaged`, `reflection`, `reflectionSavedAt`,
+`protocolResponses`, `protocolDone`, `protocolStepIndex`,
+`artifactGenerated`, `artifact`, `draftPattern`, `draftAccepted`,
+`artifactCreatedAt`, `artifactUpdatedAt`, `dashboardSavedAt`,
+`moduleCompleted`, plus the static `moduleId`/`principleId` tags), just the
+store swapped to `useSovereign().reflection.recordReflection()` under key
+`hermetic-hall/cause-and-effect:record`. Same local-`reflection`-state
+naming collision, same fix (`sovereignReflection`).
+
+Verification: same method as Polarity/Rhythm — `npx esbuild` bundle-check,
+Vite dev server + headless Chromium load of the
+`/experiencemode/sovereign/reclamation-university/hermetic-hall/cause-and-effect`
+route correctly redirected to `/login` with no errors attributable to the
+change. Not verified: the signed-in experience (same Supabase-credentials
+gap as the prior modules). Full suite: 129/134 tests pass, same 5
+pre-existing unrelated failures as before (no dedicated test file exists
+for this component).
+
+**Remaining for Phase 8**: three module engines
 (`ReclamationModuleEngine.jsx`, `HermeticCurriculumModule.jsx`,
-`CauseEffectModuleExperience.jsx`, `GenderModuleExperience.jsx`) each have
-their own persistence pattern and bugs (see `SOVEREIGN_STATE_MAP.md` §1)
-and need the same kind of individually-scoped, individually-verified pass
-— not a bulk find/replace.
+`GenderModuleExperience.jsx`) each have their own persistence pattern and
+bugs (see `SOVEREIGN_STATE_MAP.md` §1) and need the same kind of
+individually-scoped, individually-verified pass — not a bulk find/replace.
 
 ## Current architecture (active today)
 

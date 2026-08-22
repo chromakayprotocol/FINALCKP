@@ -254,12 +254,35 @@ errors attributable to the change. Not verified: the signed-in experience
 129/134 tests pass, same 5 pre-existing unrelated failures as before (no
 dedicated test file exists for this component).
 
-**Remaining for Phase 8**: five module engines
+**Done:** `RhythmModuleExperience.jsx` (Hermetic Hall Module V) — same
+localStorage-only pattern as Polarity (`STORE_KEY`
+`ckp-hermetic-hall-module-5`), same fix: hydrate/save payload unchanged
+(`activeIndex`, `maxIndex`, `completedIds`, `reflection`,
+`reflectionSavedAt`, `protocolResponses`, `protocolDone`,
+`protocolStepIndex`, `responseKind`, `interventionPoint`,
+`artifactGenerated`, `artifact`, `patternStatement`, `artifactCreatedAt`,
+`artifactUpdatedAt`, `sevenDayPracticeStarted`, `sevenDayPracticeEntries`,
+`moduleCompleted`, plus the static `moduleId`/`principleId` tags already
+in the payload), just the store swapped to
+`useSovereign().reflection.recordReflection()` under key
+`hermetic-hall/rhythm:record`. Same local-`reflection`-state naming
+collision as Polarity, same fix (`sovereignReflection`).
+
+Verification: same method as Polarity — `npx esbuild` bundle-check, Vite
+dev server + headless Chromium load of the
+`/experiencemode/sovereign/reclamation-university/hermetic-hall/rhythm`
+route correctly redirected to `/login` with no errors attributable to the
+change. Not verified: the signed-in experience (same Supabase-credentials
+gap as the prior modules). Full suite: 129/134 tests pass, same 5
+pre-existing unrelated failures as before (no dedicated test file exists
+for this component).
+
+**Remaining for Phase 8**: four module engines
 (`ReclamationModuleEngine.jsx`, `HermeticCurriculumModule.jsx`,
-`RhythmModuleExperience.jsx`, `CauseEffectModuleExperience.jsx`,
-`GenderModuleExperience.jsx`) each have their own persistence pattern and
-bugs (see `SOVEREIGN_STATE_MAP.md` §1) and need the same kind of
-individually-scoped, individually-verified pass — not a bulk find/replace.
+`CauseEffectModuleExperience.jsx`, `GenderModuleExperience.jsx`) each have
+their own persistence pattern and bugs (see `SOVEREIGN_STATE_MAP.md` §1)
+and need the same kind of individually-scoped, individually-verified pass
+— not a bulk find/replace.
 
 ## Current architecture (active today)
 

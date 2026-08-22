@@ -298,11 +298,40 @@ gap as the prior modules). Full suite: 129/134 tests pass, same 5
 pre-existing unrelated failures as before (no dedicated test file exists
 for this component).
 
-**Remaining for Phase 8**: three module engines
-(`ReclamationModuleEngine.jsx`, `HermeticCurriculumModule.jsx`,
-`GenderModuleExperience.jsx`) each have their own persistence pattern and
-bugs (see `SOVEREIGN_STATE_MAP.md` §1) and need the same kind of
-individually-scoped, individually-verified pass — not a bulk find/replace.
+**Done:** `GenderModuleExperience.jsx` (Hermetic Hall Module VII, the final
+principle) — same localStorage-only pattern as Polarity/Rhythm/Cause &
+Effect (`STORE_KEY` `ckp-hermetic-hall-module-7`), same fix: hydrate/save
+payload unchanged (`activeIndex`, `visited`, `engaged`, `reflection`,
+`reflectionSavedAt`, `protocolResponses`, `protocolDone`,
+`protocolStepIndex`, `artifactGenerated`, `artifact`, `artifactCreatedAt`,
+`artifactUpdatedAt`, `dashboardSavedAt`, `moduleCompleted`, plus the static
+`moduleId`/`principleId` tags), just the store swapped to
+`useSovereign().reflection.recordReflection()` under key
+`hermetic-hall/gender:record`. Same local-`reflection`-state naming
+collision, same fix (`sovereignReflection`).
+
+Verification: same method as the prior three — `npx esbuild` bundle-check,
+Vite dev server + headless Chromium load of the
+`/experiencemode/sovereign/reclamation-university/hermetic-hall/gender`
+route correctly redirected to `/login` with no errors attributable to the
+change. Not verified: the signed-in experience (same Supabase-credentials
+gap as the prior modules). Full suite: 129/134 tests pass, same 5
+pre-existing unrelated failures as before (no dedicated test file exists
+for this component).
+
+This completes all seven Hermetic Hall module engines (Mentalism through
+Gender) — every one now persists through the Sovereign Runtime's
+local+remote sync instead of localStorage-only or no persistence at all.
+
+**Remaining for Phase 8**: two components outside the seven-principle
+sequence — `ReclamationModuleEngine.jsx` (the persistence engine for
+non-Hermetic-Hall faculties, which already talks to Supabase directly via
+`saveUserProgress`/`loadUserProgress` rather than being broken, so this
+would be a structural migration onto the runtime's typed domains rather
+than a bug fix) and `HermeticCurriculumModule.jsx` (a different,
+non-standard persistence shape within Hermetic Hall itself, per
+`SOVEREIGN_STATE_MAP.md` §1) — each still needs its own scoped,
+individually-verified pass.
 
 ## Current architecture (active today)
 

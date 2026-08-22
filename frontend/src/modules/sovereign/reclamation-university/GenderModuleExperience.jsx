@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import useFooterOffset from "./useFooterOffset";
 import { ArrowRight, LayoutDashboard, Pencil, Download, FileDown } from "lucide-react";
@@ -6,6 +6,8 @@ import jsPDF from "jspdf";
 import CurriculumSpine from "./CurriculumSpine";
 import ReclamationLessonMedia from "./ReclamationLessonMedia";
 import { CURRICULUM_SECTIONS } from "./curriculumSections";
+import { useAuth } from "../../../context/AuthContext";
+import { SovereignProvider, useSovereign } from "../../../sovereign/runtime";
 import {
   GENDER_META, PRINCIPLES, CURRENT_STATES, INTRO_CONTENT, PRINCIPLE_CONTENT, KEY_CONCEPTS,
   WHY_IT_MATTERS, DOMAINS, RECLAMATION_CONTENT, LENS_LEDE, LENS, REFLECTION_CONTENT,
@@ -15,7 +17,7 @@ import {
 import "./curriculumSpine.css";
 import "./genderModuleExperience.css";
 
-const STORE_KEY = "ckp-hermetic-hall-module-7";
+const MODULE_ID = "hermetic-hall/gender";
 
 const PRIMARY_ACTION = {
   intro: "Continue to Principle",
@@ -58,8 +60,26 @@ const ARTIFACT_REQUIREMENTS = [
 
 const MIN_REFLECTION_CHARS = 80;
 
-export default function GenderModuleExperience({ faculty, onComplete }) {
+/* Persistence (Phase 8 of the Sovereign OS migration, docs/ARCHITECTURE.md):
+   this module previously persisted only to localStorage (STORE_KEY
+   "ckp-hermetic-hall-module-7"), so progress never reached the server and
+   was lost on a new device or cleared storage (SOVEREIGN_STATE_MAP.md §1).
+   Routes the same payload through the Sovereign Runtime's local+remote
+   sync instead — the hydrate/save shape below is otherwise unchanged from
+   the localStorage version. */
+export default function GenderModuleExperience(props) {
+  const { user } = useAuth();
+  const namespace = user?.id || "anonymous";
+  return (
+    <SovereignProvider namespace={namespace} userId={user?.id}>
+      <GenderModuleExperienceInner {...props} />
+    </SovereignProvider>
+  );
+}
+
+function GenderModuleExperienceInner({ faculty, onComplete }) {
   const navigate = useNavigate();
+  const { reflection: sovereignReflection, session } = useSovereign();
   const [activeIndex, setActiveIndex] = useState(0);
   const [visited, setVisited] = useState(["intro"]);
   const [engaged, setEngaged] = useState([]);
@@ -92,29 +112,33 @@ export default function GenderModuleExperience({ faculty, onComplete }) {
   const [ceremonyPlaying, setCeremonyPlaying] = useState(false);
 
   /* -------------------------------------------------------- PERSISTENCE -- */
-  useEffect(() => {
-    try {
-      const raw = window.localStorage.getItem(STORE_KEY);
-      if (raw) {
-        const d = JSON.parse(raw);
-        if (d.activeIndex != null) setActiveIndex(d.activeIndex);
-        if (Array.isArray(d.visited)) setVisited(d.visited);
-        if (Array.isArray(d.engaged)) setEngaged(d.engaged);
-        if (d.reflection != null) setReflection(d.reflection);
-        if (d.reflectionSavedAt != null) setReflectionSavedAt(d.reflectionSavedAt);
-        if (d.protocolResponses) setProtocolResponses({ ...EMPTY_PROTOCOL, ...d.protocolResponses });
-        if (Array.isArray(d.protocolDone)) setProtocolDone(d.protocolDone);
-        if (d.protocolStepIndex != null) setProtocolStepIndex(d.protocolStepIndex);
-        if (d.artifactGenerated) setArtifactGenerated(true);
-        if (d.artifact) setArtifact({ ...EMPTY_ARTIFACT, ...d.artifact });
-        if (d.artifactCreatedAt != null) setArtifactCreatedAt(d.artifactCreatedAt);
-        if (d.artifactUpdatedAt != null) setArtifactUpdatedAt(d.artifactUpdatedAt);
-        if (d.dashboardSavedAt != null) setDashboardSavedAt(d.dashboardSavedAt);
-        if (d.moduleCompleted) setModuleCompleted(true);
-      }
-    } catch (e) { /* private mode or disabled storage */ }
-    setHydrated(true);
+  const applyRecord = useCallback((d) => {
+    if (!d) return;
+    if (d.activeIndex != null) setActiveIndex(d.activeIndex);
+    if (Array.isArray(d.visited)) setVisited(d.visited);
+    if (Array.isArray(d.engaged)) setEngaged(d.engaged);
+    if (d.reflection != null) setReflection(d.reflection);
+    if (d.reflectionSavedAt != null) setReflectionSavedAt(d.reflectionSavedAt);
+    if (d.protocolResponses) setProtocolResponses({ ...EMPTY_PROTOCOL, ...d.protocolResponses });
+    if (Array.isArray(d.protocolDone)) setProtocolDone(d.protocolDone);
+    if (d.protocolStepIndex != null) setProtocolStepIndex(d.protocolStepIndex);
+    if (d.artifactGenerated) setArtifactGenerated(true);
+    if (d.artifact) setArtifact({ ...EMPTY_ARTIFACT, ...d.artifact });
+    if (d.artifactCreatedAt != null) setArtifactCreatedAt(d.artifactCreatedAt);
+    if (d.artifactUpdatedAt != null) setArtifactUpdatedAt(d.artifactUpdatedAt);
+    if (d.dashboardSavedAt != null) setDashboardSavedAt(d.dashboardSavedAt);
+    if (d.moduleCompleted) setModuleCompleted(true);
   }, []);
+
+  const appliedSyncStatusRef = useRef(null);
+  useEffect(() => {
+    if (session.syncStatus === "syncing") return;
+    if (appliedSyncStatusRef.current === session.syncStatus) return;
+    appliedSyncStatusRef.current = session.syncStatus;
+    const record = sovereignReflection.entries[`${MODULE_ID}:record`]?.response ?? null;
+    applyRecord(record);
+    setHydrated(true);
+  }, [session.syncStatus, sovereignReflection, applyRecord]);
 
   useEffect(() => {
     if (!hydrated) return;
@@ -125,7 +149,11 @@ export default function GenderModuleExperience({ faculty, onComplete }) {
       artifactGenerated, artifact, artifactCreatedAt, artifactUpdatedAt,
       dashboardSavedAt, moduleCompleted,
     };
-    try { window.localStorage.setItem(STORE_KEY, JSON.stringify(payload)); } catch (e) { /* ignore */ }
+    const t = setTimeout(() => {
+      sovereignReflection.recordReflection(MODULE_ID, "record", payload);
+    }, 800);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hydrated, activeIndex, visited, engaged, reflection, reflectionSavedAt, protocolResponses,
       protocolDone, protocolStepIndex, artifactGenerated, artifact, artifactCreatedAt,
       artifactUpdatedAt, dashboardSavedAt, moduleCompleted]);

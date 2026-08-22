@@ -227,13 +227,39 @@ change. Not verified: the signed-in experience (same Supabase-credentials
 gap as Vibration). Full suite: 103/108 tests pass, same 5 pre-existing
 unrelated failures as before.
 
-**Remaining for Phase 8**: six module engines
+**Done:** `PolarityModuleExperience.jsx` (Hermetic Hall Module IV) — this
+was localStorage-only (key `ckp-hermetic-hall-module-4`): progress reached
+the browser's storage but never the server, so it never synced across
+devices and was lost with cleared site data. The hydrate/save payload
+shape (`activeIndex`, `maxIndex`, `completedIds`, `reflection`,
+`reflectionSavedAt`, `protocolResponses`, `protocolDone`,
+`protocolStepIndex`, `artifactGenerated`, `artifact`, `artifactSituation`,
+`patternStatement`, `artifactCreatedAt`, `artifactUpdatedAt`,
+`moduleCompleted`) is unchanged from the localStorage version — only the
+underlying store changed, from `window.localStorage` to
+`useSovereign().reflection.recordReflection()` under key
+`hermetic-hall/polarity:record`. Same wrapper/hydrate-guard/800ms-debounce
+pattern as Vibration and Mentalism/Correspondence. One naming wrinkle
+worth flagging for the remaining modules: this component already had its
+own local `reflection` state (the reflection-textarea string), which
+collides with the runtime's `useSovereign().reflection` domain — resolved
+by destructuring it as `sovereignReflection`.
+
+Verification: same method as the prior two — `npx esbuild` bundle-check
+(no naming-collision or syntax errors), Vite dev server + headless
+Chromium load of the `/experiencemode/sovereign/reclamation-university/
+hermetic-hall/polarity` route correctly redirected to `/login` with no
+errors attributable to the change. Not verified: the signed-in experience
+(same Supabase-credentials gap as the prior two modules). Full suite:
+129/134 tests pass, same 5 pre-existing unrelated failures as before (no
+dedicated test file exists for this component).
+
+**Remaining for Phase 8**: five module engines
 (`ReclamationModuleEngine.jsx`, `HermeticCurriculumModule.jsx`,
-`PolarityModuleExperience.jsx`, `RhythmModuleExperience.jsx`,
-`CauseEffectModuleExperience.jsx`, `GenderModuleExperience.jsx`) each have
-their own persistence pattern and bugs (see `SOVEREIGN_STATE_MAP.md` §1) and
-need the same kind of individually-scoped, individually-verified pass — not
-a bulk find/replace.
+`RhythmModuleExperience.jsx`, `CauseEffectModuleExperience.jsx`,
+`GenderModuleExperience.jsx`) each have their own persistence pattern and
+bugs (see `SOVEREIGN_STATE_MAP.md` §1) and need the same kind of
+individually-scoped, individually-verified pass — not a bulk find/replace.
 
 ## Current architecture (active today)
 

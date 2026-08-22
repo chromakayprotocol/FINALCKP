@@ -132,6 +132,56 @@ export function sovereignReducer(state, action) {
       };
     }
 
+    case SOVEREIGN_ACTION_TYPES.LOAD_TRACK: {
+      const { trackId } = action.payload;
+      return {
+        ...state,
+        media: {
+          ...state.media,
+          currentTrackId: trackId,
+          position: 0,
+          duration: 0,
+          isPlaying: false,
+        },
+      };
+    }
+
+    case SOVEREIGN_ACTION_TYPES.PLAY: {
+      // Nothing to play without a loaded track — same invariant as
+      // sealArtifact() no-oping without a draft.
+      if (!state.media.currentTrackId) return state;
+      return { ...state, media: { ...state.media, isPlaying: true } };
+    }
+
+    case SOVEREIGN_ACTION_TYPES.PAUSE: {
+      return { ...state, media: { ...state.media, isPlaying: false } };
+    }
+
+    case SOVEREIGN_ACTION_TYPES.SEEK: {
+      return { ...state, media: { ...state.media, position: action.payload.position } };
+    }
+
+    case SOVEREIGN_ACTION_TYPES.ADVANCE_POSITION: {
+      return { ...state, media: { ...state.media, position: action.payload.position } };
+    }
+
+    case SOVEREIGN_ACTION_TYPES.SET_DURATION: {
+      return { ...state, media: { ...state.media, duration: action.payload.duration } };
+    }
+
+    case SOVEREIGN_ACTION_TYPES.SET_VOLUME: {
+      const volume = Math.max(0, Math.min(1, Number(action.payload.volume) || 0));
+      return { ...state, media: { ...state.media, volume } };
+    }
+
+    case SOVEREIGN_ACTION_TYPES.SELECT_ANCHOR: {
+      return { ...state, media: { ...state.media, activeAnchor: action.payload.anchorKey } };
+    }
+
+    case SOVEREIGN_ACTION_TYPES.SELECT_MEDIA_CONCEPT: {
+      return { ...state, media: { ...state.media, activeConcept: action.payload.conceptId } };
+    }
+
     default:
       return state;
   }

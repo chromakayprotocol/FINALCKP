@@ -13,6 +13,15 @@ import {
   sealArtifact,
   setIdentity,
   hydrate,
+  loadTrack,
+  play,
+  pause,
+  seek,
+  advancePosition,
+  setDuration,
+  setVolume,
+  selectAnchor,
+  selectMediaConcept,
 } from './sovereignActions';
 
 describe('sovereignReducer', () => {
@@ -120,5 +129,63 @@ describe('sovereignReducer', () => {
     const state = sovereignReducer(initial, { type: 'not/a/real/action', payload: {} });
 
     expect(state).toBe(initial);
+  });
+
+  it('loading a track resets position/duration and does not auto-play', () => {
+    let state = sovereignReducer(createInitialState(), loadTrack('track-1'));
+    state = sovereignReducer(state, seek(42));
+    state = sovereignReducer(state, loadTrack('track-2'));
+
+    expect(state.media.currentTrackId).toBe('track-2');
+    expect(state.media.position).toBe(0);
+    expect(state.media.duration).toBe(0);
+    expect(state.media.isPlaying).toBe(false);
+  });
+
+  it('cannot play without a loaded track', () => {
+    const state = sovereignReducer(createInitialState(), play());
+
+    expect(state.media.isPlaying).toBe(false);
+  });
+
+  it('plays and pauses a loaded track', () => {
+    let state = sovereignReducer(createInitialState(), loadTrack('track-1'));
+    state = sovereignReducer(state, play());
+    expect(state.media.isPlaying).toBe(true);
+
+    state = sovereignReducer(state, pause());
+    expect(state.media.isPlaying).toBe(false);
+  });
+
+  it('seek and advancePosition both set position, independent of playback state', () => {
+    let state = sovereignReducer(createInitialState(), loadTrack('track-1'));
+    state = sovereignReducer(state, seek(30));
+    expect(state.media.position).toBe(30);
+
+    state = sovereignReducer(state, advancePosition(31.5));
+    expect(state.media.position).toBe(31.5);
+  });
+
+  it('learns duration independently of position', () => {
+    const state = sovereignReducer(createInitialState(), setDuration(184.2));
+
+    expect(state.media.duration).toBe(184.2);
+  });
+
+  it('clamps volume to the 0-1 range', () => {
+    let state = sovereignReducer(createInitialState(), setVolume(1.4));
+    expect(state.media.volume).toBe(1);
+
+    state = sovereignReducer(state, setVolume(-0.5));
+    expect(state.media.volume).toBe(0);
+  });
+
+  it('tracks the active lyric anchor and media concept independently of the concept graph selection', () => {
+    let state = sovereignReducer(createInitialState(), selectAnchor('anchor-3'));
+    state = sovereignReducer(state, selectMediaConcept('shadow-work'));
+
+    expect(state.media.activeAnchor).toBe('anchor-3');
+    expect(state.media.activeConcept).toBe('shadow-work');
+    expect(state.concepts.selected).toEqual([]);
   });
 });

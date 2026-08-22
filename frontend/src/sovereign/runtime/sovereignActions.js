@@ -18,6 +18,15 @@ export const SOVEREIGN_ACTION_TYPES = Object.freeze({
   EXECUTE_PROTOCOL: 'sovereign/executeProtocol',
   GENERATE_ARTIFACT: 'sovereign/generateArtifact',
   SEAL_ARTIFACT: 'sovereign/sealArtifact',
+  LOAD_TRACK: 'sovereign/loadTrack',
+  PLAY: 'sovereign/play',
+  PAUSE: 'sovereign/pause',
+  SEEK: 'sovereign/seek',
+  ADVANCE_POSITION: 'sovereign/advancePosition',
+  SET_DURATION: 'sovereign/setDuration',
+  SET_VOLUME: 'sovereign/setVolume',
+  SELECT_ANCHOR: 'sovereign/selectAnchor',
+  SELECT_MEDIA_CONCEPT: 'sovereign/selectMediaConcept',
 });
 
 function withMeta(type, payload = {}) {
@@ -58,3 +67,34 @@ export const generateArtifact = (draft) =>
   withMeta(SOVEREIGN_ACTION_TYPES.GENERATE_ARTIFACT, { draft });
 
 export const sealArtifact = () => withMeta(SOVEREIGN_ACTION_TYPES.SEAL_ARTIFACT);
+
+/* Media Runtime (Phase 9) — the single owner of "what's playing" state.
+   These describe *what happened*, not how a particular player UI got
+   there: loadTrack() swaps the active track (resetting position/duration,
+   same as a new `<audio src>` would), play()/pause() toggle playback,
+   seek() is a discrete user jump (distinct from the continuous
+   advancePosition() ticks a playing track emits every frame — only seek
+   is event-worthy). selectAnchor()/selectMediaConcept() track which lyric
+   anchor or concept is "live" for whatever's currently playing, for the
+   Concept Graph (Phase 10) to consume later. */
+export const loadTrack = (trackId) => withMeta(SOVEREIGN_ACTION_TYPES.LOAD_TRACK, { trackId });
+
+export const play = () => withMeta(SOVEREIGN_ACTION_TYPES.PLAY);
+
+export const pause = () => withMeta(SOVEREIGN_ACTION_TYPES.PAUSE);
+
+export const seek = (position) => withMeta(SOVEREIGN_ACTION_TYPES.SEEK, { position });
+
+export const advancePosition = (position) =>
+  withMeta(SOVEREIGN_ACTION_TYPES.ADVANCE_POSITION, { position });
+
+export const setDuration = (duration) =>
+  withMeta(SOVEREIGN_ACTION_TYPES.SET_DURATION, { duration });
+
+export const setVolume = (volume) => withMeta(SOVEREIGN_ACTION_TYPES.SET_VOLUME, { volume });
+
+export const selectAnchor = (anchorKey) =>
+  withMeta(SOVEREIGN_ACTION_TYPES.SELECT_ANCHOR, { anchorKey });
+
+export const selectMediaConcept = (conceptId) =>
+  withMeta(SOVEREIGN_ACTION_TYPES.SELECT_MEDIA_CONCEPT, { conceptId });

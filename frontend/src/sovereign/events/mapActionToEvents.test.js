@@ -10,6 +10,14 @@ import {
   executeProtocol,
   generateArtifact,
   sealArtifact,
+  loadTrack,
+  play,
+  pause,
+  seek,
+  advancePosition,
+  setDuration,
+  setVolume,
+  selectAnchor,
 } from '../runtime/sovereignActions';
 import { SOVEREIGN_STEP_IDS } from '../runtime/sovereignSteps';
 import { mapActionToEvents } from './mapActionToEvents';
@@ -157,5 +165,63 @@ describe('mapActionToEvents', () => {
 
     const connected = dispatchAndMap(selected.nextState, connectConcepts('a', 'b', 'CAUSES'));
     expect(types(connected.events)).toEqual([SOVEREIGN_EVENT_TYPES.CONCEPT_CONNECTED]);
+  });
+
+  it('play() emits MEDIA_STARTED only on the real not-playing -> playing transition', () => {
+    let state = createInitialState();
+    ({ nextState: state } = dispatchAndMap(state, loadTrack('track-1')));
+
+    const started = dispatchAndMap(state, play());
+    expect(types(started.events)).toEqual([SOVEREIGN_EVENT_TYPES.MEDIA_STARTED]);
+    expect(started.events[0].payload).toEqual({ trackId: 'track-1' });
+
+    // Calling play() again while already playing must not re-fire it.
+    const playedAgain = dispatchAndMap(started.nextState, play());
+    expect(types(playedAgain.events)).toEqual([]);
+  });
+
+  it('play() without a loaded track is a reducer no-op and emits nothing', () => {
+    const { events } = dispatchAndMap(createInitialState(), play());
+    expect(events).toEqual([]);
+  });
+
+  it('pause() emits MEDIA_PAUSED only on the real playing -> not-playing transition', () => {
+    let state = createInitialState();
+    ({ nextState: state } = dispatchAndMap(state, loadTrack('track-1')));
+    ({ nextState: state } = dispatchAndMap(state, play()));
+
+    const paused = dispatchAndMap(state, pause());
+    expect(types(paused.events)).toEqual([SOVEREIGN_EVENT_TYPES.MEDIA_PAUSED]);
+
+    // Already paused — pausing again must not re-fire it.
+    const pausedAgain = dispatchAndMap(paused.nextState, pause());
+    expect(types(pausedAgain.events)).toEqual([]);
+  });
+
+  it('seek() always emits MEDIA_SEEKED with the target position', () => {
+    let state = createInitialState();
+    ({ nextState: state } = dispatchAndMap(state, loadTrack('track-1')));
+
+    const { events } = dispatchAndMap(state, seek(42));
+    expect(types(events)).toEqual([SOVEREIGN_EVENT_TYPES.MEDIA_SEEKED]);
+    expect(events[0].payload).toEqual({ trackId: 'track-1', position: 42 });
+  });
+
+  it('selectAnchor() emits LYRIC_ANCHOR_SELECTED', () => {
+    let state = createInitialState();
+    ({ nextState: state } = dispatchAndMap(state, loadTrack('track-1')));
+
+    const { events } = dispatchAndMap(state, selectAnchor('anchor-3'));
+    expect(types(events)).toEqual([SOVEREIGN_EVENT_TYPES.LYRIC_ANCHOR_SELECTED]);
+    expect(events[0].payload).toEqual({ trackId: 'track-1', anchorKey: 'anchor-3' });
+  });
+
+  it('continuous position/duration/volume updates emit nothing', () => {
+    let state = createInitialState();
+    ({ nextState: state } = dispatchAndMap(state, loadTrack('track-1')));
+
+    expect(types(dispatchAndMap(state, advancePosition(10)).events)).toEqual([]);
+    expect(types(dispatchAndMap(state, setDuration(180)).events)).toEqual([]);
+    expect(types(dispatchAndMap(state, setVolume(0.5)).events)).toEqual([]);
   });
 });

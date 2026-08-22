@@ -202,6 +202,15 @@ export function SovereignProvider({
         dispatchAction(actions.executeProtocol(protocolId, payload, moduleId)),
       generateArtifact: (draft) => dispatchAction(actions.generateArtifact(draft)),
       sealArtifact: () => dispatchAction(actions.sealArtifact()),
+      loadTrack: (trackId) => dispatchAction(actions.loadTrack(trackId)),
+      play: () => dispatchAction(actions.play()),
+      pause: () => dispatchAction(actions.pause()),
+      seek: (position) => dispatchAction(actions.seek(position)),
+      advancePosition: (position) => dispatchAction(actions.advancePosition(position)),
+      setDuration: (duration) => dispatchAction(actions.setDuration(duration)),
+      setVolume: (volume) => dispatchAction(actions.setVolume(volume)),
+      selectAnchor: (anchorKey) => dispatchAction(actions.selectAnchor(anchorKey)),
+      selectMediaConcept: (conceptId) => dispatchAction(actions.selectMediaConcept(conceptId)),
     };
   }, [dispatchAction]);
 

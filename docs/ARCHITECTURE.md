@@ -369,6 +369,68 @@ already have working Supabase persistence and were deliberately left
 alone rather than rewritten for architectural consistency alone — that's
 future work, not a Phase 8 bug fix.
 
+## Phase 9 (in progress): Media Runtime
+
+Per `SOVEREIGN_STATE_MAP.md` §8, audio playback today is two fully
+independent, non-communicating stacks: `context/audioprovider.jsx`
+(`AudioProvider`/`useAudio`, one consumer — `ReclamationCodex.jsx`) and
+`modules/sovereign/AudioVisualizerCore.jsx` (its own separate `<audio>`
+element, `useState`, and the only place `lib/audio/useAudioAnalyzer.js`'s
+`AnalyserNode` gets instantiated). Neither persists across reload, and
+nothing stops both from playing concurrently if both are mounted.
+
+This pass built out the runtime's `media` domain — state shape for it
+already existed in `sovereignState.js` since Phase 3, but had zero actions
+or reducer cases, so it was pure dead scaffolding until now — following
+the same "build the layer standalone, verify with tests, wire into live
+code as a separate later pass" sequencing used for Phases 3-7 before
+Phase 8 touched live components:
+
+- **Actions** (`sovereignActions.js`): `loadTrack(trackId)` (swaps the
+  active track, resetting `position`/`duration`, mirroring what a new
+  `<audio src>` does — does not auto-play), `play()`/`pause()` (no-op
+  without a loaded track, same invariant as `sealArtifact()` without a
+  draft), `seek(position)` (a discrete user jump), `advancePosition(position)`
+  (the continuous per-frame tick a playing track emits — kept distinct
+  from `seek` because only a discrete jump is event-worthy),
+  `setDuration(duration)`, `setVolume(volume)` (clamped 0-1),
+  `selectAnchor(anchorKey)`/`selectMediaConcept(conceptId)` (which lyric
+  anchor/concept is "live" for whatever's playing — for the Concept Graph,
+  Phase 10, to consume later).
+- **Reducer** (`sovereignReducer.js`): one case per action above, all pure
+  state transitions against `state.media`.
+- **Events** (Phase 6's event bus): `MEDIA_STARTED`/`MEDIA_PAUSED` now
+  wired to `play()`/`pause()`, firing only on a real playing-state
+  transition (not on redundant repeat calls); `MEDIA_SEEKED` wired to
+  `seek()`; `LYRIC_ANCHOR_SELECTED` wired to `selectAnchor()`. These four
+  event types existed in `eventTypes.js` since Phase 6, marked "pending
+  Phase 9" — now marked wired. `advancePosition`/`setDuration`/`setVolume`/
+  `selectMediaConcept` intentionally emit nothing (continuous or
+  not-yet-reserved an event type), consistent with the rest of the event
+  taxonomy only covering meaningful transitions.
+- **`useSovereign()`**: the `media` domain now bundles the state slice
+  with all nine bound actions, same pattern as every other domain.
+
+Verification: 13 new tests (8 reducer, 5 event-mapping) covering the
+no-op-without-a-track guards, the playing-state-transition-only event
+firing, volume clamping, and that `activeConcept`/`activeAnchor` are
+independent of the Concept Graph's own `concepts.selected` array. Full
+suite: 187/193 tests pass — same 6 pre-existing failures as before
+(confirmed via `git stash`/`git stash pop` against the base commit),
+0 introduced. `npx esbuild` bundle-checked all three `sovereign/*/index.js`
+barrels.
+
+**Not done in this pass, deliberately**: nothing in the live app
+dispatches these actions yet. `AudioProvider` and `AudioVisualizerCore.jsx`
+still own their playback state independently, and `useAudioAnalyzer` is
+still only ever instantiated against `AudioVisualizerCore`'s own element.
+Wiring either or both of them to become consumers of the runtime — and
+deciding what happens to the second, fully independent `<audio>` element
+in `AudioVisualizerCore.jsx` — is a live-code change with real playback-UX
+risk (unlike Phase 8's persistence-layer swaps, this touches what the user
+actually hears), so it's being treated as its own scoped increment rather
+than folded into this one.
+
 ## Current architecture (active today)
 
 ```

@@ -39,7 +39,18 @@ export function useSovereign() {
         completeStep: (stepId, criteria) =>
           actions.completeStep(activeModule.moduleId, stepId, criteria),
       },
-      media: selectMedia(state),
+      media: {
+        ...selectMedia(state),
+        loadTrack: actions.loadTrack,
+        play: actions.play,
+        pause: actions.pause,
+        seek: actions.seek,
+        advancePosition: actions.advancePosition,
+        setDuration: actions.setDuration,
+        setVolume: actions.setVolume,
+        selectAnchor: actions.selectAnchor,
+        selectMediaConcept: actions.selectMediaConcept,
+      },
       reflection: { ...selectReflection(state), recordReflection: actions.recordReflection },
       concepts: {
         ...selectConcepts(state),

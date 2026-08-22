@@ -109,6 +109,43 @@ export function mapActionToEvents(action, { prevState, nextState }) {
       break;
     }
 
+    case SOVEREIGN_ACTION_TYPES.PLAY: {
+      // play() is a no-op in the reducer without a loaded track, and a
+      // repeat play() while already playing shouldn't re-announce — only
+      // emit on a real not-playing -> playing transition.
+      if (nextState.media.isPlaying && !prevState.media.isPlaying) {
+        push(SOVEREIGN_EVENT_TYPES.MEDIA_STARTED, {
+          trackId: nextState.media.currentTrackId,
+        });
+      }
+      break;
+    }
+
+    case SOVEREIGN_ACTION_TYPES.PAUSE: {
+      if (!nextState.media.isPlaying && prevState.media.isPlaying) {
+        push(SOVEREIGN_EVENT_TYPES.MEDIA_PAUSED, {
+          trackId: nextState.media.currentTrackId,
+        });
+      }
+      break;
+    }
+
+    case SOVEREIGN_ACTION_TYPES.SEEK: {
+      push(SOVEREIGN_EVENT_TYPES.MEDIA_SEEKED, {
+        trackId: nextState.media.currentTrackId,
+        position: action.payload.position,
+      });
+      break;
+    }
+
+    case SOVEREIGN_ACTION_TYPES.SELECT_ANCHOR: {
+      push(SOVEREIGN_EVENT_TYPES.LYRIC_ANCHOR_SELECTED, {
+        trackId: nextState.media.currentTrackId,
+        anchorKey: action.payload.anchorKey,
+      });
+      break;
+    }
+
     default:
       break;
   }

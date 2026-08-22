@@ -2,11 +2,17 @@
  * The Sovereign event taxonomy (Phase 6 of the Sovereign OS migration).
  *
  * Not every event below is emitted yet — several depend on runtime pieces
- * later phases haven't built (the Media Runtime in Phase 9, the Concept
- * Graph in Phase 10, the richer reflection lifecycle in Phase 12). Each one
- * is commented with whether it's wired to a real action today via
- * mapActionToEvents.js, so it's obvious what a consumer can actually rely
- * on right now versus what's reserved for a later phase.
+ * later phases haven't built (the Concept Graph in Phase 10, the richer
+ * reflection lifecycle in Phase 12). Each one is commented with whether
+ * it's wired to a real action today via mapActionToEvents.js, so it's
+ * obvious what a consumer can actually rely on right now versus what's
+ * reserved for a later phase.
+ *
+ * The Media Runtime's actions/reducer/events (Phase 9) are wired as of
+ * this comment, but nothing in the live app dispatches them yet — the two
+ * existing audio stacks (context/audioprovider.jsx,
+ * modules/sovereign/AudioVisualizerCore.jsx) still own their playback
+ * state independently. See docs/ARCHITECTURE.md's Phase 9 section.
  */
 export const SOVEREIGN_EVENT_TYPES = Object.freeze({
   MODULE_ENTERED: 'MODULE_ENTERED', // wired: startModule()
@@ -17,10 +23,10 @@ export const SOVEREIGN_EVENT_TYPES = Object.freeze({
   CONCEPT_SELECTED: 'CONCEPT_SELECTED', // wired: selectConcept()
   CONCEPT_CONNECTED: 'CONCEPT_CONNECTED', // wired: connectConcepts()
 
-  MEDIA_STARTED: 'MEDIA_STARTED', // pending Phase 9 — media domain has no actions yet
-  MEDIA_PAUSED: 'MEDIA_PAUSED', // pending Phase 9
-  MEDIA_SEEKED: 'MEDIA_SEEKED', // pending Phase 9
-  LYRIC_ANCHOR_SELECTED: 'LYRIC_ANCHOR_SELECTED', // pending Phase 9
+  MEDIA_STARTED: 'MEDIA_STARTED', // wired: play(), only on a real not-playing -> playing transition
+  MEDIA_PAUSED: 'MEDIA_PAUSED', // wired: pause(), only on a real playing -> not-playing transition
+  MEDIA_SEEKED: 'MEDIA_SEEKED', // wired: seek()
+  LYRIC_ANCHOR_SELECTED: 'LYRIC_ANCHOR_SELECTED', // wired: selectAnchor()
 
   REFLECTION_STARTED: 'REFLECTION_STARTED', // pending Phase 12 — recordReflection() is one atomic commit today
   REFLECTION_UPDATED: 'REFLECTION_UPDATED', // pending Phase 12

@@ -343,12 +343,31 @@ a deliberate, planned structural pass (e.g. once a later phase actually
 needs the runtime's typed domains here) rather than a drive-by fix
 alongside the other five.
 
-**Remaining for Phase 8**: `ReclamationModuleEngine.jsx` — the persistence
-engine for non-Hermetic-Hall faculties. Same category as
-`HermeticCurriculumModule.jsx`: it already talks to Supabase directly via
-`saveUserProgress`/`loadUserProgress` and isn't broken, so migrating it
-would be a structural migration onto the runtime's typed domains, not a
-bug fix, and needs the same kind of scoping conversation before starting.
+**Also deliberately skipped:** `ReclamationModuleEngine.jsx` — the shared
+persistence engine for every non-Hermetic-Hall faculty (broader blast
+radius than `HermeticCurriculumModule.jsx`, since it's the one component
+behind all of them). Reviewed and found the same category as
+`HermeticCurriculumModule.jsx`, not a new one: `saveProgress`/
+`saveCompletion` (via `useReclamationModuleProgress`) are already called
+on every meaningful interaction — track listened, Shadow Code toggled,
+Light Code retrieved, scene advance, declaration seal, completion — with
+legacy-ID normalization for backward compatibility and a working
+unlock-gate/Integration-Key/journal-save flow. Not broken, not missing
+persistence. Applying the same call the user already made for
+`HermeticCurriculumModule.jsx` rather than re-litigating it: left as-is,
+future migration deferred to a deliberate structural pass rather than a
+drive-by fix.
+
+**Phase 8 status**: complete for this pass. All seven Hermetic Hall
+principles (Mentalism, Correspondence, Vibration, Polarity, Rhythm,
+Cause & Effect, Gender — six components, since Mentalism and
+Correspondence share `HermeticSuppliedModuleExperience.jsx`) had actually
+broken or missing persistence and now route through the Sovereign
+Runtime's local+remote sync. The two remaining Reclamation University
+components (`HermeticCurriculumModule.jsx`, `ReclamationModuleEngine.jsx`)
+already have working Supabase persistence and were deliberately left
+alone rather than rewritten for architectural consistency alone — that's
+future work, not a Phase 8 bug fix.
 
 ## Current architecture (active today)
 

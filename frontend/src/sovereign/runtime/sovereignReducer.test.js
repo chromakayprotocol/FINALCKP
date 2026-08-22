@@ -23,6 +23,10 @@ import {
   selectAnchor,
   selectMediaConcept,
   mapConceptToDomain,
+  startReflection,
+  updateReflection,
+  extractConcepts,
+  commitReflection,
 } from './sovereignActions';
 
 describe('sovereignReducer', () => {
@@ -254,5 +258,95 @@ describe('sovereignReducer', () => {
     state = sovereignReducer(state, mapConceptToDomain('shadow-work', 'psychology', 'outcome'));
 
     expect(state.concepts.domainMappings).toEqual([]);
+  });
+
+  describe('structured reflection (Phase 12)', () => {
+    it('startReflection creates a draft entry and is idempotent about startedAt', () => {
+      let state = sovereignReducer(createInitialState(), startReflection('mentalism', '08-reflection'));
+      const entry = state.reflection.entries['mentalism:08-reflection'];
+      expect(entry.status).toBe('draft');
+      expect(entry.startedAt).not.toBeNull();
+      const firstStartedAt = entry.startedAt;
+
+      state = sovereignReducer(state, startReflection('mentalism', '08-reflection'));
+      expect(state.reflection.entries['mentalism:08-reflection'].startedAt).toBe(firstStartedAt);
+    });
+
+    it('updateReflection records each edit without requiring startReflection first', () => {
+      let state = sovereignReducer(createInitialState(), updateReflection('mentalism', '08-reflection', 'first draft'));
+      expect(state.reflection.entries['mentalism:08-reflection'].response).toBe('first draft');
+      expect(state.reflection.entries['mentalism:08-reflection'].status).toBe('draft');
+
+      state = sovereignReducer(state, updateReflection('mentalism', '08-reflection', 'revised draft'));
+      expect(state.reflection.entries['mentalism:08-reflection'].response).toBe('revised draft');
+    });
+
+    it('extractConcepts records candidates without touching retainedConcepts or the real Concept Graph', () => {
+      const state = sovereignReducer(
+        createInitialState(),
+        extractConcepts('mentalism', '08-reflection', ['shadow-work', 'projection']),
+      );
+
+      expect(state.reflection.entries['mentalism:08-reflection'].candidateConcepts).toEqual([
+        'shadow-work', 'projection',
+      ]);
+      expect(state.reflection.entries['mentalism:08-reflection'].retainedConcepts).toEqual([]);
+      expect(state.concepts.selected).toEqual([]);
+    });
+
+    it('commitReflection finalizes the entry and promotes only the retained concepts into the Concept Graph', () => {
+      let state = sovereignReducer(createInitialState(), startReflection('mentalism', '08-reflection'));
+      state = sovereignReducer(state, updateReflection('mentalism', '08-reflection', 'draft text'));
+      state = sovereignReducer(
+        state,
+        extractConcepts('mentalism', '08-reflection', ['shadow-work', 'projection']),
+      );
+
+      state = sovereignReducer(
+        state,
+        commitReflection('mentalism', '08-reflection', 'final text', ['shadow-work']),
+      );
+
+      const entry = state.reflection.entries['mentalism:08-reflection'];
+      expect(entry.status).toBe('committed');
+      expect(entry.response).toBe('final text');
+      expect(entry.retainedConcepts).toEqual(['shadow-work']);
+      expect(entry.candidateConcepts).toEqual(['shadow-work', 'projection']); // preserved, not cleared
+      expect(entry.committedAt).not.toBeNull();
+
+      // Only the retained concept becomes real — the rejected candidate
+      // (projection) never reaches the Concept Graph.
+      expect(state.concepts.selected).toEqual(['shadow-work']);
+      expect(state.curriculum.modules.mentalism.selectedConcepts).toEqual(['shadow-work']);
+    });
+
+    it('commitReflection with no retained concepts commits the reflection without selecting anything', () => {
+      const state = sovereignReducer(
+        createInitialState(),
+        commitReflection('mentalism', '08-reflection', 'final text', []),
+      );
+
+      expect(state.reflection.entries['mentalism:08-reflection'].status).toBe('committed');
+      expect(state.concepts.selected).toEqual([]);
+    });
+
+    it('committing does not require a prior response — keeps the existing one if none is given', () => {
+      let state = sovereignReducer(createInitialState(), updateReflection('mentalism', '08-reflection', 'typed earlier'));
+      state = sovereignReducer(state, commitReflection('mentalism', '08-reflection', undefined, []));
+
+      expect(state.reflection.entries['mentalism:08-reflection'].response).toBe('typed earlier');
+    });
+
+    it('recordReflection (Phase 8 whole-blob usage) is untouched by the structured pipeline\'s new fields', () => {
+      const state = sovereignReducer(
+        createInitialState(),
+        recordReflection('hermetic-hall/vibration', 'record', { reflect: { primary: 'x' } }),
+      );
+
+      const entry = state.reflection.entries['hermetic-hall/vibration:record'];
+      expect(entry.response).toEqual({ reflect: { primary: 'x' } });
+      expect(entry.status).toBeUndefined();
+      expect(entry.candidateConcepts).toBeUndefined();
+    });
   });
 });

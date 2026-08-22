@@ -627,6 +627,100 @@ to a domain/role (that's Phase 16, Visual Interaction Layer, per the
 guide's own sequencing) and any seeded/authored initial matrix content —
 this phase is the data model and persistence, not populated data.
 
+## Phase 12: reflection as structured state
+
+Built to the guide's spec: "instead of question/textarea/save, use Prompt
+-> Reflection -> Concept extraction/selection -> User editing -> Decision
+-> State," with "the user must explicitly choose what is retained" and
+"USER = authority, AI = instrument."
+
+The existing `recordReflection(moduleId, promptId, response)` — one
+atomic write — could not simply be redefined into this pipeline: all
+seven live Phase 8 Reclamation University components use it to persist
+their *entire* local module state as a single JSON blob under a reserved
+`"record"` promptId, not an actual reflection. Redefining what that
+action does, or what `entries[key].response` means, would have broken
+shipped, working code for no reason. So Phase 12 is purely additive:
+`recordReflection` is untouched, byte-for-byte, and still satisfies the
+REFLECTION step exactly as before; four new actions
+(`startReflection`/`updateReflection`/`extractConcepts`/
+`commitReflection`) implement the real staged pipeline as a second,
+richer way to write the same `reflection.entries` dict, for any caller
+that wants it. A reflection entry now optionally carries `status`
+(`'draft'` | `'committed'`), `candidateConcepts`, `retainedConcepts`,
+`startedAt`, and `committedAt` alongside the original `response`/
+`updatedAt` — entries written by the old atomic path simply never
+populate those fields, which every consumer already treats as optional.
+
+The four stages, concretely: `startReflection(moduleId, promptId)` marks
+a prompt begun (idempotent — re-opening an in-progress draft doesn't
+reset `startedAt` or wipe what's written); `updateReflection(...,
+response)` records each edit; `extractConcepts(..., conceptIds)` records
+which concepts are *candidates* — the action doesn't care whether a human
+typed them or a future AI suggested them, since nothing about "surfacing
+candidates" is itself a decision; `commitReflection(..., response,
+retainedConcepts)` is the actual Decision — the one place a human chooses
+the subset of candidates that's actually kept. Critically, `commitReflection`
+doesn't just record `retainedConcepts` as a note on the entry: each
+retained concept is credited into the real Concept Graph exactly as
+`selectConcept()` would (both `concepts.selected` and the module's
+`selectedConcepts`), via a `creditConceptSelection()` helper now shared
+by both action's reducer cases — a rejected candidate never reaches the
+Concept Graph at all. This is what makes the pipeline real rather than
+decorative: "Decision -> State" in the guide's diagram means the decision
+actually mutates the state other systems (Phase 4's KEY_CONCEPTS
+criterion, Phase 10/11's Concept Graph and Domain Matrix) already read.
+
+Events: `REFLECTION_STARTED`/`REFLECTION_UPDATED` — placeholders in
+`eventTypes.js` since Phase 6, marked "pending Phase 12" — are now wired.
+`REFLECTION_CONCEPTS_EXTRACTED` is a new event type (no Phase 6 slot
+existed for it, same as `CONCEPT_DOMAIN_MAPPED` in Phase 11), firing only
+when the candidate list actually changes. `commitReflection` fires the
+existing `REFLECTION_COMMITTED` (shared with `recordReflection`, since
+it's the same semantic event from a richer input path) plus one
+`CONCEPT_SELECTED` per retained concept, so anything subscribed to
+concept-selection events sees the same thing regardless of which path
+added it.
+
+Persistence extended the same way as every prior phase: `sovereign_reflections`
+(still unapplied to any live database) gained `status`/`candidate_concepts`/
+`retained_concepts`/`started_at`/`committed_at` columns, with sensible
+defaults so a row written by the old atomic path still round-trips
+cleanly; `reflectionEntryToRow`/`rowToReflectionEntry` carry the new
+fields (defaulting missing values the same way the SQL columns do, so
+Phase-8-written rows and Phase-12-written rows round-trip through the
+identical code path); `sovereignReconciliation.js` needed no changes —
+`reconcileReflectionEntries`'s existing whole-entry-by-`updatedAt` policy
+already carries new fields along for free, same as Phase 10's
+`selectedConcepts` addition to modules did.
+
+Verification: 12 new tests (7 reducer — including one explicitly proving
+`recordReflection`'s Phase 8 usage is unaffected — 4 event-mapping, 1 new
++ 1 rewritten remote-mapping round-trip) plus one existing persistence
+test fixed for the new columns. Full suite: 222/228 — same 6 pre-existing
+unrelated failures, 0 introduced. `npx esbuild` bundle-checked all
+`sovereign/*/index.js` barrels; since this phase touched `useSovereign.js`/
+`SovereignProvider.jsx` (shared by every live Reclamation University
+component from Phase 8), also re-bundle-checked
+`VibrationModuleExperience.jsx` directly and did a headless-browser load
+of both the app root and one live Hermetic Hall route — clean, only the
+same pre-existing sandbox network noise, both correctly redirecting an
+unauthenticated visitor to `/login`.
+
+**Not attempted in this pass**: any UI for an actual reflection prompt
+screen (nothing live calls these new actions yet — same "runtime first,
+wire into components later" posture used since Phase 3), and any AI
+integration for `extractConcepts` (Phase 18, deliberately last per the
+guide — "AI can assist with X" describes a future caller populating
+`conceptIds`, not anything built here). The REFLECTION step's completion
+criterion also deliberately still accepts *any* entry (`reflectionEntry
+!== null`), not specifically a `status: 'committed'` one — tightening
+that to require a genuine commit would be truer to "the user must
+explicitly choose what is retained," but would also change what already-
+passing tests and the existing REFLECTION_COMMITTED-via-`recordReflection`
+path mean, which is exactly the kind of breaking change this pass
+deliberately avoided.
+
 ## Current architecture (active today)
 
 ```

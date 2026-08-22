@@ -27,6 +27,10 @@ function resolveModuleId(action, nextState) {
   return action.payload?.moduleId ?? nextState.curriculum.activeModuleId ?? null;
 }
 
+function sameConceptIds(a, b) {
+  return a.length === b.length && a.every((id, index) => id === b[index]);
+}
+
 function diffCompletedSteps(prevState, nextState, moduleId) {
   if (!moduleId || !nextState.curriculum.modules[moduleId]) return [];
 
@@ -160,6 +164,53 @@ export function mapActionToEvents(action, { prevState, nextState }) {
         trackId: nextState.media.currentTrackId,
         anchorKey: action.payload.anchorKey,
       });
+      break;
+    }
+
+    case SOVEREIGN_ACTION_TYPES.START_REFLECTION: {
+      push(SOVEREIGN_EVENT_TYPES.REFLECTION_STARTED, {
+        moduleId: action.payload.moduleId,
+        promptId: action.payload.promptId,
+      });
+      break;
+    }
+
+    case SOVEREIGN_ACTION_TYPES.UPDATE_REFLECTION: {
+      push(SOVEREIGN_EVENT_TYPES.REFLECTION_UPDATED, {
+        moduleId: action.payload.moduleId,
+        promptId: action.payload.promptId,
+      });
+      break;
+    }
+
+    case SOVEREIGN_ACTION_TYPES.EXTRACT_CONCEPTS: {
+      const entryId = `${action.payload.moduleId}:${action.payload.promptId}`;
+      const prevCandidates = prevState.reflection.entries[entryId]?.candidateConcepts ?? [];
+      const nextCandidates = nextState.reflection.entries[entryId]?.candidateConcepts ?? [];
+      // Skip the no-op case of extracting the exact same candidate list
+      // again (e.g. a re-run suggestion pass that found nothing new).
+      if (!sameConceptIds(prevCandidates, nextCandidates)) {
+        push(SOVEREIGN_EVENT_TYPES.REFLECTION_CONCEPTS_EXTRACTED, {
+          moduleId: action.payload.moduleId,
+          promptId: action.payload.promptId,
+          conceptIds: nextCandidates,
+        });
+      }
+      break;
+    }
+
+    case SOVEREIGN_ACTION_TYPES.COMMIT_REFLECTION: {
+      push(SOVEREIGN_EVENT_TYPES.REFLECTION_COMMITTED, {
+        moduleId: action.payload.moduleId,
+        promptId: action.payload.promptId,
+      });
+      // The Decision stage's retained concepts become real Concept Graph
+      // selections (see creditConceptSelection() in the reducer) — announce
+      // each one exactly as selectConcept() would, so a consumer watching
+      // CONCEPT_SELECTED sees the same thing either way it happened.
+      for (const conceptId of action.payload.retainedConcepts) {
+        push(SOVEREIGN_EVENT_TYPES.CONCEPT_SELECTED, { conceptId, moduleId: action.payload.moduleId });
+      }
       break;
     }
 

@@ -19,6 +19,10 @@ import {
   setVolume,
   selectAnchor,
   mapConceptToDomain,
+  startReflection,
+  updateReflection,
+  extractConcepts,
+  commitReflection,
 } from '../runtime/sovereignActions';
 import { SOVEREIGN_STEP_IDS } from '../runtime/sovereignSteps';
 import { mapActionToEvents } from './mapActionToEvents';
@@ -255,5 +259,75 @@ describe('mapActionToEvents', () => {
   it('mapConceptToDomain() with an invalid domain/role is a reducer no-op and emits nothing', () => {
     const { events } = dispatchAndMap(createInitialState(), mapConceptToDomain('shadow-work', 'astrology', 'cause'));
     expect(events).toEqual([]);
+  });
+
+  it('startReflection() emits REFLECTION_STARTED, updateReflection() emits REFLECTION_UPDATED', () => {
+    const started = dispatchAndMap(createInitialState(), startReflection('mentalism', SOVEREIGN_STEP_IDS.REFLECTION));
+    expect(types(started.events)).toEqual([SOVEREIGN_EVENT_TYPES.REFLECTION_STARTED]);
+    expect(started.events[0].payload).toEqual({ moduleId: 'mentalism', promptId: SOVEREIGN_STEP_IDS.REFLECTION });
+
+    const updated = dispatchAndMap(
+      started.nextState,
+      updateReflection('mentalism', SOVEREIGN_STEP_IDS.REFLECTION, 'draft text'),
+    );
+    expect(types(updated.events)).toEqual([SOVEREIGN_EVENT_TYPES.REFLECTION_UPDATED]);
+  });
+
+  it('extractConcepts() emits REFLECTION_CONCEPTS_EXTRACTED only when the candidate list actually changes', () => {
+    const extracted = dispatchAndMap(
+      createInitialState(),
+      extractConcepts('mentalism', SOVEREIGN_STEP_IDS.REFLECTION, ['shadow-work', 'projection']),
+    );
+    expect(types(extracted.events)).toEqual([SOVEREIGN_EVENT_TYPES.REFLECTION_CONCEPTS_EXTRACTED]);
+    expect(extracted.events[0].payload).toEqual({
+      moduleId: 'mentalism',
+      promptId: SOVEREIGN_STEP_IDS.REFLECTION,
+      conceptIds: ['shadow-work', 'projection'],
+    });
+
+    // Re-extracting the identical list (e.g. a repeated suggestion pass
+    // that found nothing new) must not re-fire.
+    const repeated = dispatchAndMap(
+      extracted.nextState,
+      extractConcepts('mentalism', SOVEREIGN_STEP_IDS.REFLECTION, ['shadow-work', 'projection']),
+    );
+    expect(types(repeated.events)).toEqual([]);
+  });
+
+  it('commitReflection() emits REFLECTION_COMMITTED plus one CONCEPT_SELECTED per retained concept, and completes the REFLECTION step', () => {
+    let state = createInitialState();
+    ({ nextState: state } = dispatchAndMap(state, startModule('mentalism')));
+    state = walkToReflectionGate(state, 'mentalism');
+
+    const { events } = dispatchAndMap(
+      state,
+      commitReflection('mentalism', SOVEREIGN_STEP_IDS.REFLECTION, 'final text', ['shadow-work', 'projection']),
+    );
+
+    expect(types(events)).toEqual([
+      SOVEREIGN_EVENT_TYPES.REFLECTION_COMMITTED,
+      SOVEREIGN_EVENT_TYPES.CONCEPT_SELECTED,
+      SOVEREIGN_EVENT_TYPES.CONCEPT_SELECTED,
+      SOVEREIGN_EVENT_TYPES.STEP_COMPLETED,
+    ]);
+    expect(events[1].payload).toEqual({ conceptId: 'shadow-work', moduleId: 'mentalism' });
+    expect(events[2].payload).toEqual({ conceptId: 'projection', moduleId: 'mentalism' });
+    expect(events[3].payload).toEqual({ moduleId: 'mentalism', stepId: SOVEREIGN_STEP_IDS.REFLECTION });
+  });
+
+  it('commitReflection() with no retained concepts still commits and completes the step, with no CONCEPT_SELECTED events', () => {
+    let state = createInitialState();
+    ({ nextState: state } = dispatchAndMap(state, startModule('mentalism')));
+    state = walkToReflectionGate(state, 'mentalism');
+
+    const { events } = dispatchAndMap(
+      state,
+      commitReflection('mentalism', SOVEREIGN_STEP_IDS.REFLECTION, 'final text', []),
+    );
+
+    expect(types(events)).toEqual([
+      SOVEREIGN_EVENT_TYPES.REFLECTION_COMMITTED,
+      SOVEREIGN_EVENT_TYPES.STEP_COMPLETED,
+    ]);
   });
 });

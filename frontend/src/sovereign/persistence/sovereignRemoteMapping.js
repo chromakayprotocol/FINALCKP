@@ -70,6 +70,15 @@ export function reflectionEntryToRow(userId, entry) {
     module_id: entry.moduleId,
     prompt_id: entry.promptId,
     response: entry.response ?? null,
+    // Entries written by the plain recordReflection() (Phase 8's
+    // whole-blob use case) never set these — default to the same values
+    // the SQL column defaults use, so a round-trip through Supabase can't
+    // silently drop them to something else.
+    status: entry.status ?? 'draft',
+    candidate_concepts: entry.candidateConcepts ?? [],
+    retained_concepts: entry.retainedConcepts ?? [],
+    started_at: entry.startedAt ?? null,
+    committed_at: entry.committedAt ?? null,
   };
 }
 
@@ -78,7 +87,12 @@ export function rowToReflectionEntry(row) {
     moduleId: row.module_id,
     promptId: row.prompt_id,
     response: row.response,
+    status: row.status ?? 'draft',
+    candidateConcepts: row.candidate_concepts ?? [],
+    retainedConcepts: row.retained_concepts ?? [],
+    startedAt: row.started_at ?? null,
     updatedAt: row.updated_at,
+    committedAt: row.committed_at ?? null,
   };
 }
 

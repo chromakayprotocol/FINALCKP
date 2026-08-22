@@ -18,6 +18,55 @@ function updateModule(state, moduleId, updater) {
   };
 }
 
+/* Shared by SELECT_CONCEPT and COMMIT_REFLECTION (Phase 12) — committing a
+   reflection's retained concepts must have the exact same effect on the
+   Concept Graph as calling selectConcept() directly for each one, so
+   there's only one real implementation of "what does selecting a concept
+   do" for both paths to share. */
+function creditConceptSelection(state, conceptId, moduleId) {
+  const selected = state.concepts.selected.includes(conceptId)
+    ? state.concepts.selected
+    : [...state.concepts.selected, conceptId];
+  const withSelection = { ...state, concepts: { ...state.concepts, selected } };
+  if (!moduleId) return withSelection;
+  return updateModule(withSelection, moduleId, (existing) => ({
+    ...existing,
+    selectedConcepts: existing.selectedConcepts.includes(conceptId)
+      ? existing.selectedConcepts
+      : [...existing.selectedConcepts, conceptId],
+  }));
+}
+
+function getOrCreateReflectionEntry(entries, moduleId, promptId) {
+  const entryId = `${moduleId}:${promptId}`;
+  return (
+    entries[entryId] ?? {
+      moduleId,
+      promptId,
+      response: null,
+      status: 'draft',
+      candidateConcepts: [],
+      retainedConcepts: [],
+      startedAt: null,
+      updatedAt: null,
+      committedAt: null,
+    }
+  );
+}
+
+function updateReflectionEntry(state, moduleId, promptId, updater) {
+  const entryId = `${moduleId}:${promptId}`;
+  const existing = getOrCreateReflectionEntry(state.reflection.entries, moduleId, promptId);
+  const entry = updater(existing);
+  return {
+    ...state,
+    reflection: {
+      ...state.reflection,
+      entries: { ...state.reflection.entries, [entryId]: entry },
+    },
+  };
+}
+
 export function sovereignReducer(state, action) {
   switch (action.type) {
     case SOVEREIGN_ACTION_TYPES.HYDRATE: {
@@ -83,17 +132,7 @@ export function sovereignReducer(state, action) {
 
     case SOVEREIGN_ACTION_TYPES.SELECT_CONCEPT: {
       const { conceptId, moduleId } = action.payload;
-      const selected = state.concepts.selected.includes(conceptId)
-        ? state.concepts.selected
-        : [...state.concepts.selected, conceptId];
-      const withSelection = { ...state, concepts: { ...state.concepts, selected } };
-      if (!moduleId) return withSelection;
-      return updateModule(withSelection, moduleId, (existing) => ({
-        ...existing,
-        selectedConcepts: existing.selectedConcepts.includes(conceptId)
-          ? existing.selectedConcepts
-          : [...existing.selectedConcepts, conceptId],
-      }));
+      return creditConceptSelection(state, conceptId, moduleId);
     }
 
     case SOVEREIGN_ACTION_TYPES.CONNECT_CONCEPTS: {
@@ -206,6 +245,53 @@ export function sovereignReducer(state, action) {
           domainMappings: [...state.concepts.domainMappings, mapping],
         },
       };
+    }
+
+    case SOVEREIGN_ACTION_TYPES.START_REFLECTION: {
+      const { moduleId, promptId } = action.payload;
+      return updateReflectionEntry(state, moduleId, promptId, (existing) => ({
+        ...existing,
+        // Idempotent — re-opening an in-progress draft doesn't reset its
+        // start time or wipe what's already been written.
+        startedAt: existing.startedAt ?? action.meta.timestamp,
+      }));
+    }
+
+    case SOVEREIGN_ACTION_TYPES.UPDATE_REFLECTION: {
+      const { moduleId, promptId, response } = action.payload;
+      return updateReflectionEntry(state, moduleId, promptId, (existing) => ({
+        ...existing,
+        response,
+        updatedAt: action.meta.timestamp,
+      }));
+    }
+
+    case SOVEREIGN_ACTION_TYPES.EXTRACT_CONCEPTS: {
+      const { moduleId, promptId, conceptIds } = action.payload;
+      return updateReflectionEntry(state, moduleId, promptId, (existing) => ({
+        ...existing,
+        candidateConcepts: conceptIds,
+        updatedAt: action.meta.timestamp,
+      }));
+    }
+
+    case SOVEREIGN_ACTION_TYPES.COMMIT_REFLECTION: {
+      const { moduleId, promptId, response, retainedConcepts } = action.payload;
+      const withEntry = updateReflectionEntry(state, moduleId, promptId, (existing) => ({
+        ...existing,
+        response: response ?? existing.response,
+        retainedConcepts,
+        status: 'committed',
+        updatedAt: action.meta.timestamp,
+        committedAt: action.meta.timestamp,
+      }));
+      // The Decision stage isn't just a note on the reflection — retained
+      // concepts become real Concept Graph facts, exactly as if the user
+      // had called selectConcept() for each one.
+      return retainedConcepts.reduce(
+        (nextState, conceptId) => creditConceptSelection(nextState, conceptId, moduleId),
+        withEntry,
+      );
     }
 
     default:

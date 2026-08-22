@@ -53,13 +53,23 @@ create table if not exists public.sovereign_module_state (
   unique (user_id, module_id)
 );
 
--- One row per (user, module, prompt) reflection entry.
+-- One row per (user, module, prompt) reflection entry. Reflections created
+-- via the old atomic recordReflection() (still used by Phase 8's
+-- whole-module-blob persistence under the reserved "record" promptId)
+-- leave status/candidate/retained/started/committed at their defaults;
+-- only the Phase 12 staged pipeline (startReflection -> updateReflection ->
+-- extractConcepts -> commitReflection) populates them for real.
 create table if not exists public.sovereign_reflections (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references auth.users(id) on delete cascade,
   module_id text not null,
   prompt_id text not null,
   response jsonb not null default 'null'::jsonb,
+  status text not null default 'draft' check (status in ('draft', 'committed')),
+  candidate_concepts text[] not null default '{}',
+  retained_concepts text[] not null default '{}',
+  started_at timestamptz,
+  committed_at timestamptz,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   unique (user_id, module_id, prompt_id)

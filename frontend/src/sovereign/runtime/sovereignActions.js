@@ -28,6 +28,10 @@ export const SOVEREIGN_ACTION_TYPES = Object.freeze({
   SELECT_ANCHOR: 'sovereign/selectAnchor',
   SELECT_MEDIA_CONCEPT: 'sovereign/selectMediaConcept',
   MAP_CONCEPT_TO_DOMAIN: 'sovereign/mapConceptToDomain',
+  START_REFLECTION: 'sovereign/startReflection',
+  UPDATE_REFLECTION: 'sovereign/updateReflection',
+  EXTRACT_CONCEPTS: 'sovereign/extractConcepts',
+  COMMIT_REFLECTION: 'sovereign/commitReflection',
 });
 
 function withMeta(type, payload = {}) {
@@ -48,6 +52,17 @@ export const advanceStep = (moduleId, stepId) =>
 export const completeStep = (moduleId, stepId, criteria = {}) =>
   withMeta(SOVEREIGN_ACTION_TYPES.COMPLETE_STEP, { moduleId, stepId, criteria });
 
+/* One atomic write: prompt -> response -> saved, no staging. Still the
+   right tool for what Phase 8 actually uses it for — seven live
+   Reclamation University components persist their *entire* local
+   module state as one JSON blob under a reserved promptId ("record"),
+   not a real reflection — so this stays exactly as it always has,
+   unchanged, rather than being folded into the staged pipeline below.
+   For an actual authored reflection (a real curriculum promptId, e.g.
+   SOVEREIGN_STEP_IDS.REFLECTION), prefer startReflection/updateReflection/
+   extractConcepts/commitReflection (Phase 12) instead — recordReflection
+   still works for that case too (it satisfies the same REFLECTION step
+   criterion), it just skips the staged decision the guide asks for. */
 export const recordReflection = (moduleId, promptId, response) =>
   withMeta(SOVEREIGN_ACTION_TYPES.RECORD_REFLECTION, { moduleId, promptId, response });
 
@@ -117,3 +132,36 @@ export const selectMediaConcept = (conceptId) =>
    silently corrupting the matrix. */
 export const mapConceptToDomain = (conceptId, domain, role) =>
   withMeta(SOVEREIGN_ACTION_TYPES.MAP_CONCEPT_TO_DOMAIN, { conceptId, domain, role });
+
+/* Structured Reflection (Phase 12) — "instead of question/textarea/save,
+   use Prompt -> Reflection -> Concept extraction/selection -> User
+   editing -> Decision -> State." Four stages, four actions, one entry:
+   startReflection() marks a prompt as begun (idempotent — doesn't reset
+   an in-progress draft); updateReflection() records each edit to the
+   response text; extractConcepts() records which concepts are *candidates*
+   for this reflection — manually chosen by the user today, or (later,
+   Phase 18) AI-suggested, since the action itself doesn't care which;
+   commitReflection() is the explicit Decision — the user picks the subset
+   of candidates that's actually retained, and only those become real
+   Concept Graph facts (credited into concepts.selected and the module's
+   selectedConcepts, same as selectConcept() would). Nothing here is
+   AI-aware; "AI can assist with X" from the guide means a future caller
+   can populate extractConcepts()'s conceptIds from a suggestion, but the
+   user still has to call commitReflection() to make anything real —
+   USER = authority, AI = instrument. */
+export const startReflection = (moduleId, promptId) =>
+  withMeta(SOVEREIGN_ACTION_TYPES.START_REFLECTION, { moduleId, promptId });
+
+export const updateReflection = (moduleId, promptId, response) =>
+  withMeta(SOVEREIGN_ACTION_TYPES.UPDATE_REFLECTION, { moduleId, promptId, response });
+
+export const extractConcepts = (moduleId, promptId, conceptIds) =>
+  withMeta(SOVEREIGN_ACTION_TYPES.EXTRACT_CONCEPTS, { moduleId, promptId, conceptIds });
+
+export const commitReflection = (moduleId, promptId, response, retainedConcepts = []) =>
+  withMeta(SOVEREIGN_ACTION_TYPES.COMMIT_REFLECTION, {
+    moduleId,
+    promptId,
+    response,
+    retainedConcepts,
+  });

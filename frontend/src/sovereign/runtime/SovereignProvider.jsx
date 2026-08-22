@@ -195,6 +195,14 @@ export function SovereignProvider({
         dispatchAction(actions.completeStep(moduleId, stepId, criteria)),
       recordReflection: (moduleId, promptId, response) =>
         dispatchAction(actions.recordReflection(moduleId, promptId, response)),
+      startReflection: (moduleId, promptId) =>
+        dispatchAction(actions.startReflection(moduleId, promptId)),
+      updateReflection: (moduleId, promptId, response) =>
+        dispatchAction(actions.updateReflection(moduleId, promptId, response)),
+      extractConcepts: (moduleId, promptId, conceptIds) =>
+        dispatchAction(actions.extractConcepts(moduleId, promptId, conceptIds)),
+      commitReflection: (moduleId, promptId, response, retainedConcepts) =>
+        dispatchAction(actions.commitReflection(moduleId, promptId, response, retainedConcepts)),
       selectConcept: (conceptId, moduleId) =>
         dispatchAction(actions.selectConcept(conceptId, moduleId)),
       connectConcepts: (fromConceptId, toConceptId, relationship) =>

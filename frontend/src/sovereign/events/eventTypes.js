@@ -3,9 +3,9 @@
  *
  * Not every event below is emitted yet — several depend on runtime pieces
  * later phases haven't built (a "viewed without selecting" concept action,
- * the richer reflection lifecycle in Phase 12). Each one is commented with
- * whether it's wired to a real action today via mapActionToEvents.js, so
- * it's obvious what a consumer can actually rely on right now versus
+ * `executeProtocol()` still being one atomic call). Each one is commented
+ * with whether it's wired to a real action today via mapActionToEvents.js,
+ * so it's obvious what a consumer can actually rely on right now versus
  * what's reserved for a later phase.
  *
  * The Media Runtime's actions/reducer/events (Phase 9) are wired as of
@@ -14,9 +14,11 @@
  * modules/sovereign/AudioVisualizerCore.jsx) still own their playback
  * state independently. See docs/ARCHITECTURE.md's Phase 9 section.
  *
- * CONCEPT_DOMAIN_MAPPED (Phase 11) wasn't part of the original Phase 6
- * taxonomy — the Domain Matrix didn't exist yet when that list was
- * written — so it's added here rather than filling in a pre-reserved slot.
+ * CONCEPT_DOMAIN_MAPPED (Phase 11) and REFLECTION_CONCEPTS_EXTRACTED
+ * (Phase 12) weren't part of the original Phase 6 taxonomy — the Domain
+ * Matrix and the staged reflection pipeline didn't exist yet when that
+ * list was written — so they're added here rather than filling in a
+ * pre-reserved slot.
  */
 export const SOVEREIGN_EVENT_TYPES = Object.freeze({
   MODULE_ENTERED: 'MODULE_ENTERED', // wired: startModule()
@@ -24,7 +26,7 @@ export const SOVEREIGN_EVENT_TYPES = Object.freeze({
   STEP_COMPLETED: 'STEP_COMPLETED', // wired: derived from evaluateModuleSteps() after any action
 
   CONCEPT_OPENED: 'CONCEPT_OPENED', // pending — no "viewed without selecting" action exists yet
-  CONCEPT_SELECTED: 'CONCEPT_SELECTED', // wired: selectConcept()
+  CONCEPT_SELECTED: 'CONCEPT_SELECTED', // wired: selectConcept(), and commitReflection() per retained concept
   CONCEPT_CONNECTED: 'CONCEPT_CONNECTED', // wired: connectConcepts()
   CONCEPT_DOMAIN_MAPPED: 'CONCEPT_DOMAIN_MAPPED', // wired: mapConceptToDomain(), only on a genuinely new mapping
 
@@ -33,9 +35,10 @@ export const SOVEREIGN_EVENT_TYPES = Object.freeze({
   MEDIA_SEEKED: 'MEDIA_SEEKED', // wired: seek()
   LYRIC_ANCHOR_SELECTED: 'LYRIC_ANCHOR_SELECTED', // wired: selectAnchor()
 
-  REFLECTION_STARTED: 'REFLECTION_STARTED', // pending Phase 12 — recordReflection() is one atomic commit today
-  REFLECTION_UPDATED: 'REFLECTION_UPDATED', // pending Phase 12
-  REFLECTION_COMMITTED: 'REFLECTION_COMMITTED', // wired: recordReflection()
+  REFLECTION_STARTED: 'REFLECTION_STARTED', // wired: startReflection()
+  REFLECTION_UPDATED: 'REFLECTION_UPDATED', // wired: updateReflection()
+  REFLECTION_CONCEPTS_EXTRACTED: 'REFLECTION_CONCEPTS_EXTRACTED', // wired: extractConcepts(), only when the candidate list actually changes
+  REFLECTION_COMMITTED: 'REFLECTION_COMMITTED', // wired: recordReflection() and commitReflection()
 
   PROTOCOL_STARTED: 'PROTOCOL_STARTED', // pending — executeProtocol() is atomic (call = execution complete)
   PROTOCOL_COMPLETED: 'PROTOCOL_COMPLETED', // wired: executeProtocol()

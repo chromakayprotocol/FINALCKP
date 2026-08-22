@@ -52,7 +52,26 @@ export function useSovereign() {
         selectAnchor: actions.selectAnchor,
         selectMediaConcept: actions.selectMediaConcept,
       },
-      reflection: { ...selectReflection(state), recordReflection: actions.recordReflection },
+      reflection: {
+        ...selectReflection(state),
+        recordReflection: actions.recordReflection,
+        // Structured pipeline (Phase 12) — all four default moduleId to
+        // the active module, same fallback pattern as concepts.selectConcept
+        // and synthesis.executeProtocol, with an optional override last.
+        startReflection: (promptId, moduleId) =>
+          actions.startReflection(moduleId ?? activeModule?.moduleId, promptId),
+        updateReflection: (promptId, response, moduleId) =>
+          actions.updateReflection(moduleId ?? activeModule?.moduleId, promptId, response),
+        extractConcepts: (promptId, conceptIds, moduleId) =>
+          actions.extractConcepts(moduleId ?? activeModule?.moduleId, promptId, conceptIds),
+        commitReflection: (promptId, response, retainedConcepts, moduleId) =>
+          actions.commitReflection(
+            moduleId ?? activeModule?.moduleId,
+            promptId,
+            response,
+            retainedConcepts,
+          ),
+      },
       concepts: {
         ...selectConcepts(state),
         // Defaults to the active module, same fallback pattern as

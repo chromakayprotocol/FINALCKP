@@ -78,15 +78,14 @@ create table if not exists public.sovereign_events (
   occurred_at timestamptz not null default now()
 );
 
--- One row per (user, concept) selection. module_id is nullable — concept
--- selection isn't module-scoped in the runtime yet (see the KEY_CONCEPTS
--- placeholder note in sovereignSteps.js); Phase 10's Concept Graph is
--- expected to tighten this.
+-- One row per (user, concept) selection — a concept is one global,
+-- once-only fact about the user (Phase 10 chose to track *which module*
+-- gets credit for a selection on sovereign_module_state.selected_concepts
+-- instead of here, so this table doesn't need its own module_id).
 create table if not exists public.sovereign_concepts (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references auth.users(id) on delete cascade,
   concept_id text not null,
-  module_id text,
   selected_at timestamptz not null default now(),
   unique (user_id, concept_id)
 );
@@ -102,6 +101,23 @@ create table if not exists public.sovereign_connections (
   relationship text not null,
   created_at timestamptz not null default now(),
   unique (user_id, from_concept_id, to_concept_id, relationship)
+);
+
+-- One row per (user, concept, domain, role) mapping — the Domain Matrix
+-- (Phase 11). "domain" and "role" are validated client-side against
+-- sovereignDomains.js's catalog (an unknown value is a reducer no-op, so
+-- it never reaches here); not re-validated with a check constraint since
+-- the catalog is expected to grow and a migration shouldn't be required
+-- to add a domain. Unique so resync can upsert-and-ignore-duplicates, same
+-- as sovereign_connections.
+create table if not exists public.sovereign_domain_mappings (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  concept_id text not null,
+  domain text not null,
+  role text not null,
+  mapped_at timestamptz not null default now(),
+  unique (user_id, concept_id, domain, role)
 );
 
 -- One row per user: the current Living Artifact document. Phase 14 (the
@@ -129,6 +145,8 @@ create index if not exists idx_sovereign_concepts_user
   on public.sovereign_concepts(user_id);
 create index if not exists idx_sovereign_connections_user
   on public.sovereign_connections(user_id);
+create index if not exists idx_sovereign_domain_mappings_user
+  on public.sovereign_domain_mappings(user_id);
 
 alter table public.sovereign_sessions enable row level security;
 alter table public.sovereign_module_state enable row level security;
@@ -136,6 +154,7 @@ alter table public.sovereign_reflections enable row level security;
 alter table public.sovereign_events enable row level security;
 alter table public.sovereign_concepts enable row level security;
 alter table public.sovereign_connections enable row level security;
+alter table public.sovereign_domain_mappings enable row level security;
 alter table public.sovereign_artifacts enable row level security;
 
 create policy "Users read own sovereign session"
@@ -223,6 +242,19 @@ create policy "Users delete own sovereign connections"
   to authenticated
   using ((select auth.uid()) = user_id);
 
+create policy "Users read own sovereign domain mappings"
+  on public.sovereign_domain_mappings for select
+  to authenticated
+  using ((select auth.uid()) = user_id);
+create policy "Users insert own sovereign domain mappings"
+  on public.sovereign_domain_mappings for insert
+  to authenticated
+  with check ((select auth.uid()) = user_id);
+create policy "Users delete own sovereign domain mappings"
+  on public.sovereign_domain_mappings for delete
+  to authenticated
+  using ((select auth.uid()) = user_id);
+
 create policy "Users read own sovereign artifact"
   on public.sovereign_artifacts for select
   to authenticated
@@ -247,12 +279,14 @@ grant delete on
   public.sovereign_module_state,
   public.sovereign_reflections,
   public.sovereign_concepts,
-  public.sovereign_connections
+  public.sovereign_connections,
+  public.sovereign_domain_mappings
 to authenticated;
 grant select, insert on
   public.sovereign_events,
   public.sovereign_concepts,
-  public.sovereign_connections
+  public.sovereign_connections,
+  public.sovereign_domain_mappings
 to authenticated;
 grant usage, select on sequence public.sovereign_events_id_seq to authenticated;
 

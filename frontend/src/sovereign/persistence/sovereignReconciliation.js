@@ -16,9 +16,10 @@
  *   wins rather than blending them.
  * - reflection.entries: per-entry, later updatedAt wins. Independent
  *   entries (different module/prompt) never conflict.
- * - concepts.selected / concepts.connections / synthesis: additive-only in
- *   the runtime today (no deselect/disconnect actions exist), so these are
- *   simple set-unions — there's nothing to "win," only things to keep.
+ * - concepts.selected / concepts.connections / concepts.domainMappings /
+ *   synthesis: additive-only in the runtime today (no deselect/disconnect/
+ *   unmap actions exist), so these are simple set-unions — there's nothing
+ *   to "win," only things to keep.
  * - artifact: status-priority wins (sealed > draft > empty) so a stale
  *   replica can never silently downgrade an artifact that was already
  *   sealed elsewhere; a tie between two sealed artifacts is broken by
@@ -100,6 +101,19 @@ function reconcileConnections(localConnections, remoteConnections) {
   return Array.from(seen.values());
 }
 
+function domainMappingFingerprint(mapping) {
+  return `${mapping.conceptId}::${mapping.domain}::${mapping.role}`;
+}
+
+function reconcileDomainMappings(localMappings, remoteMappings) {
+  const seen = new Map();
+  for (const mapping of [...localMappings, ...remoteMappings]) {
+    const key = domainMappingFingerprint(mapping);
+    if (!seen.has(key)) seen.set(key, mapping);
+  }
+  return Array.from(seen.values());
+}
+
 const ARTIFACT_STATUS_PRIORITY = { empty: 0, draft: 1, sealed: 2 };
 
 function reconcileArtifact(localArtifact, remoteArtifact) {
@@ -165,6 +179,10 @@ export function reconcileSovereignState(localState, remoteSnapshot) {
     concepts: {
       selected: reconcileConceptSelections(localState.concepts.selected, remoteSnapshot.concepts ?? []),
       connections: reconcileConnections(localState.concepts.connections, remoteSnapshot.connections ?? []),
+      domainMappings: reconcileDomainMappings(
+        localState.concepts.domainMappings,
+        remoteSnapshot.domainMappings ?? [],
+      ),
     },
     // synthesis.protocolExecutions has no remote table yet — see the note
     // at the top of sovereignRemoteMapping.js.

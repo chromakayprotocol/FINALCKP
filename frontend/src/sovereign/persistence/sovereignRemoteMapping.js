@@ -129,6 +129,32 @@ export function rowsToConnections(rows) {
   return rows.map(rowToConnection);
 }
 
+export function domainMappingToRow(userId, mapping) {
+  return {
+    user_id: userId,
+    concept_id: mapping.conceptId,
+    domain: mapping.domain,
+    role: mapping.role,
+  };
+}
+
+export function rowToDomainMapping(row) {
+  return {
+    conceptId: row.concept_id,
+    domain: row.domain,
+    role: row.role,
+    mappedAt: row.mapped_at,
+  };
+}
+
+export function domainMappingsToRows(userId, domainMappings) {
+  return domainMappings.map((mapping) => domainMappingToRow(userId, mapping));
+}
+
+export function rowsToDomainMappings(rows) {
+  return rows.map(rowToDomainMapping);
+}
+
 export function artifactToRow(userId, artifact) {
   return {
     user_id: userId,

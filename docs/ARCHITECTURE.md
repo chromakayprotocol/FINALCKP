@@ -556,6 +556,77 @@ invents), a browsing UI, and `CONCEPT_OPENED` (still pending — no "viewed
 without selecting" action exists). This increment only closes the one
 concretely-evidenced gap the codebase itself had already flagged.
 
+## Phase 11: the Domain Matrix
+
+The user supplied this phase's actual text mid-session (Phases 1-10 up to
+this point had been executed from a paraphrased/summarized memory of the
+original guide after context compaction — Phase 10 in particular had to
+be scoped from codebase evidence alone because the real spec wasn't
+available). Built to the literal spec: eight domains (Psychology,
+Technology, Economics, Culture, Power, Language, Systems, Identity) ×
+four roles (Condition, Cause, Effect, Feedback), where "each domain
+references concepts rather than owning duplicate definitions" and "the
+same concept can exist across multiple domains."
+
+New: `sovereignDomains.js` — the static domain/role catalog
+(`SOVEREIGN_DOMAINS`, `SOVEREIGN_DOMAIN_ROLES`), `isValidDomain`/
+`isValidDomainRole`, and two pure derivations: `buildDomainMatrix(concepts)`
+(the literal grid the guide draws — one row per domain, one column per
+role, every cell present even when empty, so a future renderer never has
+to special-case a gap) and `domainsForConcept(concepts, conceptId)` (the
+inverse view: every domain/role a given concept has been mapped into).
+`concepts.domainMappings: []` was added to `sovereignState.js` alongside
+the existing `selected`/`connections` arrays — a mapping is a
+`{conceptId, domain, role, mappedAt}` triple, deliberately *not* a new
+place a concept gets defined (the concept itself still only exists as an
+id in `concepts.selected`, Phase 10). `mapConceptToDomain(conceptId,
+domain, role)` is the new action; the reducer no-ops on an unknown
+domain/role (validated against the catalog) or an exact repeat of an
+existing triple, and otherwise appends — the same "concept can carry
+multiple roles across multiple domains" flexibility the guide's matrix
+diagram implies is preserved (no artificial one-role-per-domain
+constraint). `CONCEPT_DOMAIN_MAPPED` is a new event type — Phase 6's
+taxonomy predates the Domain Matrix, so there was no placeholder slot to
+fill, unlike Phase 9's four pre-reserved media events — wired to fire
+only when a mapping genuinely lands (not on a no-op).
+
+Extended the persistence layer the same way Phase 7 built it for
+`concepts.connections`: a new `sovereign_domain_mappings` table (still
+unapplied to any live database, so free to edit) with
+`unique(user_id, concept_id, domain, role)`, RLS policies, and grants
+matching `sovereign_connections`' shape exactly; `sovereignRemoteMapping.js`
+gained `domainMappingToRow`/`rowToDomainMapping`/`domainMappingsToRows`/
+`rowsToDomainMappings`; `sovereignSupabaseSync.js` fetches/pushes the new
+table (upsert with `ignoreDuplicates: true`, same as connections);
+`sovereignReconciliation.js` gained `reconcileDomainMappings`, a
+set-union by `(conceptId, domain, role)` fingerprint — additive-only data,
+same policy class as connections. Also cleaned up one now-resolved loose
+end from Phase 7: `sovereign_concepts.module_id` was a column added in
+anticipation of module-scoped concept selection that Phase 10 ended up
+solving a different way (via `sovereign_module_state.selected_concepts`
+instead), leaving it permanently unused — removed it rather than leave a
+column nothing ever wrote to.
+
+`useSovereign()`'s `concepts` bundle gained `mapConceptToDomain` and a
+computed `domainMatrix` (the live grid, recalculated whenever concepts
+change) — a component can render the matrix directly without calling
+`buildDomainMatrix` itself.
+
+Verification: 15 new tests (7 in a new `sovereignDomains.test.js` for the
+catalog and both pure derivations, 4 reducer, 2 event-mapping, 2 remote
+mapping round-trip) plus 3 existing persistence tests fixed for the new
+`domainMappings` field (same "hand-built fixture predates the new field"
+issue Phase 10 hit). Full suite: 210/216 — same 6 pre-existing unrelated
+failures, 0 introduced. `npx esbuild` bundle-checked all
+`sovereign/*/index.js` barrels. No live UI touched — domain mapping has
+no live consumers yet, same posture as every phase since Phase 3 up
+until Phase 8's live wiring began.
+
+**Not attempted in this pass**: any UI for actually assigning a concept
+to a domain/role (that's Phase 16, Visual Interaction Layer, per the
+guide's own sequencing) and any seeded/authored initial matrix content —
+this phase is the data model and persistence, not populated data.
+
 ## Current architecture (active today)
 
 ```

@@ -199,6 +199,8 @@ export function SovereignProvider({
         dispatchAction(actions.selectConcept(conceptId, moduleId)),
       connectConcepts: (fromConceptId, toConceptId, relationship) =>
         dispatchAction(actions.connectConcepts(fromConceptId, toConceptId, relationship)),
+      mapConceptToDomain: (conceptId, domain, role) =>
+        dispatchAction(actions.mapConceptToDomain(conceptId, domain, role)),
       executeProtocol: (protocolId, payload, moduleId) =>
         dispatchAction(actions.executeProtocol(protocolId, payload, moduleId)),
       generateArtifact: (draft) => dispatchAction(actions.generateArtifact(draft)),

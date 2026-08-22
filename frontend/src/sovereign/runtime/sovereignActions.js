@@ -27,6 +27,7 @@ export const SOVEREIGN_ACTION_TYPES = Object.freeze({
   SET_VOLUME: 'sovereign/setVolume',
   SELECT_ANCHOR: 'sovereign/selectAnchor',
   SELECT_MEDIA_CONCEPT: 'sovereign/selectMediaConcept',
+  MAP_CONCEPT_TO_DOMAIN: 'sovereign/mapConceptToDomain',
 });
 
 function withMeta(type, payload = {}) {
@@ -108,3 +109,11 @@ export const selectAnchor = (anchorKey) =>
 
 export const selectMediaConcept = (conceptId) =>
   withMeta(SOVEREIGN_ACTION_TYPES.SELECT_MEDIA_CONCEPT, { conceptId });
+
+/* Domain Matrix (Phase 11) — "this concept plays this role when viewed
+   through this domain," not a second definition of the concept. See
+   sovereignDomains.js for the domain/role catalog and the reducer for the
+   validation that makes an unknown domain/role a no-op rather than
+   silently corrupting the matrix. */
+export const mapConceptToDomain = (conceptId, domain, role) =>
+  withMeta(SOVEREIGN_ACTION_TYPES.MAP_CONCEPT_TO_DOMAIN, { conceptId, domain, role });

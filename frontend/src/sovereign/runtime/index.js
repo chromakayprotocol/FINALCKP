@@ -20,3 +20,13 @@ export {
   clearPersistedState,
   createAutosave,
 } from './sovereignLocalPersistence';
+export {
+  SOVEREIGN_DOMAINS,
+  SOVEREIGN_DOMAIN_IDS,
+  SOVEREIGN_DOMAIN_ROLES,
+  SOVEREIGN_DOMAIN_ROLE_IDS,
+  isValidDomain,
+  isValidDomainRole,
+  buildDomainMatrix,
+  domainsForConcept,
+} from './sovereignDomains';

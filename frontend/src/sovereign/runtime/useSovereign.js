@@ -12,6 +12,7 @@ import {
   selectArtifact,
 } from './sovereignSelectors';
 import { evaluateModuleSteps } from './sovereignSteps';
+import { buildDomainMatrix } from './sovereignDomains';
 
 /**
  * The one way app code reads or mutates Sovereign state. Each domain bundles
@@ -61,6 +62,8 @@ export function useSovereign() {
         selectConcept: (conceptId, moduleId) =>
           actions.selectConcept(conceptId, moduleId ?? activeModule?.moduleId ?? null),
         connectConcepts: actions.connectConcepts,
+        mapConceptToDomain: actions.mapConceptToDomain,
+        domainMatrix: buildDomainMatrix(selectConcepts(state)),
       },
       synthesis: {
         ...selectSynthesis(state),

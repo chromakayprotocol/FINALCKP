@@ -60,7 +60,7 @@ describe('fetchRemoteState', () => {
     expect(supabase.calls).toEqual([]);
   });
 
-  it('assembles a full snapshot from all six tables', async () => {
+  it('assembles a full snapshot from all seven tables', async () => {
     const supabase = createFakeSupabase({
       sovereign_sessions: {
         selectSingle: {
@@ -78,6 +78,9 @@ describe('fetchRemoteState', () => {
       sovereign_connections: {
         select: { data: [{ from_concept_id: 'a', to_concept_id: 'b', relationship: 'CAUSES', created_at: 't1' }], error: null },
       },
+      sovereign_domain_mappings: {
+        select: { data: [{ concept_id: 'shadow-work', domain: 'psychology', role: 'cause', mapped_at: 't1' }], error: null },
+      },
       sovereign_artifacts: {
         selectSingle: { data: { status: 'sealed', draft_json: { title: 'x' }, sealed_at: 't1' }, error: null },
       },
@@ -91,6 +94,7 @@ describe('fetchRemoteState', () => {
     expect(data.reflections['mentalism:08-reflection'].response).toBe('x');
     expect(data.concepts).toEqual(['shadow-work']);
     expect(data.connections).toEqual([{ fromConceptId: 'a', toConceptId: 'b', relationship: 'CAUSES', createdAt: 't1' }]);
+    expect(data.domainMappings).toEqual([{ conceptId: 'shadow-work', domain: 'psychology', role: 'cause', mappedAt: 't1' }]);
     expect(data.artifact).toEqual({ status: 'sealed', draft: { title: 'x' }, sealedAt: 't1' });
 
     // Every query was scoped to this user.
@@ -106,6 +110,7 @@ describe('fetchRemoteState', () => {
     expect(data.modules).toEqual({});
     expect(data.reflections).toEqual({});
     expect(data.concepts).toEqual([]);
+    expect(data.domainMappings).toEqual([]);
     expect(data.artifact).toBeNull();
   });
 
@@ -168,13 +173,14 @@ describe('pushRemoteState', () => {
     expect(supabase.calls.some((call) => call.table === 'sovereign_artifacts')).toBe(true);
   });
 
-  it('upserts connections and concepts with ignoreDuplicates so repeat pushes never accumulate rows', async () => {
+  it('upserts connections, concepts, and domain mappings with ignoreDuplicates so repeat pushes never accumulate rows', async () => {
     const supabase = createFakeSupabase();
     const state = {
       ...createInitialState(),
       concepts: {
         selected: ['shadow-work'],
         connections: [{ fromConceptId: 'a', toConceptId: 'b', relationship: 'CAUSES', createdAt: 't1' }],
+        domainMappings: [{ conceptId: 'shadow-work', domain: 'psychology', role: 'cause', mappedAt: 't1' }],
       },
     };
 
@@ -182,10 +188,15 @@ describe('pushRemoteState', () => {
 
     const conceptCall = supabase.calls.find((call) => call.table === 'sovereign_concepts');
     const connectionCall = supabase.calls.find((call) => call.table === 'sovereign_connections');
+    const domainMappingCall = supabase.calls.find((call) => call.table === 'sovereign_domain_mappings');
     expect(conceptCall.opts).toMatchObject({ ignoreDuplicates: true });
     expect(connectionCall.opts).toMatchObject({
       ignoreDuplicates: true,
       onConflict: 'user_id,from_concept_id,to_concept_id,relationship',
+    });
+    expect(domainMappingCall.opts).toMatchObject({
+      ignoreDuplicates: true,
+      onConflict: 'user_id,concept_id,domain,role',
     });
   });
 

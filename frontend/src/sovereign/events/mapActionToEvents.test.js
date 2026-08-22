@@ -18,6 +18,7 @@ import {
   setDuration,
   setVolume,
   selectAnchor,
+  mapConceptToDomain,
 } from '../runtime/sovereignActions';
 import { SOVEREIGN_STEP_IDS } from '../runtime/sovereignSteps';
 import { mapActionToEvents } from './mapActionToEvents';
@@ -239,5 +240,20 @@ describe('mapActionToEvents', () => {
     expect(types(dispatchAndMap(state, advancePosition(10)).events)).toEqual([]);
     expect(types(dispatchAndMap(state, setDuration(180)).events)).toEqual([]);
     expect(types(dispatchAndMap(state, setVolume(0.5)).events)).toEqual([]);
+  });
+
+  it('mapConceptToDomain() emits CONCEPT_DOMAIN_MAPPED only for a genuinely new mapping', () => {
+    const mapped = dispatchAndMap(createInitialState(), mapConceptToDomain('shadow-work', 'psychology', 'cause'));
+    expect(types(mapped.events)).toEqual([SOVEREIGN_EVENT_TYPES.CONCEPT_DOMAIN_MAPPED]);
+    expect(mapped.events[0].payload).toEqual({ conceptId: 'shadow-work', domain: 'psychology', role: 'cause' });
+
+    // A repeat of the same mapping is a reducer no-op — must not re-fire.
+    const repeated = dispatchAndMap(mapped.nextState, mapConceptToDomain('shadow-work', 'psychology', 'cause'));
+    expect(types(repeated.events)).toEqual([]);
+  });
+
+  it('mapConceptToDomain() with an invalid domain/role is a reducer no-op and emits nothing', () => {
+    const { events } = dispatchAndMap(createInitialState(), mapConceptToDomain('shadow-work', 'astrology', 'cause'));
+    expect(events).toEqual([]);
   });
 });

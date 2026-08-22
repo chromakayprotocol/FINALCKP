@@ -1,5 +1,6 @@
 import { SOVEREIGN_ACTION_TYPES } from './sovereignActions';
 import { createModuleState } from './sovereignState';
+import { isValidDomain, isValidDomainRole } from './sovereignDomains';
 
 function getOrCreateModule(modules, moduleId) {
   return modules[moduleId] ?? createModuleState(moduleId);
@@ -186,6 +187,25 @@ export function sovereignReducer(state, action) {
 
     case SOVEREIGN_ACTION_TYPES.SELECT_MEDIA_CONCEPT: {
       return { ...state, media: { ...state.media, activeConcept: action.payload.conceptId } };
+    }
+
+    case SOVEREIGN_ACTION_TYPES.MAP_CONCEPT_TO_DOMAIN: {
+      const { conceptId, domain, role } = action.payload;
+      if (!conceptId || !isValidDomain(domain) || !isValidDomainRole(role)) return state;
+
+      const exists = state.concepts.domainMappings.some(
+        (mapping) => mapping.conceptId === conceptId && mapping.domain === domain && mapping.role === role,
+      );
+      if (exists) return state;
+
+      const mapping = { conceptId, domain, role, mappedAt: action.meta.timestamp };
+      return {
+        ...state,
+        concepts: {
+          ...state.concepts,
+          domainMappings: [...state.concepts.domainMappings, mapping],
+        },
+      };
     }
 
     default:

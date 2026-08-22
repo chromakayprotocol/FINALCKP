@@ -78,6 +78,20 @@ export function mapActionToEvents(action, { prevState, nextState }) {
       break;
     }
 
+    case SOVEREIGN_ACTION_TYPES.MAP_CONCEPT_TO_DOMAIN: {
+      // mapConceptToDomain() no-ops in the reducer for an invalid
+      // domain/role or a repeat of an existing mapping — only emit when a
+      // new mapping actually landed.
+      if (nextState.concepts.domainMappings.length > prevState.concepts.domainMappings.length) {
+        push(SOVEREIGN_EVENT_TYPES.CONCEPT_DOMAIN_MAPPED, {
+          conceptId: action.payload.conceptId,
+          domain: action.payload.domain,
+          role: action.payload.role,
+        });
+      }
+      break;
+    }
+
     case SOVEREIGN_ACTION_TYPES.RECORD_REFLECTION: {
       push(SOVEREIGN_EVENT_TYPES.REFLECTION_COMMITTED, {
         moduleId: action.payload.moduleId,

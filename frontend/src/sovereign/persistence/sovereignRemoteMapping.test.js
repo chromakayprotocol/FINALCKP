@@ -12,6 +12,10 @@ import {
   rowsToConceptSelections,
   connectionToRow,
   rowToConnection,
+  domainMappingToRow,
+  rowToDomainMapping,
+  domainMappingsToRows,
+  rowsToDomainMappings,
   artifactToRow,
   rowToArtifact,
   sessionSnapshotToRow,
@@ -106,6 +110,40 @@ describe('sovereignRemoteMapping', () => {
       relationship: 'CAUSES',
       createdAt: '2026-01-01T00:00:00.000Z',
     });
+  });
+
+  it('round-trips a concept-domain mapping', () => {
+    const row = domainMappingToRow('user-1', {
+      conceptId: 'shadow-work',
+      domain: 'psychology',
+      role: 'cause',
+    });
+    expect(row).toEqual({
+      user_id: 'user-1',
+      concept_id: 'shadow-work',
+      domain: 'psychology',
+      role: 'cause',
+    });
+
+    const restored = rowToDomainMapping({ ...row, mapped_at: '2026-01-01T00:00:00.000Z' });
+    expect(restored).toEqual({
+      conceptId: 'shadow-work',
+      domain: 'psychology',
+      role: 'cause',
+      mappedAt: '2026-01-01T00:00:00.000Z',
+    });
+  });
+
+  it('maps a domain mappings list to rows and back losslessly', () => {
+    const mappings = [
+      { conceptId: 'shadow-work', domain: 'psychology', role: 'cause', mappedAt: '2026-01-01T00:00:00.000Z' },
+      { conceptId: 'shadow-work', domain: 'culture', role: 'effect', mappedAt: '2026-01-02T00:00:00.000Z' },
+    ];
+
+    const rows = domainMappingsToRows('user-1', mappings);
+    expect(rows.every((row) => row.user_id === 'user-1')).toBe(true);
+    expect(rowsToDomainMappings(rows.map((row, index) => ({ ...row, mapped_at: mappings[index].mappedAt }))))
+      .toEqual(mappings);
   });
 
   it('round-trips the artifact singleton', () => {

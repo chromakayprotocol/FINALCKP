@@ -86,6 +86,9 @@ export function createInitialState() {
     concepts: {
       selected: [],
       connections: [],
+      // Phase 11 (Domain Matrix): {conceptId, domain, role, mappedAt}
+      // triples — see sovereignDomains.js for the domain/role catalog.
+      domainMappings: [],
     },
     synthesis: {
       protocolExecutions: [],

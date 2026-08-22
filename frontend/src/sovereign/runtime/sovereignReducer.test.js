@@ -22,6 +22,7 @@ import {
   setVolume,
   selectAnchor,
   selectMediaConcept,
+  mapConceptToDomain,
 } from './sovereignActions';
 
 describe('sovereignReducer', () => {
@@ -220,5 +221,38 @@ describe('sovereignReducer', () => {
     expect(state.media.activeAnchor).toBe('anchor-3');
     expect(state.media.activeConcept).toBe('shadow-work');
     expect(state.concepts.selected).toEqual([]);
+  });
+
+  it('maps a concept to a domain/role', () => {
+    const state = sovereignReducer(
+      createInitialState(),
+      mapConceptToDomain('shadow-work', 'psychology', 'cause'),
+    );
+
+    expect(state.concepts.domainMappings).toEqual([
+      { conceptId: 'shadow-work', domain: 'psychology', role: 'cause', mappedAt: expect.any(String) },
+    ]);
+  });
+
+  it('does not duplicate an identical (concept, domain, role) mapping', () => {
+    let state = sovereignReducer(createInitialState(), mapConceptToDomain('shadow-work', 'psychology', 'cause'));
+    state = sovereignReducer(state, mapConceptToDomain('shadow-work', 'psychology', 'cause'));
+
+    expect(state.concepts.domainMappings).toHaveLength(1);
+  });
+
+  it('allows the same concept to be mapped into multiple domains, or multiple roles within one domain', () => {
+    let state = sovereignReducer(createInitialState(), mapConceptToDomain('shadow-work', 'psychology', 'cause'));
+    state = sovereignReducer(state, mapConceptToDomain('shadow-work', 'culture', 'effect'));
+    state = sovereignReducer(state, mapConceptToDomain('shadow-work', 'psychology', 'feedback'));
+
+    expect(state.concepts.domainMappings).toHaveLength(3);
+  });
+
+  it('ignores an unknown domain or role rather than corrupting the matrix', () => {
+    let state = sovereignReducer(createInitialState(), mapConceptToDomain('shadow-work', 'astrology', 'cause'));
+    state = sovereignReducer(state, mapConceptToDomain('shadow-work', 'psychology', 'outcome'));
+
+    expect(state.concepts.domainMappings).toEqual([]);
   });
 });

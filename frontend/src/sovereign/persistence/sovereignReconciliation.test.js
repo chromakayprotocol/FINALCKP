@@ -136,7 +136,7 @@ describe('reconcileSovereignState', () => {
 
   describe('concepts', () => {
     it('unions selected concepts without duplicating', () => {
-      const local = baseLocal({ concepts: { selected: ['shadow-work'], connections: [] } });
+      const local = baseLocal({ concepts: { selected: ['shadow-work'], connections: [], domainMappings: [] } });
       const remote = { concepts: ['shadow-work', 'projection'] };
 
       const result = reconcileSovereignState(local, remote);
@@ -145,7 +145,11 @@ describe('reconcileSovereignState', () => {
 
     it('unions connections by (from, to, relationship) identity, deduping repeats', () => {
       const local = baseLocal({
-        concepts: { selected: [], connections: [{ fromConceptId: 'a', toConceptId: 'b', relationship: 'CAUSES' }] },
+        concepts: {
+          selected: [],
+          connections: [{ fromConceptId: 'a', toConceptId: 'b', relationship: 'CAUSES' }],
+          domainMappings: [],
+        },
       });
       const remote = {
         connections: [
@@ -156,6 +160,25 @@ describe('reconcileSovereignState', () => {
 
       const result = reconcileSovereignState(local, remote);
       expect(result.concepts.connections).toHaveLength(2);
+    });
+
+    it('unions domain mappings by (concept, domain, role) identity, deduping repeats', () => {
+      const local = baseLocal({
+        concepts: {
+          selected: [],
+          connections: [],
+          domainMappings: [{ conceptId: 'shadow-work', domain: 'psychology', role: 'cause' }],
+        },
+      });
+      const remote = {
+        domainMappings: [
+          { conceptId: 'shadow-work', domain: 'psychology', role: 'cause' }, // duplicate of local
+          { conceptId: 'shadow-work', domain: 'culture', role: 'effect' },
+        ],
+      };
+
+      const result = reconcileSovereignState(local, remote);
+      expect(result.concepts.domainMappings).toHaveLength(2);
     });
   });
 

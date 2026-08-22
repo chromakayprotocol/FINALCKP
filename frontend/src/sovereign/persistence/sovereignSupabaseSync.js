@@ -22,6 +22,8 @@ import {
   rowsToConceptSelections,
   connectionsToRows,
   rowsToConnections,
+  domainMappingsToRows,
+  rowsToDomainMappings,
   artifactToRow,
   rowToArtifact,
   sessionSnapshotToRow,
@@ -49,15 +51,23 @@ export async function fetchRemoteState(userId, client) {
     return { data: null, error: new Error('A user id is required to fetch Sovereign state.') };
   }
 
-  const [sessionResult, moduleResult, reflectionResult, conceptResult, connectionResult, artifactResult] =
-    await Promise.all([
-      supabase.from('sovereign_sessions').select('*').eq('user_id', userId).maybeSingle(),
-      supabase.from('sovereign_module_state').select('*').eq('user_id', userId),
-      supabase.from('sovereign_reflections').select('*').eq('user_id', userId),
-      supabase.from('sovereign_concepts').select('*').eq('user_id', userId),
-      supabase.from('sovereign_connections').select('*').eq('user_id', userId),
-      supabase.from('sovereign_artifacts').select('*').eq('user_id', userId).maybeSingle(),
-    ]);
+  const [
+    sessionResult,
+    moduleResult,
+    reflectionResult,
+    conceptResult,
+    connectionResult,
+    domainMappingResult,
+    artifactResult,
+  ] = await Promise.all([
+    supabase.from('sovereign_sessions').select('*').eq('user_id', userId).maybeSingle(),
+    supabase.from('sovereign_module_state').select('*').eq('user_id', userId),
+    supabase.from('sovereign_reflections').select('*').eq('user_id', userId),
+    supabase.from('sovereign_concepts').select('*').eq('user_id', userId),
+    supabase.from('sovereign_connections').select('*').eq('user_id', userId),
+    supabase.from('sovereign_domain_mappings').select('*').eq('user_id', userId),
+    supabase.from('sovereign_artifacts').select('*').eq('user_id', userId).maybeSingle(),
+  ]);
 
   const error = firstError([
     sessionResult,
@@ -65,6 +75,7 @@ export async function fetchRemoteState(userId, client) {
     reflectionResult,
     conceptResult,
     connectionResult,
+    domainMappingResult,
     artifactResult,
   ]);
   if (error) return { data: null, error };
@@ -80,6 +91,7 @@ export async function fetchRemoteState(userId, client) {
       reflections: rowsToReflectionEntries(reflectionResult.data ?? []),
       concepts: rowsToConceptSelections(conceptResult.data ?? []),
       connections: rowsToConnections(connectionResult.data ?? []),
+      domainMappings: rowsToDomainMappings(domainMappingResult.data ?? []),
       artifact: rowToArtifact(artifactResult.data),
     },
     error: null,
@@ -88,10 +100,10 @@ export async function fetchRemoteState(userId, client) {
 
 /**
  * Pushes the given Sovereign state to Supabase for one user. Modules and
- * reflections are upserted (they have real update semantics); concepts and
- * connections are additive-only today, so duplicates are ignored rather
- * than updated; the artifact row is only written once something has
- * actually been drafted.
+ * reflections are upserted (they have real update semantics); concepts,
+ * connections, and domain mappings are additive-only today, so duplicates
+ * are ignored rather than updated; the artifact row is only written once
+ * something has actually been drafted.
  */
 export async function pushRemoteState(userId, state, client) {
   const supabase = resolveClient(client);
@@ -106,6 +118,7 @@ export async function pushRemoteState(userId, state, client) {
   const reflectionRows = reflectionEntriesToRows(userId, state.reflection.entries);
   const conceptRows = conceptSelectionsToRows(userId, state.concepts.selected);
   const connectionRows = connectionsToRows(userId, state.concepts.connections);
+  const domainMappingRows = domainMappingsToRows(userId, state.concepts.domainMappings);
 
   const operations = [
     supabase
@@ -143,6 +156,14 @@ export async function pushRemoteState(userId, state, client) {
     operations.push(
       supabase.from('sovereign_connections').upsert(connectionRows, {
         onConflict: 'user_id,from_concept_id,to_concept_id,relationship',
+        ignoreDuplicates: true,
+      }),
+    );
+  }
+  if (domainMappingRows.length) {
+    operations.push(
+      supabase.from('sovereign_domain_mappings').upsert(domainMappingRows, {
+        onConflict: 'user_id,concept_id,domain,role',
         ignoreDuplicates: true,
       }),
     );

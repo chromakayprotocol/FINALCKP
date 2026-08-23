@@ -56,7 +56,8 @@ function normalizeTrack(row, position = null, lyricData = null, visualAssets = n
     display_text: lyrics,
     lyrics,
     lyrics_track_id: lyrics ? row.id : null,
-    light_code: protocol?.primary_light_code || null,
+    light_code: row.light_code || protocol?.primary_light_code || null,
+    shadow_code: row.shadow_code || null,
     lyric_summary: protocol?.lyric_summary || null,
     timed_lyrics: timedLyrics,
     visual_preset: row.visual_presets || null,
@@ -73,6 +74,8 @@ const TRACK_COLUMNS = `
   queue_index,
   r2_audio_key,
   r2_cover_key,
+  light_code,
+  shadow_code,
   preset_id,
   visual_presets (
     id,

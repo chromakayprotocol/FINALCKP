@@ -262,8 +262,8 @@ export default function ActTwoVisualizerCore({
           <p className="atv-artist">{activeTrack?.artist || 'Musiq Matrix'} · Act II</p>
           <div className="atv-cover-wrap"><img src={cover} alt={activeTrack?.cover_alt || `${activeTrack?.title || 'Current track'} cover art`} /><span>MMR–II / {String(activeIndex + 1).padStart(2, '0')}</span></div>
           <dl>
-            <div><dt>Light code</dt><dd>The Mirror Does Not Flatter. The Mirror Does Not Judge.</dd></div>
-            <div><dt>Shadow code</dt><dd>Distortion · Concealment · Performance</dd></div>
+            <div><dt>Light code</dt><dd>{activeTrack?.light_code || 'The Mirror Does Not Flatter. The Mirror Does Not Judge.'}</dd></div>
+            <div><dt>Shadow code</dt><dd>{activeTrack?.shadow_code || 'Distortion · Concealment · Performance'}</dd></div>
           </dl>
         </aside>
 

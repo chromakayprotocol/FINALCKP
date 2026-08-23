@@ -4,8 +4,7 @@ import {
   FileText, Flame, Globe2, Lightbulb, PenLine, RefreshCw, Sparkles,
   Target, Waves,
 } from "lucide-react";
-import { useAuth } from "../../../context/AuthContext";
-import { SovereignProvider, useSovereign } from "../../../sovereign/runtime";
+import { useSovereign } from "../../../sovereign/runtime";
 import suppliedCopy from "../../../data/hermeticSuppliedModules.txt?raw";
 import "./hermeticMaterialExperience.css";
 import "./hermeticReferenceExperience.css";
@@ -156,18 +155,14 @@ function CopyScreen({ section, moduleTitle, moduleSlug, activeTab, response, onR
    textarea were plain useState, wiped on every unmount/reload
    (SOVEREIGN_STATE_MAP.md duplication finding #3). Routes both through the
    Sovereign Runtime's local+remote sync instead, keyed per module slug so
-   Mentalism and Correspondence don't collide. */
-export default function HermeticSuppliedModuleExperience(props) {
-  const { user } = useAuth();
-  const namespace = user?.id || "anonymous";
-  return (
-    <SovereignProvider namespace={namespace} userId={user?.id}>
-      <HermeticSuppliedModuleExperienceInner {...props} />
-    </SovereignProvider>
-  );
-}
+   Mentalism and Correspondence don't collide.
 
-function HermeticSuppliedModuleExperienceInner({ moduleSlug, progress = 0, onComplete }) {
+   Phase 15 follow-up (docs/ARCHITECTURE.md): this component no longer
+   mounts its own SovereignProvider — ReclamationModulePage.jsx now hoists
+   one shared provider above all seven Hermetic Hall module components, so
+   state (concepts, reflections, artifact) actually survives navigating
+   between modules instead of resetting on every mount. */
+export default function HermeticSuppliedModuleExperience({ moduleSlug, progress = 0, onComplete }) {
   const moduleCopy = MODULE_COPY[moduleSlug];
   const { reflection, session } = useSovereign();
   const MODULE_ID = `hermetic-hall/${moduleSlug}`;

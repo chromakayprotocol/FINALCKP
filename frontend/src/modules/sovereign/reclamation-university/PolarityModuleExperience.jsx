@@ -6,8 +6,7 @@ import jsPDF from "jspdf";
 import CurriculumSpine from "./CurriculumSpine";
 import ReclamationLessonMedia from "./ReclamationLessonMedia";
 import { CURRICULUM_SECTIONS } from "./curriculumSections";
-import { useAuth } from "../../../context/AuthContext";
-import { SovereignProvider, useSovereign } from "../../../sovereign/runtime";
+import { useSovereign } from "../../../sovereign/runtime";
 import {
   POLARITY_META, PRINCIPLES, INTRO_CONTENT, PRINCIPLE_CONTENT, KEY_CONCEPTS,
   WHY_IT_MATTERS, DOMAINS, RECLAMATION_CONTENT, LENS, LENS_SOURCES, REFLECTION_CONTENT,
@@ -41,18 +40,13 @@ const EMPTY_ARTIFACT = { binary: "", situation: "", continuum: "", degree: "", b
    was lost on a new device or cleared storage (SOVEREIGN_STATE_MAP.md §1).
    Routes the same payload through the Sovereign Runtime's local+remote
    sync instead — the hydrate/save shape below is otherwise unchanged from
-   the localStorage version. */
-export default function PolarityModuleExperience(props) {
-  const { user } = useAuth();
-  const namespace = user?.id || "anonymous";
-  return (
-    <SovereignProvider namespace={namespace} userId={user?.id}>
-      <PolarityModuleExperienceInner {...props} />
-    </SovereignProvider>
-  );
-}
+   the localStorage version.
 
-function PolarityModuleExperienceInner({ faculty, onComplete }) {
+   Phase 15 follow-up (docs/ARCHITECTURE.md): no longer mounts its own
+   SovereignProvider — ReclamationModulePage.jsx hoists one shared provider
+   above all seven Hermetic Hall module components so state survives
+   navigating between modules. */
+export default function PolarityModuleExperience({ faculty, onComplete }) {
   const navigate = useNavigate();
   const { reflection: sovereignReflection, session } = useSovereign();
   const [activeIndex, setActiveIndex] = useState(0);

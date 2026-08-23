@@ -1,7 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../../../context/AuthContext";
-import { SovereignProvider, useSovereign } from "../../../sovereign/runtime";
+import { useSovereign } from "../../../sovereign/runtime";
 import useFooterOffset from "./useFooterOffset";
 import "./vibrationModuleExperience.css";
 
@@ -841,18 +840,13 @@ const MODULE_ID = "hermetic-hall/vibration";
    persistence-layer swap only — this module's own reflect/plate/steps/
    audits state still lives in plain useState below; a full structural
    migration onto the runtime's typed module/reflection/artifact domains is
-   future work, not this pass. */
-export default function VibrationModuleExperience(props) {
-  const { user } = useAuth();
-  const namespace = user?.id || "anonymous";
-  return (
-    <SovereignProvider namespace={namespace} userId={user?.id}>
-      <VibrationModuleExperienceInner {...props} />
-    </SovereignProvider>
-  );
-}
+   future work, not this pass.
 
-function VibrationModuleExperienceInner({ module, faculty, onComplete }) {
+   Phase 15 follow-up (docs/ARCHITECTURE.md): no longer mounts its own
+   SovereignProvider — ReclamationModulePage.jsx hoists one shared provider
+   above all seven Hermetic Hall module components so state survives
+   navigating between modules. */
+export default function VibrationModuleExperience({ module, faculty, onComplete }) {
   const navigate = useNavigate();
   const { reflection, session } = useSovereign();
   const [tab, setTab] = useState(0);

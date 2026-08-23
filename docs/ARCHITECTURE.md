@@ -959,6 +959,90 @@ beyond the existing `SovereignModulePanel`-style dark/red Tailwind
 aesthetic (that's Phase 16's job); a real navigation beyond the seven
 Hermetic Hall modules (no non-Hall faculties, no cross-Act navigation).
 
+## Phase 15 follow-up: hoisting one shared SovereignProvider into live routes
+
+Every phase from 15 through 18 named the same deferred decision: the
+Sovereign OS Shell (and the cross-module awareness it depends on) was
+never wired into the live Reclamation University routes, because doing
+so meant touching all six already-shipped, Sovereign-consuming Hermetic
+Hall components (`SOVEREIGN_STATE_MAP.md`'s Phase 8 migrations) at once
+— real production-risk surgery, not a new standalone file. Picked up
+explicitly rather than deferred again.
+
+**The actual problem, confirmed by reading the code rather than assumed
+from memory**: each of the six components (`VibrationModuleExperience`,
+`PolarityModuleExperience`, `RhythmModuleExperience`,
+`CauseEffectModuleExperience`, `GenderModuleExperience`,
+`HermeticSuppliedModuleExperience`) mounted its *own* `SovereignProvider`
+at its own top level, scoped to its own component lifetime. Since
+`ReclamationModulePage.jsx` (the page these all render under) simply
+`return`s a different one of them based on `module.slug`, navigating
+Vibration → Polarity via the normal `onComplete` flow unmounted one
+provider and mounted a fresh one — any in-memory Sovereign state
+(selected concepts, in-progress reflections, the artifact draft) was
+gone the instant a user moved to the next module. "Does a concept
+selected in module A survive into module B" — the guide's own Phase 19
+Test B — was never actually true for real, signed-in users; it only
+ever held for the isolated `/qa/sovereign-os` staging page's demo
+provider.
+
+**The fix, scoped to a single, well-understood React Router fact**:
+`ReclamationModulePage` itself is one `Route`'s `element`
+(`/experiencemode/sovereign/reclamation-university/:facultySlug/:moduleSlug`)
+— React Router keeps that component instance mounted across
+`:moduleSlug`-only navigation (same matched Route, new params), it does
+not remount it. So hoisting one `SovereignProvider` inside
+`ReclamationModulePage` itself, wrapping whichever of the six
+Sovereign-consuming components it currently renders, gives those six
+components a provider that survives exactly the navigation that used to
+destroy it — without touching the route table in `App.jsx` at all, and
+without changing any of the six components' own internals beyond
+removing their now-redundant individual `SovereignProvider` wrapper
+(each was a ~4-line, mechanically identical block — `const { user } =
+useAuth(); const namespace = user?.id || 'anonymous'; return
+<SovereignProvider>...<XInner/></SovereignProvider>` — deleted, with the
+inner component simply renamed up to the file's default export). No
+other line in any of the six files changed. `HermeticCurriculumModule`
+and `ReclamationModuleEngine` — the two Reclamation University
+components Phase 8 deliberately left alone because they don't use
+`useSovereign()` at all — are correctly left outside the hoisted
+provider too, so they don't pay for a Supabase sync they'd never read
+from.
+
+**What this does not do**: it doesn't render the Sovereign OS Shell
+(`SovereignOSShell.jsx`) anywhere in these live routes. Its fixed
+three-column grid layout was designed for a standalone page
+(`/qa/sovereign-os`), not to coexist with six modules' own full-viewport,
+individually-designed interaction models — putting it there for real
+would mean redesigning the Shell into something that can wrap arbitrary
+content (a collapsible drawer, not a grid that assumes it owns the
+page), which is real visual/responsive design work of its own,
+explicitly scoped out of this pass. What *is* real now: the state
+those Shell panels would read — `concepts.selected`,
+`reflection.entries`, `artifact.draft` — genuinely persists across
+Hermetic Hall module navigation for the first time, which is the actual
+prerequisite Phase 19's Test B and Phase 13's synthesis questions
+needed to mean anything for a real user, not just a test fixture.
+
+Verification: full suite 312/318 — same 6 pre-existing unrelated
+failures, 0 introduced. `npx esbuild` bundle-checked all seven touched
+files individually (clean) and the full `App.jsx` entry point (clean,
+only the same benign `import.meta`/iife warnings seen on every prior
+bundle-check). Live Vite dev server + headless Chromium loaded all six
+Hermetic Hall module routes directly
+(`/experiencemode/sovereign/reclamation-university/hermetic-hall/{vibration,polarity,rhythm,cause-and-effect,gender,mentalism}`)
+— each correctly redirected to `/login` with zero console/page errors,
+confirming the restructured `ReclamationModulePage.jsx` and all six
+edited components still import and render without a runtime error.
+**Not verified**: the actual signed-in cross-module memory (selecting a
+concept in Vibration, navigating to Polarity, confirming it's still
+there) — same real gap as every Phase 8 entry above, this environment
+has no real Supabase test credentials and creating one against the
+live production project wasn't judged appropriate just to check this.
+The fix rests on a well-established, doc-verifiable React Router
+behavior (a Route's element doesn't remount on a params-only change),
+not on an assumption unique to this codebase.
+
 ## Phase 16: the Visual Interaction Layer
 
 The guide lists seven elements ("SVG causal-chain animations,

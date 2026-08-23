@@ -32,6 +32,7 @@ const ChromaKeyProtocolPremium = lazy(() => import('./pages/ChromaKeyProtocolPre
 const SelfDirectedSovereignMode = lazy(() => import('./pages/SelfDirectedSovereignMode'));
 const CKPVisualizerCore = lazy(() => import('./pages/CKPVisualizerCore'));
 const VisualizerCorePage = lazy(() => import('./pages/experience/VisualizerCorePage'));
+const ActTwoVisualizerPage = lazy(() => import('./pages/experience/ActTwoVisualizerPage'));
 const ReclamationUniversityPage = lazy(() => import('./pages/ReclamationUniversityPage'));
 const ReclamationFacultyRedirect = lazy(() => import('./pages/ReclamationFacultyRedirect'));
 const ReclamationModulePage = lazy(() => import('./pages/ReclamationModulePage'));
@@ -239,6 +240,15 @@ function AppRoutes() {
       />
 
       <Route
+        path="/experiencemode/act-two/visualizer"
+        element={
+          <ProtectedRoute withShell={false}>
+            <ActTwoVisualizerPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
         path="/experiencemode/sovereign/reclamation-university"
         element={
           <ProtectedRoute withShell={false}>
@@ -433,7 +443,8 @@ function AppWithBackground() {
   if (
     path.includes("/protocol/2") ||
     path.includes("/act/2") ||
-    path.includes("act_two")
+    path.includes("act_two") ||
+    path.includes("act-two")
   ) {
     act = "water";
   }

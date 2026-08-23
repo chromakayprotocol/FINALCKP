@@ -1316,6 +1316,78 @@ wrangler deploy --dry-run` confirmed a clean bundle against the real
 account's bindings. No live deploy was performed or claimed, and no
 API key was requested in chat.
 
+## Phase 15/18 follow-up: making the Shell and VMA actually visible
+
+Every prior phase touching the Shell or VMA built real, tested code
+that stayed reachable only at unauthenticated `/qa/*` staging pages —
+deliberately, each time, because wiring either into the live product
+was flagged as a separate design/UX decision. Picked up explicitly:
+a new, real, authenticated, linked page.
+
+**`SovereignOSLive.jsx`** (route:
+`/experiencemode/sovereign/reclamation-university/sovereign-os`,
+`ProtectedRoute`-gated): mounts the real `SovereignOS` wrapper (real
+`SovereignProvider`, namespaced to the signed-in user — the same
+component `SovereignOSDemo.jsx` uses, just under real auth instead of
+none) and renders the Concept Graph (Phase 16) plus a new `VMAChat`
+component as the Main Workspace. Linked from a real button on
+`HermeticHallViewport.jsx` ("Open Sovereign OS") — the first place
+either the Shell or VMA has been reachable by clicking through the live
+app rather than typing a URL.
+
+**`VMAChat.jsx`**: a real chat UI calling `frontend/vma-worker`'s
+`POST /chat`. Two things worth being precise about:
+- The context it sends is `useSovereign().vma.context` — a new bundle
+  added to `useSovereign.js` that calls `buildVMAContext(state)`
+  directly (Phase 18's function, previously only exercised by its own
+  tests) rather than reconstructing an equivalent shape by hand in the
+  component. `buildVMAContext` needs the raw reducer state
+  (`state.curriculum.modules`, `state.artifact.status`, ...), which
+  `useSovereign()` never exposed before — adding `vma.context` was the
+  one small, additive hook change this needed, not a new derivation.
+- Auth mirrors `src/services/apiClient.js`'s exact pattern for the
+  FastAPI backend: pull the live Supabase access token per-request via
+  `supabase.auth.getSession()`, send it as `Authorization: Bearer`. No
+  new session mechanism.
+- The Worker's URL is `VITE_APP_VMA_WORKER_URL` (frontend/.env.example),
+  left unset by default — if unset, the chat says so explicitly rather
+  than silently failing or fabricating a reply.
+
+**A real bug found and fixed getting here**: triggering the two
+`workflow_dispatch` deploys (Phase 17/18's Workers) for the first time
+against real CI — both failed immediately, before reaching
+`wrangler deploy`, with `Cannot find module 'vite'` from
+`npx vitest run`. Neither worker package had its own Vitest config, so
+Vitest walked up from `frontend/vma-worker/` (or
+`frontend/protected-media-worker/`) and found `../vite.config.js` — the
+main frontend app's own config, which needs
+`frontend/node_modules/vite` to load. That happened to exist in this
+session's dev container (the frontend app had already been installed
+and tested earlier in the same session) but was never installed in
+CI's clean checkout, which only ever ran `npm ci` inside each worker
+directory — so both suites passed here and failed for real the moment
+they actually ran in CI. Fixed with a minimal `vitest.config.js` in
+each worker directory (`test: { root: import.meta.dirname }`), and this
+time verified against the actual failure condition, not just "it passed
+locally": ran both suites with `frontend/node_modules` temporarily
+moved out of the way, confirming 18 and 32 tests still pass with it
+genuinely absent. A reminder that "verified locally" in a long session
+with an already-populated environment isn't the same claim as "verified
+under the conditions CI actually runs under" — worth being honest about
+rather than assuming the first green run generalizes.
+
+Also discovered while investigating the Worker deploy runs: this
+account has a *separate*, pre-existing Cloudflare Git-integration
+auto-build (visible as automated PR comments from
+`cloudflare-workers-and-pages[bot]`) wired to at least three Worker/
+Pages projects (`r2-worker`, `chromakeyprotocolproduction`,
+`chroma-key-protocol`) that rebuilds on every push independent of this
+repo's own GitHub Actions workflows. It's failing for at least two of
+them. This is unrelated to anything built in this migration and wasn't
+investigated further in this pass — noted here as a real, pre-existing
+account-configuration item for whoever owns that Git integration to
+look at, not something this session broke or is responsible for fixing.
+
 ## Phase 19: testing the system as an OS
 
 Every earlier phase's tests proved one function or one reducer case in

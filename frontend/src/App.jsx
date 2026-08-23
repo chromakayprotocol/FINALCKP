@@ -36,6 +36,7 @@ const ReclamationUniversityPage = lazy(() => import('./pages/ReclamationUniversi
 const ReclamationFacultyRedirect = lazy(() => import('./pages/ReclamationFacultyRedirect'));
 const ReclamationModulePage = lazy(() => import('./pages/ReclamationModulePage'));
 const SovereignOSDemo = lazy(() => import('./pages/experience/SovereignOSDemo'));
+const SovereignOSLive = lazy(() => import('./pages/experience/SovereignOSLive'));
 
 import AppShell from './components/layout/AppShell';
 import PaywallModal from './components/layout/PaywallModal';
@@ -116,6 +117,18 @@ function AppRoutes() {
       {/* Phase 15 staging route — the Sovereign OS Shell, not linked from
           anywhere live. See SovereignOSShell.jsx's header comment. */}
       <Route path="/qa/sovereign-os" element={<SovereignOSDemo />} />
+
+      {/* Phase 15/16/18 live: the real Shell + Concept Graph + VMA chat,
+          authenticated, running the real SovereignProvider. Linked from
+          Reclamation University's landing page. */}
+      <Route
+        path="/experiencemode/sovereign/reclamation-university/sovereign-os"
+        element={
+          <ProtectedRoute withShell={false}>
+            <SovereignOSLive />
+          </ProtectedRoute>
+        }
+      />
 
       {/* AUTH */}
 

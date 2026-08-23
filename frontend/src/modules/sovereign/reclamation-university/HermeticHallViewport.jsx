@@ -31,6 +31,24 @@ export default function HermeticHallViewport() {
           <span className="hh-brand">Reclamation University</span>
           <h1>Hermetic Hall</h1>
           <span className="hh-instruction">Select a Principle</span>
+          <button
+            type="button"
+            onClick={() => navigate('/experiencemode/sovereign/reclamation-university/sovereign-os')}
+            style={{
+              marginTop: '0.75rem',
+              padding: '0.4rem 1rem',
+              background: 'transparent',
+              border: '1px solid rgba(239, 68, 68, 0.4)',
+              borderRadius: '999px',
+              color: '#fca5a5',
+              fontSize: '0.7rem',
+              letterSpacing: '0.14em',
+              textTransform: 'uppercase',
+              cursor: 'pointer',
+            }}
+          >
+            Open Sovereign OS
+          </button>
         </header>
 
         <nav className="hh-principle-map" aria-label="Seven Hermetic principles">

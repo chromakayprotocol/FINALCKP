@@ -1,0 +1,27 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "chroma-key-vma",
+  "main": "src/index.js",
+  "compatibility_date": "2026-07-01",
+  // Required by @anthropic-ai/sdk, which statically imports node:fs/
+  // node:path for its credential-chain (OAuth profile / WIF) code —
+  // unused here (this Worker passes `apiKey` directly), but the import
+  // still needs to resolve at module load. Cloudflare's own dry-run
+  // flagged this; Workers ships node:fs/node:path shims under this
+  // flag specifically for cases like it.
+  "compatibility_flags": ["nodejs_compat"],
+  // No `routes`: not wired to any live domain, matches
+  // frontend/protected-media-worker's staging-only approach. See
+  // docs/ARCHITECTURE.md's Phase 18 section.
+  "vars": {
+    "SUPABASE_URL": "https://jmlqrqrikpukxxbstuoe.supabase.co",
+    // Public/non-secret — the same value already shipped to the
+    // frontend as VITE_SUPABASE_PUBLISHABLE_KEY. The only real secret
+    // this Worker needs is ANTHROPIC_API_KEY:
+    //   npx wrangler secret put ANTHROPIC_API_KEY
+    "SUPABASE_ANON_KEY": "sb_publishable_8DEj5ynJmj7Aj2CbfghWNQ_4XmX9-wA"
+  },
+  "observability": {
+    "enabled": true
+  }
+}

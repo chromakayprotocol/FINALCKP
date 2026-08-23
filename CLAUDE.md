@@ -6,6 +6,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **Chroma Key Protocol** — a narrative, role-based web app with a React/Vite frontend and a FastAPI backend, backed by Supabase (auth + Postgres) and Cloudflare (R2 for media storage, Pages for hosting, a small R2 Worker). The product is structured as "Acts" (I–IV) the user progresses through — journaling, guided audio listening, a "Protocol" chat, a visualizer, and a "Reclamation University" curriculum module ("Sovereign Mode").
 
+> **Migration note**: a "Sovereign OS" migration is in progress (Phase 1 of the guide as of this writing) whose target architecture removes the FastAPI backend entirely in favor of a frontend-owned Sovereign Runtime + Supabase + Cloudflare Workers. See `docs/ARCHITECTURE.md` for both the current and target architectures. Until that migration actually lands, everything below in this file describes the real, active system — treat it as accurate.
+
 ## Commands
 
 ### Frontend (`frontend/`)

@@ -3,6 +3,8 @@
 
 A full-stack web application built around the **Chroma Key Protocol** — a structured, role-based system designed to manage user access, identity, and interaction flows within a branded, high-contrast UI environment.
 
+> **Migration note**: this repo is migrating toward a "Sovereign OS" architecture that removes the Python/FastAPI backend entirely in favor of a frontend-owned runtime + Supabase + Cloudflare Workers. See `docs/ARCHITECTURE.md` for the current vs. target architecture. Everything below still describes the currently-active system.
+
 ---
 
 ## 🧠 Overview

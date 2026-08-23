@@ -1,0 +1,51 @@
+name: Deploy VMA Worker (manual)
+
+# Manual-only, same reasoning as deploy-protected-media-worker.yml:
+# this Worker (frontend/vma-worker) isn't wired into any live route —
+# see docs/ARCHITECTURE.md's Phase 18 section. Only deploy on an
+# explicit decision, never automatically on a push.
+on:
+  workflow_dispatch: {}
+
+jobs:
+  deploy-vma-worker:
+    runs-on: ubuntu-latest
+    name: Worker → chroma-key-vma
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/vma-worker/package-lock.json
+
+      - name: Install dependencies
+        working-directory: frontend/vma-worker
+        run: npm ci
+
+      - name: Run tests
+        working-directory: frontend/vma-worker
+        run: npx vitest run
+
+      - name: Require ANTHROPIC_API_KEY secret
+        run: |
+          if [ -z "${{ secrets.ANTHROPIC_API_KEY }}" ]; then
+            echo "::error::ANTHROPIC_API_KEY repo secret is not set — refusing to deploy a Worker that would fail every chat turn. Add it under Settings > Secrets and variables > Actions, then re-run this workflow."
+            exit 1
+          fi
+
+      - name: Set ANTHROPIC_API_KEY Worker secret
+        working-directory: frontend/vma-worker
+        run: echo "${{ secrets.ANTHROPIC_API_KEY }}" | npx wrangler secret put ANTHROPIC_API_KEY
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFARE_ACCOUNT_ID }}
+
+      - name: Deploy Worker
+        working-directory: frontend/vma-worker
+        run: npx wrangler deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFARE_ACCOUNT_ID }}

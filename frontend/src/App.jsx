@@ -35,6 +35,7 @@ const VisualizerCorePage = lazy(() => import('./pages/experience/VisualizerCoreP
 const ReclamationUniversityPage = lazy(() => import('./pages/ReclamationUniversityPage'));
 const ReclamationFacultyRedirect = lazy(() => import('./pages/ReclamationFacultyRedirect'));
 const ReclamationModulePage = lazy(() => import('./pages/ReclamationModulePage'));
+const SovereignOSDemo = lazy(() => import('./pages/experience/SovereignOSDemo'));
 
 import AppShell from './components/layout/AppShell';
 import PaywallModal from './components/layout/PaywallModal';
@@ -112,6 +113,9 @@ function AppRoutes() {
   return (
     <Routes>
       <Route path="/qa/sovereign" element={<SelfDirectedSovereignMode />} />
+      {/* Phase 15 staging route — the Sovereign OS Shell, not linked from
+          anywhere live. See SovereignOSShell.jsx's header comment. */}
+      <Route path="/qa/sovereign-os" element={<SovereignOSDemo />} />
 
       {/* AUTH */}
 

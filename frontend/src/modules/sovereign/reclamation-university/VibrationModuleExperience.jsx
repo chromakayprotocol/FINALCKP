@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { loadUserProgress, saveUserProgress } from "../../../lib/supabase/reclamationUniversity";
+import { useSovereign } from "../../../sovereign/runtime";
 import useFooterOffset from "./useFooterOffset";
 import "./vibrationModuleExperience.css";
 
@@ -827,11 +827,28 @@ function ManualPlate({ v, sealed }) {
 }
 
 /* =========================================================== MAIN ========= */
-const STORE_KEY = "ckp-hermetic-hall-module-3";
 const MODULE_ID = "hermetic-hall/vibration";
 
+/* Persistence (Phase 8 of the Sovereign OS migration, docs/ARCHITECTURE.md)
+   used to be hand-rolled here: a raw localStorage read/write plus a call to
+   saveUserProgress() whose actual argument shape didn't match what that
+   function destructures, so `progress`/`state`/`completed` were silently
+   dropped and every save quietly wiped this module's remote progress back
+   to empty defaults (SOVEREIGN_STATE_MAP.md duplication finding #1/#2).
+   This wrapper swaps that for the Sovereign Runtime's local+remote sync,
+   which doesn't have that failure mode and works while signed out. It's a
+   persistence-layer swap only — this module's own reflect/plate/steps/
+   audits state still lives in plain useState below; a full structural
+   migration onto the runtime's typed module/reflection/artifact domains is
+   future work, not this pass.
+
+   Phase 15 follow-up (docs/ARCHITECTURE.md): no longer mounts its own
+   SovereignProvider — ReclamationModulePage.jsx hoists one shared provider
+   above all seven Hermetic Hall module components so state survives
+   navigating between modules. */
 export default function VibrationModuleExperience({ module, faculty, onComplete }) {
   const navigate = useNavigate();
+  const { reflection, session } = useSovereign();
   const [tab, setTab] = useState(0);
   const [maxTab, setMaxTab] = useState(0);
   const [openConcepts, setOpenConcepts] = useState([0]);
@@ -933,9 +950,15 @@ export default function VibrationModuleExperience({ module, faculty, onComplete 
   const drifting = motion - progress >= 30;
 
   /* --- PERSISTENCE ---------------------------------------------------------
-     Supabase is the record of truth so the Manual follows the learner across
-     devices. localStorage mirrors it so a signed-out or offline session still
-     keeps the learner's work. Neither failing blocks the lesson. */
+     Local restore is synchronous (SovereignProvider hydrates from
+     localStorage before first paint), so it's applied as soon as this
+     effect first runs. If signed in, Supabase reconciliation happens
+     shortly after in the background (session.syncStatus: local -> syncing
+     -> synced/error); when it settles, the record is applied a second time
+     to pick up anything that only existed remotely (e.g. progress made on
+     another device). appliedSyncStatusRef guards against reapplying on
+     every render — this component's own saves change `reflection` too, but
+     don't change syncStatus, so they don't retrigger this. */
   const applyRecord = useCallback((d) => {
     if (!d) return;
     if (d.reflect) setReflect((p) => ({ ...p, ...d.reflect }));
@@ -948,39 +971,27 @@ export default function VibrationModuleExperience({ module, faculty, onComplete 
     if (d.plate && Object.values(d.plate).some(Boolean)) seeded.current = true;
   }, []);
 
+  const appliedSyncStatusRef = useRef(null);
   useEffect(() => {
-    let live = true;
-    (async () => {
-      let record = null;
-      try {
-        const local = window.localStorage.getItem(STORE_KEY);
-        if (local) record = JSON.parse(local);
-      } catch (e) { /* private mode or disabled storage */ }
-      try {
-        const { data } = await loadUserProgress(MODULE_ID);
-        const remote = data?.state ? (typeof data.state === "string" ? JSON.parse(data.state) : data.state) : null;
-        if (remote) record = { ...record, ...remote };
-      } catch (e) { /* signed out or offline — local record still applies */ }
-      if (live) { applyRecord(record); setHydrated(true); }
-    })();
-    return () => { live = false; };
-  }, [applyRecord]);
+    if (session.syncStatus === "syncing") return;
+    if (appliedSyncStatusRef.current === session.syncStatus) return;
+    appliedSyncStatusRef.current = session.syncStatus;
+    const record = reflection.entries[`${MODULE_ID}:record`]?.response ?? null;
+    applyRecord(record);
+    setHydrated(true);
+  }, [session.syncStatus, reflection, applyRecord]);
 
   useEffect(() => {
     if (!hydrated) return;
     setSaveState("saving");
     const payload = { reflect, plate, steps, audits, introPick, maxTab, complete };
-    const t = setTimeout(async () => {
-      let ok = false;
-      try { window.localStorage.setItem(STORE_KEY, JSON.stringify(payload)); ok = true; } catch (e) { /* ignore */ }
-      try {
-        await saveUserProgress({ moduleId: MODULE_ID, progress: work.pct, state: payload, completed: complete });
-        ok = true;
-      } catch (e) { /* offline — local mirror stands */ }
-      setSaveState(ok ? "saved" : "off");
+    const t = setTimeout(() => {
+      reflection.recordReflection(MODULE_ID, "record", payload);
+      setSaveState("saved");
     }, 800);
     return () => clearTimeout(t);
-  }, [reflect, plate, steps, audits, introPick, maxTab, complete, hydrated, work.pct]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [reflect, plate, steps, audits, introPick, maxTab, complete, hydrated]);
 
   const phases = useMemo(() => {
     const out = [];

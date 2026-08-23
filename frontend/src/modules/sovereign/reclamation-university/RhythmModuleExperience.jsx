@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useMemo, useState } from "react";
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import useFooterOffset from "./useFooterOffset";
 import { ArrowRight, LayoutDashboard, Pencil, Download, FileDown } from "lucide-react";
@@ -6,6 +6,7 @@ import jsPDF from "jspdf";
 import CurriculumSpine from "./CurriculumSpine";
 import ReclamationLessonMedia from "./ReclamationLessonMedia";
 import { CURRICULUM_SECTIONS } from "./curriculumSections";
+import { useSovereign } from "../../../sovereign/runtime";
 import {
   RHYTHM_META, PRINCIPLES, PHASES, INTRO_CONTENT, PRINCIPLE_CONTENT, KEY_CONCEPTS,
   WHY_IT_MATTERS, DOMAINS, RECLAMATION_CONTENT, LENS, LENS_SOURCES, REFLECTION_CONTENT,
@@ -16,7 +17,7 @@ import {
 import "./curriculumSpine.css";
 import "./rhythmModuleExperience.css";
 
-const STORE_KEY = "ckp-hermetic-hall-module-5";
+const MODULE_ID = "hermetic-hall/rhythm";
 
 /* Descriptive verbs, per the master's primary-action rule. */
 const PRIMARY_ACTION = {
@@ -69,8 +70,21 @@ const CYCLE_NODES = [
 const DAY_COUNT = 7;
 const EMPTY_DAY = Object.fromEntries(SEVEN_DAY_PRACTICE.daily.map((d) => [d.id, ""]));
 
+/* Persistence (Phase 8 of the Sovereign OS migration, docs/ARCHITECTURE.md):
+   this module previously persisted only to localStorage (STORE_KEY
+   "ckp-hermetic-hall-module-5"), so progress never reached the server and
+   was lost on a new device or cleared storage (SOVEREIGN_STATE_MAP.md §1).
+   Routes the same payload through the Sovereign Runtime's local+remote
+   sync instead — the hydrate/save shape below is otherwise unchanged from
+   the localStorage version.
+
+   Phase 15 follow-up (docs/ARCHITECTURE.md): no longer mounts its own
+   SovereignProvider — ReclamationModulePage.jsx hoists one shared provider
+   above all seven Hermetic Hall module components so state survives
+   navigating between modules. */
 export default function RhythmModuleExperience({ faculty, onComplete }) {
   const navigate = useNavigate();
+  const { reflection: sovereignReflection, session } = useSovereign();
   const [activeIndex, setActiveIndex] = useState(0);
   const [maxIndex, setMaxIndex] = useState(0);
   const [completedIds, setCompletedIds] = useState([]);
@@ -111,33 +125,37 @@ export default function RhythmModuleExperience({ faculty, onComplete }) {
   const [ceremonyPlaying, setCeremonyPlaying] = useState(false);
 
   /* -------------------------------------------------------- PERSISTENCE -- */
-  useEffect(() => {
-    try {
-      const raw = window.localStorage.getItem(STORE_KEY);
-      if (raw) {
-        const d = JSON.parse(raw);
-        if (d.activeIndex != null) setActiveIndex(d.activeIndex);
-        if (d.maxIndex != null) setMaxIndex(d.maxIndex);
-        if (Array.isArray(d.completedIds)) setCompletedIds(d.completedIds);
-        if (d.reflection != null) setReflection(d.reflection);
-        if (d.reflectionSavedAt != null) setReflectionSavedAt(d.reflectionSavedAt);
-        if (d.protocolResponses) setProtocolResponses({ ...EMPTY_PROTOCOL, ...d.protocolResponses });
-        if (Array.isArray(d.protocolDone)) setProtocolDone(d.protocolDone);
-        if (d.protocolStepIndex != null) setProtocolStepIndex(d.protocolStepIndex);
-        if (d.responseKind != null) setResponseKind(d.responseKind);
-        if (d.interventionPoint != null) setOverlayPhase(d.interventionPoint);
-        if (d.artifactGenerated) setArtifactGenerated(true);
-        if (d.artifact) setArtifact({ ...EMPTY_ARTIFACT, ...d.artifact });
-        if (d.patternStatement != null) setPatternStatement(d.patternStatement);
-        if (d.artifactCreatedAt != null) setArtifactCreatedAt(d.artifactCreatedAt);
-        if (d.artifactUpdatedAt != null) setArtifactUpdatedAt(d.artifactUpdatedAt);
-        if (d.sevenDayPracticeStarted) setPracticeStarted(true);
-        if (d.sevenDayPracticeEntries) setPracticeEntries(d.sevenDayPracticeEntries);
-        if (d.moduleCompleted) setModuleCompleted(true);
-      }
-    } catch (e) { /* private mode or disabled storage */ }
-    setHydrated(true);
+  const applyRecord = useCallback((d) => {
+    if (!d) return;
+    if (d.activeIndex != null) setActiveIndex(d.activeIndex);
+    if (d.maxIndex != null) setMaxIndex(d.maxIndex);
+    if (Array.isArray(d.completedIds)) setCompletedIds(d.completedIds);
+    if (d.reflection != null) setReflection(d.reflection);
+    if (d.reflectionSavedAt != null) setReflectionSavedAt(d.reflectionSavedAt);
+    if (d.protocolResponses) setProtocolResponses({ ...EMPTY_PROTOCOL, ...d.protocolResponses });
+    if (Array.isArray(d.protocolDone)) setProtocolDone(d.protocolDone);
+    if (d.protocolStepIndex != null) setProtocolStepIndex(d.protocolStepIndex);
+    if (d.responseKind != null) setResponseKind(d.responseKind);
+    if (d.interventionPoint != null) setOverlayPhase(d.interventionPoint);
+    if (d.artifactGenerated) setArtifactGenerated(true);
+    if (d.artifact) setArtifact({ ...EMPTY_ARTIFACT, ...d.artifact });
+    if (d.patternStatement != null) setPatternStatement(d.patternStatement);
+    if (d.artifactCreatedAt != null) setArtifactCreatedAt(d.artifactCreatedAt);
+    if (d.artifactUpdatedAt != null) setArtifactUpdatedAt(d.artifactUpdatedAt);
+    if (d.sevenDayPracticeStarted) setPracticeStarted(true);
+    if (d.sevenDayPracticeEntries) setPracticeEntries(d.sevenDayPracticeEntries);
+    if (d.moduleCompleted) setModuleCompleted(true);
   }, []);
+
+  const appliedSyncStatusRef = useRef(null);
+  useEffect(() => {
+    if (session.syncStatus === "syncing") return;
+    if (appliedSyncStatusRef.current === session.syncStatus) return;
+    appliedSyncStatusRef.current = session.syncStatus;
+    const record = sovereignReflection.entries[`${MODULE_ID}:record`]?.response ?? null;
+    applyRecord(record);
+    setHydrated(true);
+  }, [session.syncStatus, sovereignReflection, applyRecord]);
 
   useEffect(() => {
     if (!hydrated) return;
@@ -150,7 +168,11 @@ export default function RhythmModuleExperience({ faculty, onComplete }) {
       sevenDayPracticeStarted: practiceStarted, sevenDayPracticeEntries: practiceEntries,
       moduleCompleted,
     };
-    try { window.localStorage.setItem(STORE_KEY, JSON.stringify(payload)); } catch (e) { /* ignore */ }
+    const t = setTimeout(() => {
+      sovereignReflection.recordReflection(MODULE_ID, "record", payload);
+    }, 800);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hydrated, activeIndex, maxIndex, completedIds, reflection, reflectionSavedAt,
       protocolResponses, protocolDone, protocolStepIndex, responseKind, overlayPhase,
       artifactGenerated, artifact, patternStatement, artifactCreatedAt, artifactUpdatedAt,

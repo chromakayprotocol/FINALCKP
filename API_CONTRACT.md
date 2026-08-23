@@ -2,6 +2,8 @@
 
 This document defines the auth API contract for the canonical FastAPI server (`backend/server.py`).
 
+> **Migration note**: this contract describes the currently-active FastAPI backend. The Sovereign OS migration's target architecture (see `docs/ARCHITECTURE.md`) removes FastAPI entirely; this document stays authoritative for these endpoints until that migration actually replaces them.
+
 ## Base URL
 
 - Local backend base: `http://localhost:8000`

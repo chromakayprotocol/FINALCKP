@@ -1157,6 +1157,81 @@ to the frontend as `VITE_SUPABASE_URL`) resolve against the real
 account. The new GitHub Actions workflow's YAML was validated with
 `yaml.safe_load`. No live deploy was performed or claimed.
 
+## Phase 18: AI/VMA
+
+The guide places this phase deliberately last among the feature phases,
+and its one hard rule is specific: "VMA / AI services operate as
+consumers of Sovereign State... not as an independent chatbot bolted
+onto the app." Before any code, this needed a real decision nothing in
+the repo had made yet — which model, and at what cost — so it was put
+to the user directly rather than guessed. The answer was explicit:
+optimize for cost above all else.
+
+**The model decision.** Of the current Claude lineup, `claude-haiku-4-5`
+is the cheapest by a wide margin — $1/$5 per million input/output
+tokens, roughly a third of Sonnet 5's rate and a fifth of Opus 5's, and
+it runs without extended thinking by default (its cheapest mode, not a
+downgrade chosen for this feature — that's just what "no thinking
+config" means for this tier). Every other choice in
+`frontend/vma-worker/src/index.js` follows the same constraint:
+`max_tokens: 1024` bounds worst-case spend per reply (a companion
+reply is a few sentences, not a report), a single Messages API call is
+used rather than a tool-use/agent loop (this is a Q&A-shaped feature,
+not an open-ended one), and the stable persona instructions are marked
+as a prompt-cache breakpoint (`vmaContext.js`'s `buildSystemBlocks`)
+so a multi-turn conversation only pays full price for that block once.
+
+**The consumption itself, built for real.**
+`frontend/src/sovereign/vma/buildVMAContext.js` is not a new
+derivation — it's Phase 13's existing synthesis questions
+(`whatDidIIdentify`, `whatPatternsDidIFind`, `whatDidIReclaim`,
+`whatProtocolDidIChoose`) projected into the compact shape a prompt
+needs: module ids, concept ids, protocol ids, artifact status. Full
+reflection response text is deliberately left out — it's the most
+token-expensive part of state and the least necessary for a companion
+that should reference the journey, not quote it back verbatim. The
+Worker's `/chat` endpoint takes that context plus a message (and
+optional history), verifies the caller via the same Supabase Auth call
+pattern established in Phase 17 — using the anon/publishable key here
+rather than a service-role key, since VMA only needs proof of a real
+signed-in user, not tier data — and calls Haiku 4.5 with the context
+folded into the system prompt.
+
+**What's not done, on purpose.** Like Phase 17's Worker, this one isn't
+wired into any live route, UI, or the frontend's actual chat surface —
+it proves VMA can consume real Sovereign State and produce a grounded
+reply, not that it's live in the product. And like Phase 17, actually
+deploying it hit the same wall: no Worker-deploy tool available to this
+session, no wrangler credentials in this container. The same real
+mechanism from Phase 17 was reused rather than re-invented — a
+manual-only (`workflow_dispatch`) GitHub Actions workflow,
+`.github/workflows/deploy-vma-worker.yml`, using the same
+`CLOUDFARE_API_TOKEN`/`CLOUDFARE_ACCOUNT_ID` secrets, plus one more this
+Worker needs and this session has no way to obtain or should ask for in
+chat: `ANTHROPIC_API_KEY`. The workflow fails loudly at a dedicated
+check step when that secret is absent, same pattern as Phase 17's
+`SUPABASE_SERVICE_ROLE_KEY` check.
+
+One real, worth-naming difference from Phase 17's dry-run: Cloudflare's
+own bundler flagged that `@anthropic-ai/sdk` statically imports
+`node:fs`/`node:path` for credential-chain code this Worker doesn't use
+(it passes `apiKey` directly, no OAuth profile/WIF resolution) — but the
+import still has to resolve at module load, so `wrangler deploy
+--dry-run` warned without `compatibility_flags: ["nodejs_compat"]` set.
+Added it; the warning is gone and the bundle is clean. A real,
+Cloudflare-flagged compatibility issue, not a hypothetical one.
+
+Verification: `npx vitest run` in both `frontend/src/sovereign/vma`
+(2 tests — an empty-session context, and a real multi-step journey
+proving the context reflects retained/reclaimed concepts and chosen
+protocols while omitting rejected candidates and raw reflection text)
+and `frontend/vma-worker` (18 tests — auth against a fake Supabase
+response, request validation, prompt-cache block placement, and the
+full request handler against an injected fake model call). `npx
+wrangler deploy --dry-run` confirmed a clean bundle against the real
+account's bindings. No live deploy was performed or claimed, and no
+API key was requested in chat.
+
 ## Phase 19: testing the system as an OS
 
 Every earlier phase's tests proved one function or one reducer case in

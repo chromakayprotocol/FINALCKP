@@ -143,7 +143,7 @@ function AppRoutes() {
 
       <Route
         path="/"
-        element={user ? <Navigate to="/acts" replace /> : <Login />}
+        element={user ? <Navigate to="/experiencemode/sovereign" replace /> : <Login />}
       />
 
       {/* ACT NAVIGATION */}

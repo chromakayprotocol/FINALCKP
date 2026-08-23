@@ -30,7 +30,7 @@ const Login = () => {
   const location = useLocation();
   const redirectPath = getAuthRedirectPath(location);
   const registerPath =
-    redirectPath === '/acts' ? '/register' : `/register?redirect=${encodeURIComponent(redirectPath)}`;
+    redirectPath === '/experiencemode/sovereign' ? '/register' : `/register?redirect=${encodeURIComponent(redirectPath)}`;
 
   const handleSubmit = async (e) => {
     e.preventDefault();

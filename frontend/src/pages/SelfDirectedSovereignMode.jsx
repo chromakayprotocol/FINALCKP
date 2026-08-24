@@ -21,7 +21,7 @@ const MODULES = [
     title: 'Audio Visualizer Core',
     code: 'AVC',
     lightCode: 'See The Waveform. Shape The Sound. Amplify Your Vision.',
-    route: '/experiencemode/sovereign/module/audio-visualizer-core',
+    route: '/acts',
     card: '/ui/reclamation/Module_Cards/Sovereign/visualizer_core.png',
   },
   {

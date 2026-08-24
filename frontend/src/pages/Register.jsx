@@ -35,7 +35,7 @@ const Register = () => {
   const location = useLocation();
   const redirectPath = getAuthRedirectPath(location);
   const loginPath =
-    redirectPath === '/acts' ? '/login' : `/login?redirect=${encodeURIComponent(redirectPath)}`;
+    redirectPath === '/experiencemode/sovereign' ? '/login' : `/login?redirect=${encodeURIComponent(redirectPath)}`;
 
   const protocolIdentity = useMemo(() => {
     const trimmedHandle = protocolHandle.trim();

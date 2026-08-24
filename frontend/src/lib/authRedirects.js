@@ -1,6 +1,6 @@
 const AUTH_ROUTES = new Set(['/login', '/register']);
 
-export function sanitizeRedirectPath(path, fallback = '/acts') {
+export function sanitizeRedirectPath(path, fallback = '/experiencemode/sovereign') {
   if (!path || typeof path !== 'string') return fallback;
   if (!path.startsWith('/') || path.startsWith('//')) return fallback;
 
@@ -15,7 +15,7 @@ export function locationToRedirectPath(location) {
   return `${location.pathname}${location.search || ''}${location.hash || ''}`;
 }
 
-export function getAuthRedirectPath(location, fallback = '/acts') {
+export function getAuthRedirectPath(location, fallback = '/experiencemode/sovereign') {
   const searchParams = new URLSearchParams(location?.search || '');
   const searchRedirect = searchParams.get('redirect');
   if (searchRedirect) return sanitizeRedirectPath(searchRedirect, fallback);

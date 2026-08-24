@@ -248,14 +248,14 @@ export default function SelfDirectedSovereignMode() {
       <div className="sos-vignette" aria-hidden="true" />
 
       <header className="sos-header">
-        <div className="sos-brand-block">
+        <button type="button" className="sos-brand-block" onClick={() => navigate('/acts')} aria-label="Back to all Acts">
           <img src="/emblem/reclamation_core_emblem.png" alt="" />
           <div>
             <strong>The Chroma Key Protocol</strong>
             <span>Reclamation Mainframe</span>
             <span>Sovereign Mode</span>
           </div>
-        </div>
+        </button>
 
         <div className="sos-system-status" role="status"><i aria-hidden="true" /> System Status: Operational</div>
 

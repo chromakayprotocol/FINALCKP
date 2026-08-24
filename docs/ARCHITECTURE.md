@@ -1388,6 +1388,84 @@ investigated further in this pass — noted here as a real, pre-existing
 account-configuration item for whoever owns that Git integration to
 look at, not something this session broke or is responsible for fixing.
 
+## Post-migration correction: the LMS becoming the OS, for real
+
+Every phase above built real, tested infrastructure — but a direct
+inspection of the live route tree (prompted by a correct challenge: "the
+screen looks the same, stop theorizing and look") found that
+infrastructure had not actually transformed the primary user experience.
+Two things, verified by reading the code rather than assumed:
+
+**The real entry point has nothing to do with any of it.** A signed-in
+user hitting `/` lands on `/experiencemode/sovereign` →
+`SelfDirectedSovereignMode.jsx` — a pre-existing 3D orbital module
+carousel (React Three Fiber, a rotating "Promethean Core," HUD panels
+fed by hardcoded placeholder data) that predates this migration entirely
+and never imports `useSovereign`. It renders `withShell={false}`, so
+even the VMA widget added to the app shell doesn't appear there. The
+word "sovereign" names two unrelated things in this codebase:
+`src/modules/sovereign/` (SonicArtifacts, ElementalCodex, Archaetypes,
+LyricalCodex, VibesAndScribes, AudioVisualizerCore — pre-existing,
+reached from that carousel, confirmed by reading `SonicArtifacts.jsx`
+directly: no `useSovereign`, a plain `eyebrow`/`title`/paragraph/four-
+stats panel exactly as described) versus `src/sovereign/runtime` + this
+migration's `src/components/sovereign-os/` — the real new architecture,
+wired into exactly one place: the six Hermetic Hall components under
+Reclamation University, reached only by navigating three steps deep from
+the actual front door.
+
+**Scope decision, made explicitly rather than assumed**: fixing this is
+scoped to Reclamation University, not a rebuild of
+`SelfDirectedSovereignMode` or the six unrelated `sovereign/*` modules.
+Those stay out of scope.
+
+**What "wire it in" actually requires, also discovered by reading code
+rather than assumed**: the live Hermetic Hall components' 11-step
+tab/phase UI (`TABS` in each module file) is its own local `useState`,
+never calling `module.advanceStep`/reading `evaluateModuleSteps`. The
+Sovereign Runtime's step engine (Phase 4) and the visible tab UI a real
+user clicks through are two separate, parallel systems today — "make the
+11 steps drive the workspace" isn't a matter of restyling a panel, it
+requires that unification, module by module.
+
+**First real slice, built and shipped rather than planned**:
+`VibrationModuleExperience.jsx`'s Key Concepts step (`tab === 2`) now
+builds a live, interactive Concept Graph instead of reporting a static
+"X/4 self-audits run" count. Each of the four real concepts (Movement Is
+Often Invisible, Repetition Builds Momentum, ...) gets a real concept id
+(`conceptSlug()`, derived from the actual title — not a placeholder),
+and an "Add to concept graph" action gated on having actually run that
+concept's self-audit (no free completion). Clicking it dispatches the
+real `concepts.selectConcept()`, and the same `ConceptGraphView` Phase
+16 built (previously only reachable from the disconnected staging pages)
+renders live underneath, reading the same state. The component now also
+calls `curriculum.startModule(MODULE_ID)` on mount — a real, previously
+missing gap: it ran under the hoisted `SovereignProvider` but never told
+the runtime it was the active module, so concepts selected here would
+have gone in module-unscoped. Existing pedagogical content (the four
+concepts' real body text, practice prompts, self-audit) is untouched —
+the graph is additive instrumentation on top of real work, not a
+replacement of real content with a generic placeholder.
+
+This is one step of one module — the pattern (real content → gated real
+action → real runtime dispatch → real shared visual component rendering
+live state) is what extends to the other 10 steps and 5 modules, not a
+finished transformation. `SovereignOSShell.jsx`'s header comment was
+also corrected: it still described the pre-fix "each module mounts its
+own provider" problem as current, when the Phase 15 follow-up above had
+already resolved it — the shell's real gap is narrower than that comment
+said (the shell component itself isn't rendered in live routes; the
+provider hoisting it depends on already happened).
+
+Verification: full suite 312/318 (same 6 pre-existing failures, 0
+introduced). `VibrationModuleExperience.jsx` bundle-checked clean in
+isolation. Live Vite + headless Chromium load of the Vibration route:
+correct `/login` redirect, zero console/page errors. Not verified: the
+actual signed-in interaction (open a concept, run its audit, click "Add
+to concept graph," confirm it appears in the graph) — same real gap as
+every prior phase touching these six components, no test Supabase
+account in this environment.
+
 ## Phase 19: testing the system as an OS
 
 Every earlier phase's tests proved one function or one reducer case in

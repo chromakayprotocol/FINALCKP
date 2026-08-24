@@ -23,17 +23,23 @@ import { HERMETIC_HALL_FACULTY } from '../../data/hermeticHallCurriculum';
  * anywhere else that shares the same SovereignProvider updates every
  * region at once, without the shell itself re-mounting.
  *
- * Deliberately not wired into the live Reclamation University route tree
- * in this pass — those seven module components (Phase 8) each mount
- * their own SovereignProvider scoped to their own lifetime, and making
- * the shell genuinely "survive module transitions" for them would mean
- * hoisting one shared provider above all of them, migrating every one of
- * those live, shipped wrappers in the same pass. That's real routing/
- * layout risk on top of a phase already large enough on its own — see
- * docs/ARCHITECTURE.md's Phase 15 section for the follow-up this defers
- * to. This shell is real and fully live against whatever SovereignProvider
- * it's mounted under; SovereignOS (the sibling file) mounts its own for
- * standalone use and verification.
+ * Update (docs/ARCHITECTURE.md, "Phase 15 follow-up"): the six
+ * Sovereign-consuming Hermetic Hall components no longer each mount
+ * their own SovereignProvider — ReclamationModulePage.jsx hoists one
+ * shared provider above them, so state genuinely survives navigating
+ * between modules now. What's still true, and still deliberate: this
+ * *shell component itself* — this fixed three-column grid — isn't
+ * rendered anywhere in the live route tree. It was designed to own a
+ * standalone page (`/qa/sovereign-os`, and the live-but-separate
+ * `/experiencemode/sovereign/reclamation-university/sovereign-os`), not
+ * to wrap six modules' own full-viewport designs. Replacing pieces of
+ * those modules' actual UI with real Sovereign-Runtime-backed
+ * instruments (e.g. the Key Concepts step of VibrationModuleExperience.jsx
+ * now renders a live ConceptGraphView, not this shell) is the real path
+ * in, one interaction primitive at a time — not wrapping the existing
+ * modules in this grid. This shell is real and fully live against
+ * whatever SovereignProvider it's mounted under; SovereignOS (the
+ * sibling file) mounts its own for standalone use and verification.
  */
 
 function Navigation({ activeModuleId, onSelectModule }) {

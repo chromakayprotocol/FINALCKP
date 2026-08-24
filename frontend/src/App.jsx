@@ -41,6 +41,7 @@ const SovereignOSLive = lazy(() => import('./pages/experience/SovereignOSLive'))
 
 import AppShell from './components/layout/AppShell';
 import PaywallModal from './components/layout/PaywallModal';
+import VMAChatWidget from './components/sovereign-os/VMAChatWidget';
 import { UNLOCK_ALL_ACCESS } from './lib/accessFlags';
 import { getAuthRedirectPath } from './lib/authRedirects';
 
@@ -102,6 +103,7 @@ const AppShellWrapper = ({ children }) => {
         isOpen={showPaywall}
         onClose={() => setShowPaywall(false)}
       />
+      <VMAChatWidget />
     </AppShell>
   );
 };

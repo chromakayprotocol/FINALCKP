@@ -1,8 +1,16 @@
 import React, { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSovereign } from "../../../sovereign/runtime";
+import ConceptGraphView from "../../../components/sovereign-os/ConceptGraphView";
 import useFooterOffset from "./useFooterOffset";
 import "./vibrationModuleExperience.css";
+
+/* Stable, readable concept ids from this module's own real content
+   (CONCEPTS below), not generic placeholders — "01 MOVEMENT IS OFTEN
+   INVISIBLE" becomes movement-is-often-invisible. */
+function conceptSlug(concept) {
+  return concept.title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+}
 
 /* ============================================================================
    RECLAMATION UNIVERSITY — HERMETIC HALL
@@ -736,7 +744,7 @@ function AuditStrip({ audit, value, onPick }) {
 /* One of the four operating principles. Collapsed it shows the claim; opened
    it shows the argument and then hands the learner the self-audit, so the
    concept always ends in something they do rather than something they read. */
-function Accordion({ item, open, audit, auditValue, onAudit, onToggle }) {
+function Accordion({ item, open, audit, auditValue, onAudit, onToggle, inGraph, onAddToGraph }) {
   const panelId = `rux-acc-${item.n}`;
   return (
     <div className={`rux-acc${open ? " is-open" : ""}`}>
@@ -759,6 +767,31 @@ function Accordion({ item, open, audit, auditValue, onAudit, onToggle }) {
             <div className="rux-practice-txt">{item.practice}</div>
           </div>
           <AuditStrip audit={audit} value={auditValue} onPick={onAudit} />
+          {/* Real work (running the self-audit) is the gate — the graph
+              reflects what was actually engaged with, not what's merely
+              expanded. */}
+          {auditValue && (
+            <button
+              type="button"
+              className="rux-acc-add-graph"
+              onClick={onAddToGraph}
+              disabled={inGraph}
+              style={{
+                marginTop: 12,
+                padding: "6px 14px",
+                fontSize: 11,
+                letterSpacing: "0.12em",
+                textTransform: "uppercase",
+                border: "1px solid rgba(239,68,68,0.4)",
+                borderRadius: 999,
+                background: inGraph ? "rgba(239,68,68,0.12)" : "transparent",
+                color: "#fca5a5",
+                cursor: inGraph ? "default" : "pointer",
+              }}
+            >
+              {inGraph ? "In your concept graph" : "Add to concept graph"}
+            </button>
+          )}
         </div>
       )}
     </div>
@@ -848,7 +881,17 @@ const MODULE_ID = "hermetic-hall/vibration";
    navigating between modules. */
 export default function VibrationModuleExperience({ module, faculty, onComplete }) {
   const navigate = useNavigate();
-  const { reflection, session } = useSovereign();
+  const { reflection, session, concepts, curriculum } = useSovereign();
+
+  /* Registers this as the active Sovereign module so concepts selected
+     below are attributed to it (curriculum.modules['hermetic-hall/
+     vibration'].selectedConcepts), not left module-unscoped. Previously
+     never called — this component ran under the hoisted SovereignProvider
+     but never told the runtime it was the active module. */
+  useEffect(() => {
+    curriculum.startModule(MODULE_ID);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const [tab, setTab] = useState(0);
   const [maxTab, setMaxTab] = useState(0);
   const [openConcepts, setOpenConcepts] = useState([0]);
@@ -1288,11 +1331,24 @@ export default function VibrationModuleExperience({ module, faculty, onComplete 
                     const narrow = typeof window !== "undefined" && window.innerWidth < 900;
                     if (narrow) setOpenConcepts(openConcepts.includes(i) ? [] : [i]);
                     else toggle(openConcepts, setOpenConcepts, i);
-                  }} />
+                  }}
+                  inGraph={concepts.selected.includes(conceptSlug(c))}
+                  onAddToGraph={() => concepts.selectConcept(conceptSlug(c))} />
               ))}
             </div>
             <div className="rux-count">
               {Object.keys(audits).length}/4 SELF-AUDITS RUN
+            </div>
+
+            {/* The instrument this step actually builds: not a count, a
+                live, interactive graph of what's been added — same
+                ConceptGraphView Phase 16 built, reading the real
+                concepts.selected/connections this module's own audits
+                just wrote to. Empty until something's genuinely earned
+                a place in it. */}
+            <div style={{ marginTop: 32 }}>
+              <div className="rux-eyebrow">YOUR CONCEPT GRAPH</div>
+              <ConceptGraphView />
             </div>
           </section>
         )}

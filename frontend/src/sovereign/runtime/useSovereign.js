@@ -26,6 +26,7 @@ import {
 } from '../synthesis/sovereignSynthesis';
 import { compileArtifactDocument } from '../artifact/artifactSchema';
 import { exportArtifactToMarkdown } from '../artifact/artifactExport';
+import { buildVMAContext } from '../vma/buildVMAContext';
 
 /**
  * The one way app code reads or mutates Sovereign state. Each domain bundles
@@ -134,6 +135,13 @@ export function useSovereign() {
         subscribe: eventBus.subscribe,
         subscribeAll: eventBus.subscribeAll,
         recentEvents: eventBus.getHistory(20),
+      },
+      // Phase 18 (AI/VMA): the compact, cost-conscious projection of state
+      // frontend/vma-worker's /chat endpoint expects as `context` — see
+      // sovereign/vma/buildVMAContext.js for exactly what's included (and
+      // deliberately excluded, like raw reflection text).
+      vma: {
+        context: buildVMAContext(state),
       },
     };
   }, [state, actions, eventBus]);

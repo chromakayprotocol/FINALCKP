@@ -1466,6 +1466,47 @@ to concept graph," confirm it appears in the graph) — same real gap as
 every prior phase touching these six components, no test Supabase
 account in this environment.
 
+**Second slice: the Reflection step (`tab === 7`).** Before this change,
+the Reflection tab's textarea only ever wrote into this module's
+whole-blob "record" persistence (`reflection.recordReflection(MODULE_ID,
+"record", payload)`, the Phase 8 swap) — never into a real per-prompt
+entry. That meant the runtime step engine's own REFLECTION criterion
+(`sovereignSteps.js`: `ctx.reflectionEntry !== null` at promptId
+`08-reflection`) could never become true no matter what a learner wrote
+here — one more concrete instance of the parallel-systems problem, not
+just the Key Concepts one already fixed. The primary reflection prompt
+now dispatches the real structured pipeline (`sovereignActions.js`
+Phase 12): a "Commit reflection" button, gated on non-empty text (same
+gate pattern as Key Concepts), calls
+`reflection.commitReflection(SOVEREIGN_STEP_IDS.REFLECTION, text,
+linkedConcepts, MODULE_ID)`. Above it, chips list the concepts already
+recognized in this module (`module.selectedConcepts`, populated by the
+Key Concepts step) so the learner marks which ones this reflection
+actually connects to — real "Decision" stage, not free text: committing
+credits those concepts into the Concept Graph exactly as `selectConcept`
+would (`creditConceptSelection`, shared by both action paths in the
+reducer). This also makes the reflection real input to
+`synthesis.synthesisState.reflections` and, from there, the Artifact
+Compiler — previously the "record" blob was invisible to both. Local
+`reflectionLinkedConcepts` selection is reseeded from the persisted
+entry's `retainedConcepts` on mount so a returning learner doesn't lose
+their prior linking choice.
+
+What this does *not* yet do: the four "Supporting Prompts" (`s1`-`s4`)
+still only save into the same "record" blob, and — the bigger remaining
+gap named above — the 11-tab UI itself is still local `useState`, not
+driven by `module.advanceStep`/`evaluateModuleSteps`. Reflection's
+runtime *completion criterion* is now real; the visible tab strip still
+doesn't read it. That unification, and the remaining 9 steps across this
+module and the other 5 Hermetic Hall components, remain open.
+
+Verification: `sovereignReducer.test.js` / `sovereignSteps.test.js` /
+`sovereignSynthesis.test.js` (62 tests) re-run clean against the
+unmodified runtime this relies on. `VibrationModuleExperience.jsx`
+bundle-checked clean in isolation (esbuild). Not verified: the actual
+signed-in interaction — same standing gap as above, no test Supabase
+account in this environment.
+
 ## Phase 19: testing the system as an OS
 
 Every earlier phase's tests proved one function or one reducer case in

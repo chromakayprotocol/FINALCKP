@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { useSovereign } from "../../../sovereign/runtime";
+import { useSovereign, SOVEREIGN_STEP_IDS } from "../../../sovereign/runtime";
 import ConceptGraphView from "../../../components/sovereign-os/ConceptGraphView";
 import useFooterOffset from "./useFooterOffset";
 import "./vibrationModuleExperience.css";
@@ -881,7 +881,7 @@ const MODULE_ID = "hermetic-hall/vibration";
    navigating between modules. */
 export default function VibrationModuleExperience({ module, faculty, onComplete }) {
   const navigate = useNavigate();
-  const { reflection, session, concepts, curriculum } = useSovereign();
+  const { reflection, session, concepts, curriculum, module: sovereignModule } = useSovereign();
 
   /* Registers this as the active Sovereign module so concepts selected
      below are attributed to it (curriculum.modules['hermetic-hall/
@@ -900,6 +900,7 @@ export default function VibrationModuleExperience({ module, faculty, onComplete 
   const [hoverWave, setHoverWave] = useState(false);
   const [lyricOpen, setLyricOpen] = useState(false);
   const [reflect, setReflect] = useState({ primary: "", s1: "", s2: "", s3: "", s4: "" });
+  const [reflectionLinkedConcepts, setReflectionLinkedConcepts] = useState([]);
   const [steps, setSteps] = useState([]);
   const [audits, setAudits] = useState({});
   const [introPick, setIntroPick] = useState(null);
@@ -959,6 +960,27 @@ export default function VibrationModuleExperience({ module, faculty, onComplete 
   };
 
   const toggle = (arr, set, i) => set(arr.includes(i) ? arr.filter((x) => x !== i) : [...arr, i]);
+
+  /* Structured Reflection (Phase 12, sovereignActions.js) made real: the
+     Reflection step's own runtime completion criterion checks for a
+     committed entry at promptId SOVEREIGN_STEP_IDS.REFLECTION — this
+     module used to only ever write its whole local state under promptId
+     "record" (see the persistence effect below), so that criterion could
+     never actually become true no matter what the learner wrote here.
+     Committing here also runs the real "Decision" stage: concepts the
+     learner ties this reflection to become real Concept Graph facts via
+     retainedConcepts, the same as the Key Concepts step's "Add to concept
+     graph" button. */
+  const reflectionEntry = reflection.entries[`${MODULE_ID}:${SOVEREIGN_STEP_IDS.REFLECTION}`] ?? null;
+  const reflectionCommitted = reflectionEntry?.status === "committed";
+  const recognizedConcepts = sovereignModule?.selectedConcepts ?? [];
+  const conceptLabel = (slug) => CONCEPTS.find((c) => conceptSlug(c) === slug)?.title ?? slug;
+  const toggleReflectionConcept = (slug) => toggle(reflectionLinkedConcepts, setReflectionLinkedConcepts, slug);
+  const commitPrimaryReflection = () => {
+    const text = reflect.primary.trim();
+    if (!text) return;
+    reflection.commitReflection(SOVEREIGN_STEP_IDS.REFLECTION, text, reflectionLinkedConcepts, MODULE_ID);
+  };
 
   // The reflection prompt seeds the artifact — a pathway between tabs, not a repeated task.
   useEffect(() => {
@@ -1023,6 +1045,18 @@ export default function VibrationModuleExperience({ module, faculty, onComplete 
     applyRecord(record);
     setHydrated(true);
   }, [session.syncStatus, reflection, applyRecord]);
+
+  // Restores which concepts a previously-committed reflection was linked to
+  // — the entry itself is real persisted runtime state (unlike the rest of
+  // this component's fields, mirrored above only in the "record" blob), so
+  // its own retainedConcepts is the source of truth on remount, not localStorage.
+  const reflectionConceptsSeeded = useRef(false);
+  useEffect(() => {
+    if (reflectionConceptsSeeded.current) return;
+    if (!reflectionEntry?.retainedConcepts?.length) return;
+    reflectionConceptsSeeded.current = true;
+    setReflectionLinkedConcepts(reflectionEntry.retainedConcepts);
+  }, [reflectionEntry]);
 
   useEffect(() => {
     if (!hydrated) return;
@@ -1619,6 +1653,48 @@ export default function VibrationModuleExperience({ module, faculty, onComplete 
               <div className="rux-note rux-note-top">
                 Stays on this device. Nothing is submitted. This answer carries forward into your Energy Map.
               </div>
+
+              {recognizedConcepts.length > 0 && (
+                <div style={{ marginTop: 20 }}>
+                  <div className="rux-field-k is-accent">WHICH RECOGNIZED CONCEPTS DOES THIS CONNECT TO?</div>
+                  <div className="rux-chips" style={{ marginTop: 8 }}>
+                    {recognizedConcepts.map((slug) => (
+                      <button type="button" key={slug}
+                        className={`rux-chip${reflectionLinkedConcepts.includes(slug) ? " on" : ""}`}
+                        aria-pressed={reflectionLinkedConcepts.includes(slug)}
+                        onClick={() => toggleReflectionConcept(slug)}>
+                        {conceptLabel(slug)}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Real work (a written reflection) gates the commit — same
+                  pattern as the Key Concepts self-audit gate. */}
+              <button type="button" onClick={commitPrimaryReflection}
+                disabled={!reflect.primary.trim()}
+                style={{
+                  marginTop: 18,
+                  padding: "8px 18px",
+                  fontSize: 11,
+                  letterSpacing: "0.12em",
+                  textTransform: "uppercase",
+                  border: "1px solid rgba(239,68,68,0.4)",
+                  borderRadius: 999,
+                  background: reflectionCommitted ? "rgba(239,68,68,0.12)" : "transparent",
+                  color: reflect.primary.trim() ? "#fca5a5" : "#5c4646",
+                  cursor: reflect.primary.trim() ? "pointer" : "default",
+                }}>
+                {reflectionCommitted ? "Reflection committed — recommit with changes" : "Commit reflection"}
+              </button>
+              {reflectionCommitted && (
+                <div className="rux-note rux-note-top">
+                  Committed{reflectionLinkedConcepts.length > 0
+                    ? ` — linked to ${reflectionLinkedConcepts.length} concept${reflectionLinkedConcepts.length === 1 ? "" : "s"} in your concept graph.`
+                    : "."}
+                </div>
+              )}
             </div>
 
             <div className="rux-panel-label" style={{ margin: "34px 0 14px" }}>SUPPORTING PROMPTS</div>

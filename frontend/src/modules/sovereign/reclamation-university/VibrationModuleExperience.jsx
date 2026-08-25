@@ -284,6 +284,35 @@ const TABS = [
     skill: "Making detection a standing habit" },
 ];
 
+/* TABS above and SOVEREIGN_STEPS (sovereignSteps.js) describe the same
+   eleven-step arc in the same order — this is the missing link between
+   them. Visiting a tab now tells the runtime's step engine that step was
+   actually viewed (module.advanceStep), which is what most of
+   SOVEREIGN_STEPS' isComplete criteria check (viewed(stepId)). Before
+   this, the local `tab` useState and the runtime's step engine were two
+   parallel systems that never spoke: a learner could read all eleven
+   tabs and the runtime would still report every "viewed" step as
+   incomplete forever, because nothing ever called advanceStep. Key
+   Concepts, Reflection, and Protocol have their own, stricter,
+   real-work criteria (a concept actually selected, a reflection actually
+   committed, a protocol actually logged) — calling advanceStep for them
+   too is harmless (it only affects currentStep/viewedSteps, not those
+   criteria) and keeps this one array as the single source of the
+   tab-id -> step-id mapping. */
+const TAB_STEP_IDS = TABS.map((t) => ({
+  intro: SOVEREIGN_STEP_IDS.INTRO,
+  principle: SOVEREIGN_STEP_IDS.PRINCIPLE,
+  concepts: SOVEREIGN_STEP_IDS.KEY_CONCEPTS,
+  why: SOVEREIGN_STEP_IDS.WHY_IT_MATTERS,
+  domains: SOVEREIGN_STEP_IDS.DOMAINS,
+  reclamation: SOVEREIGN_STEP_IDS.RECLAMATION,
+  lens: SOVEREIGN_STEP_IDS.LENS_2026,
+  reflection: SOVEREIGN_STEP_IDS.REFLECTION,
+  protocol: SOVEREIGN_STEP_IDS.PROTOCOL,
+  artifact: SOVEREIGN_STEP_IDS.ARTIFACT,
+  summary: SOVEREIGN_STEP_IDS.SUMMARY,
+}[t.id]));
+
 /* One tap, early. Converts the Intro from reading into recognition. */
 const INTRO_CHECK = {
   q: "Which one keeps coming back for you?",
@@ -892,6 +921,18 @@ export default function VibrationModuleExperience({ module, faculty, onComplete 
     curriculum.startModule(MODULE_ID);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  /* Marks the initial tab (Intro) as viewed once this module actually
+     becomes the active one in the runtime — startModule() above dispatches
+     but doesn't take effect until the next render, so sovereignModule is
+     still null on the very first pass through the effect above. Every
+     later tab visit is covered by go() itself; this only covers the one
+     tab a learner sees without ever calling go(). */
+  useEffect(() => {
+    if (!sovereignModule) return;
+    sovereignModule.advanceStep(TAB_STEP_IDS[0]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sovereignModule?.moduleId]);
   const [tab, setTab] = useState(0);
   const [maxTab, setMaxTab] = useState(0);
   const [openConcepts, setOpenConcepts] = useState([0]);
@@ -930,6 +971,7 @@ export default function VibrationModuleExperience({ module, faculty, onComplete 
     const n = Math.max(0, Math.min(TABS.length - 1, i));
     setTab(n);
     setMaxTab((m) => Math.max(m, n));
+    sovereignModule?.advanceStep(TAB_STEP_IDS[n]);
     if (topRef.current) topRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
     // The strip scrolls independently of the page, so the newly selected tab
     // has to be brought into it or advancing can select something off-screen.

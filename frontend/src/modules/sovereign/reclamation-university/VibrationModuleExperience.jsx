@@ -881,7 +881,7 @@ const MODULE_ID = "hermetic-hall/vibration";
    navigating between modules. */
 export default function VibrationModuleExperience({ module, faculty, onComplete }) {
   const navigate = useNavigate();
-  const { reflection, session, concepts, curriculum, module: sovereignModule } = useSovereign();
+  const { reflection, session, concepts, curriculum, synthesis, module: sovereignModule } = useSovereign();
 
   /* Registers this as the active Sovereign module so concepts selected
      below are attributed to it (curriculum.modules['hermetic-hall/
@@ -980,6 +980,26 @@ export default function VibrationModuleExperience({ module, faculty, onComplete 
     const text = reflect.primary.trim();
     if (!text) return;
     reflection.commitReflection(SOVEREIGN_STEP_IDS.REFLECTION, text, reflectionLinkedConcepts, MODULE_ID);
+  };
+
+  /* Same gap, one step later: the Protocol step's own runtime criterion
+     (sovereignSteps.js) checks synthesis.protocolExecutions for an entry
+     scoped to this module — nothing here ever wrote one, so it could
+     never become true either, no matter how many of the five field-
+     exercise steps a learner actually marked. Logging is an explicit
+     action (not an effect firing the moment the 5th box is checked) so
+     it matches the rest of this module's gated-button language, and
+     stays gated on having marked every step, not just opened the tab. */
+  const protocolLogged = synthesis.protocolExecutions.some(
+    (execution) => execution.moduleId === MODULE_ID && execution.protocolId === "frequency-check"
+  );
+  const logProtocolRun = () => {
+    if (steps.length !== PROTOCOL_STEPS.length) return;
+    synthesis.executeProtocol(
+      "frequency-check",
+      { stepsRun: steps.map((i) => PROTOCOL_STEPS[i].t) },
+      MODULE_ID
+    );
   };
 
   // The reflection prompt seeds the artifact — a pathway between tabs, not a repeated task.
@@ -1761,6 +1781,30 @@ export default function VibrationModuleExperience({ module, faculty, onComplete 
             <div className="rux-count">
               {steps.length}/5 STEPS MARKED
             </div>
+
+            {/* Real work (all five steps actually marked) gates the log —
+                same pattern as the Key Concepts and Reflection gates. */}
+            <button type="button" onClick={logProtocolRun}
+              disabled={steps.length !== PROTOCOL_STEPS.length}
+              style={{
+                marginTop: 14,
+                padding: "8px 18px",
+                fontSize: 11,
+                letterSpacing: "0.12em",
+                textTransform: "uppercase",
+                border: "1px solid rgba(239,68,68,0.4)",
+                borderRadius: 999,
+                background: protocolLogged ? "rgba(239,68,68,0.12)" : "transparent",
+                color: steps.length === PROTOCOL_STEPS.length ? "#fca5a5" : "#5c4646",
+                cursor: steps.length === PROTOCOL_STEPS.length ? "pointer" : "default",
+              }}>
+              {protocolLogged ? "Protocol run logged — log again" : "Log this protocol run"}
+            </button>
+            {protocolLogged && (
+              <div className="rux-note rux-note-top">
+                Logged to your synthesis record — this is what the Artifact Compiler and the VMA see.
+              </div>
+            )}
 
             <hr className="rux-rule" />
 

@@ -1613,6 +1613,21 @@ introduced. Both touched files bundle-checked clean in isolation. Same
 standing gap as every slice above: no live signed-in verification (no
 test Supabase account in this environment).
 
+**Sixth slice: Rhythm, same pattern, second of the four shared-file
+modules.** Identical treatment to Polarity, applied to
+`RhythmModuleExperience.jsx`: `curriculum.startModule` on mount,
+`goToIndex()` now calls `module.advanceStep(sovereignStepIdForSection(...))`,
+Key Concepts gets a real "Add to concept graph" action gated on having
+opened that concept's accordion, Reflection gets the commit + concept-
+linking pipeline, and Protocol's log (`executeProtocol('rhythm-audit', ...)`)
+piggybacks on `generateArtifact()`, which already only runs once all
+Rhythm Audit steps are done. Same not-touched note as every slice
+above: `sealArtifact()` remains cross-journey, untouched work.
+
+Verification: full suite 312/318, same 6 pre-existing failures, 0
+introduced. Bundle-checked clean in isolation. Same standing gap: no
+live signed-in verification.
+
 ## Phase 19: testing the system as an OS
 
 Every earlier phase's tests proved one function or one reducer case in

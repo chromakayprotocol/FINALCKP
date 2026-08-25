@@ -40,6 +40,21 @@ import { HERMETIC_HALL_FACULTY } from '../../data/hermeticHallCurriculum';
  * modules in this grid. This shell is real and fully live against
  * whatever SovereignProvider it's mounted under; SovereignOS (the
  * sibling file) mounts its own for standalone use and verification.
+ *
+ * Update: sealArtifact() (Phase 3) is a single cross-journey action —
+ * not scoped to any one module — so no individual Hermetic Hall
+ * component's own UI was ever the right place to call it; every slice
+ * that wired a module left this open on purpose, tracked as a real gap
+ * rather than pretended-away. Synthesis Status, the one place this
+ * whole journey's synthesis state is actually visible across modules,
+ * now carries that action for real: "Compile & seal your Living
+ * Artifact" (gated on at least one concept selected or reflection
+ * committed anywhere, so an empty compile can't silently seal) plus a
+ * Markdown export once sealed. Reachable today via SovereignOSLive
+ * (`/experiencemode/sovereign/reclamation-university/sovereign-os`,
+ * linked from the Hermetic Hall's own "Open Sovereign OS" button) and
+ * `/qa/sovereign-os` — this component itself still isn't in the live
+ * route tree, per the paragraph above.
  */
 
 function Navigation({ activeModuleId, onSelectModule }) {
@@ -123,8 +138,42 @@ function MediaRuntime({ media }) {
   );
 }
 
-function SynthesisStatus({ synthesis }) {
+function downloadFile(filename, content, mimeType) {
+  const blob = new Blob([content], { type: mimeType });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+/* Closes the one gap every Hermetic Hall slice above left open on
+   purpose: sealArtifact() is a single cross-journey action, not
+   per-module, so no individual module's own UI is the right place to
+   call it — this panel, the one place the whole journey's synthesis is
+   actually visible, is. Real gate (hasSubstance): sealing an empty
+   compile would happen silently otherwise, since sealArtifact() only
+   refuses a *missing* draft (sovereignReducer.js), not an empty one —
+   compileFromSynthesis() always produces a structurally valid draft
+   even from zero real work. */
+function SynthesisStatus({ synthesis, concepts, artifact }) {
   const { synthesisState } = synthesis;
+  const committedReflections = synthesisState.reflections.filter((entry) => entry.status === 'committed');
+  const hasSubstance = concepts.selected.length > 0 || committedReflections.length > 0;
+  const sealed = artifact.status === 'sealed';
+
+  const handleSeal = () => {
+    artifact.compileFromSynthesis();
+    artifact.sealArtifact();
+  };
+
+  const handleExport = () => {
+    downloadFile(`living-artifact-${Date.now()}.md`, artifact.exportMarkdown(), 'text/markdown');
+  };
+
   return (
     <dl className="grid grid-cols-2 gap-x-3 gap-y-2 text-xs">
       <dt className="text-zinc-500">Completed modules</dt>
@@ -134,7 +183,33 @@ function SynthesisStatus({ synthesis }) {
       <dt className="text-zinc-500">Protocol decisions</dt>
       <dd className="text-right text-zinc-200">{synthesisState.protocolDecisions.length}</dd>
       <dt className="text-zinc-500">Artifact status</dt>
-      <dd className="text-right capitalize text-zinc-200">{synthesis.status ?? 'empty'}</dd>
+      <dd className="text-right capitalize text-zinc-200">{artifact.status ?? 'empty'}</dd>
+      <dd className="col-span-2 mt-2 flex flex-col gap-2">
+        {sealed ? (
+          <>
+            <span className="text-[10px] uppercase tracking-wide text-emerald-400">
+              Sealed{artifact.sealedAt ? ` ${new Date(artifact.sealedAt).toLocaleString()}` : ''}
+            </span>
+            <button
+              type="button"
+              onClick={handleExport}
+              className="rounded-full border border-white/15 px-3 py-1.5 text-[10px] uppercase tracking-wide text-zinc-300 transition hover:bg-white/5"
+            >
+              Export as Markdown
+            </button>
+          </>
+        ) : (
+          <button
+            type="button"
+            onClick={handleSeal}
+            disabled={!hasSubstance}
+            title={hasSubstance ? undefined : 'Select at least one concept or commit a reflection first'}
+            className="rounded-full border border-red-500/40 px-3 py-1.5 text-[10px] uppercase tracking-wide text-red-300 transition hover:bg-red-500/10 disabled:cursor-default disabled:opacity-40 disabled:hover:bg-transparent"
+          >
+            Compile &amp; seal your Living Artifact
+          </button>
+        )}
+      </dd>
     </dl>
   );
 }
@@ -176,7 +251,7 @@ export default function SovereignOSShell({ children }) {
           <MediaRuntime media={media} />
         </ShellPanel>
         <ShellPanel title="Synthesis Status">
-          <SynthesisStatus synthesis={{ ...synthesis, status: artifact.status }} />
+          <SynthesisStatus synthesis={synthesis} concepts={concepts} artifact={artifact} />
         </ShellPanel>
       </aside>
     </div>

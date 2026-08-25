@@ -5,8 +5,9 @@ import { ArrowRight, LayoutDashboard, Pencil, Download, FileDown } from "lucide-
 import jsPDF from "jspdf";
 import CurriculumSpine from "./CurriculumSpine";
 import ReclamationLessonMedia from "./ReclamationLessonMedia";
-import { CURRICULUM_SECTIONS } from "./curriculumSections";
-import { useSovereign } from "../../../sovereign/runtime";
+import { CURRICULUM_SECTIONS, sovereignStepIdForSection } from "./curriculumSections";
+import ConceptGraphView from "../../../components/sovereign-os/ConceptGraphView";
+import { useSovereign, SOVEREIGN_STEP_IDS } from "../../../sovereign/runtime";
 import {
   POLARITY_META, PRINCIPLES, INTRO_CONTENT, PRINCIPLE_CONTENT, KEY_CONCEPTS,
   WHY_IT_MATTERS, DOMAINS, RECLAMATION_CONTENT, LENS, LENS_SOURCES, REFLECTION_CONTENT,
@@ -48,13 +49,37 @@ const EMPTY_ARTIFACT = { binary: "", situation: "", continuum: "", degree: "", b
    navigating between modules. */
 export default function PolarityModuleExperience({ faculty, onComplete }) {
   const navigate = useNavigate();
-  const { reflection: sovereignReflection, session } = useSovereign();
+  const {
+    reflection: sovereignReflection,
+    session,
+    concepts,
+    curriculum,
+    synthesis,
+    module: sovereignModule,
+  } = useSovereign();
+
+  /* Registers this as the active Sovereign module and, from here on, keeps
+     the runtime step engine (sovereignSteps.js) in sync with real
+     navigation — previously this component never called either, so it
+     never registered as active and none of its steps could ever complete
+     in the runtime's own terms, no matter what a learner actually did. */
+  useEffect(() => {
+    curriculum.startModule(MODULE_ID);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  useEffect(() => {
+    if (!sovereignModule) return;
+    sovereignModule.advanceStep(sovereignStepIdForSection(CURRICULUM_SECTIONS[0].id));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sovereignModule?.moduleId]);
+
   const [activeIndex, setActiveIndex] = useState(0);
   const [maxIndex, setMaxIndex] = useState(0);
   const [completedIds, setCompletedIds] = useState([]);
   const [hydrated, setHydrated] = useState(false);
 
   const [openConcept, setOpenConcept] = useState(0);
+  const [reflectionLinkedConcepts, setReflectionLinkedConcepts] = useState([]);
   const [openDomain, setOpenDomain] = useState(null);
   const [spectrumValue, setSpectrumValue] = useState(5);
   const [showSources, setShowSources] = useState(false);
@@ -133,12 +158,47 @@ export default function PolarityModuleExperience({ faculty, onComplete }) {
     return () => clearTimeout(t);
   }, [reflection, hydrated]);
 
+  // Restores which concepts a previously-committed reflection was linked
+  // to — the entry itself is real persisted runtime state, so it's the
+  // source of truth on remount, not this component's own local blob.
+  const reflectionConceptsSeeded = useRef(false);
+  useEffect(() => {
+    const entry = sovereignReflection.entries[`${MODULE_ID}:${SOVEREIGN_STEP_IDS.REFLECTION}`];
+    if (reflectionConceptsSeeded.current) return;
+    if (!entry?.retainedConcepts?.length) return;
+    reflectionConceptsSeeded.current = true;
+    setReflectionLinkedConcepts(entry.retainedConcepts);
+  }, [sovereignReflection]);
+
   const currentSection = CURRICULUM_SECTIONS[activeIndex];
   const progressPct = Math.round(((maxIndex + 1) / CURRICULUM_SECTIONS.length) * 100);
+
+  /* conceptSlug/reflectionEntry/protocolLogged below follow the exact
+     pattern proven in VibrationModuleExperience.jsx (see docs/
+     ARCHITECTURE.md, "post-migration correction"): real content -> a
+     gated real action -> a real runtime dispatch -> a real shared
+     visual component reading live state. */
+  const conceptSlug = (c) => c.title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+  const toggleConcept = (i) => setOpenConcept((cur) => (cur === i ? null : i));
+  const reflectionEntry = sovereignReflection.entries[`${MODULE_ID}:${SOVEREIGN_STEP_IDS.REFLECTION}`] ?? null;
+  const reflectionCommitted = reflectionEntry?.status === "committed";
+  const recognizedConcepts = sovereignModule?.selectedConcepts ?? [];
+  const conceptLabel = (slug) => KEY_CONCEPTS.find((c) => conceptSlug(c) === slug)?.title ?? slug;
+  const toggleReflectionConcept = (slug) =>
+    setReflectionLinkedConcepts((prev) => (prev.includes(slug) ? prev.filter((s) => s !== slug) : [...prev, slug]));
+  const commitReflection = () => {
+    const text = reflection.trim();
+    if (!text) return;
+    sovereignReflection.commitReflection(SOVEREIGN_STEP_IDS.REFLECTION, text, reflectionLinkedConcepts, MODULE_ID);
+  };
+  const protocolLogged = synthesis.protocolExecutions.some(
+    (execution) => execution.moduleId === MODULE_ID && execution.protocolId === "spectrum-shift"
+  );
 
   const goToIndex = (index) => {
     setActiveIndex(index);
     setMaxIndex((m) => Math.max(m, index));
+    sovereignModule?.advanceStep(sovereignStepIdForSection(CURRICULUM_SECTIONS[index].id));
   };
 
   const markCompleteAndAdvance = () => {
@@ -160,7 +220,14 @@ export default function PolarityModuleExperience({ faculty, onComplete }) {
   };
 
   /* --------------------------------------------------------------- ARTIFACT -- */
+  /* generateArtifact() only ever runs once handlePrimaryAction has already
+     confirmed protocolComplete (all five Spectrum Shift steps actually
+     run) — the same real-work gate the Protocol step's own runtime
+     criterion needs, so this is the one correct place to log the
+     execution: piggybacking on an already-gated, already-explicit user
+     action rather than adding a second button that duplicates it. */
   const generateArtifact = () => {
+    synthesis.executeProtocol("spectrum-shift", { responses: protocolResponses }, MODULE_ID);
     const r = protocolResponses;
     setArtifact({
       binary: r.poles || "The false binary you named in the Protocol.",
@@ -368,9 +435,11 @@ export default function PolarityModuleExperience({ faculty, onComplete }) {
                 <div style={{ display: "grid", gap: 10, marginTop: 18 }}>
                   {KEY_CONCEPTS.map((c, i) => {
                     const open = openConcept === i;
+                    const slug = conceptSlug(c);
+                    const inGraph = concepts.selected.includes(slug);
                     return (
                       <div className={`rup-acc${open ? " is-open" : ""}`} key={c.n}>
-                        <button type="button" className="rup-acc-head" onClick={() => setOpenConcept(open ? null : i)} aria-expanded={open}>
+                        <button type="button" className="rup-acc-head" onClick={() => toggleConcept(i)} aria-expanded={open}>
                           <span className="rup-acc-mark">{c.n}</span>
                           <span style={{ flex: 1, minWidth: 0 }}>
                             <span className="rup-acc-title" style={{ display: "block" }}>{c.title}</span>
@@ -385,11 +454,25 @@ export default function PolarityModuleExperience({ faculty, onComplete }) {
                               <div className="rup-practice-tag">PRACTICE</div>
                               <div className="rup-practice-txt">{c.practice}</div>
                             </div>
+                            {/* Real work (having actually opened and read this
+                                concept) gates the graph, same as Vibration's
+                                self-audit gate — weaker signal since this
+                                module has no per-concept audit, but still real
+                                engagement rather than an automatic add. */}
+                            <button type="button" className="rup-btn" style={{ marginTop: 12 }}
+                              disabled={inGraph}
+                              onClick={() => concepts.selectConcept(slug, MODULE_ID)}>
+                              {inGraph ? "In your concept graph" : "Add to concept graph"}
+                            </button>
                           </div>
                         )}
                       </div>
                     );
                   })}
+                </div>
+                <div style={{ marginTop: 32 }}>
+                  <div className="rup-panel-label">YOUR CONCEPT GRAPH</div>
+                  <div style={{ marginTop: 10 }}><ConceptGraphView /></div>
                 </div>
               </section>
             )}
@@ -542,6 +625,33 @@ export default function PolarityModuleExperience({ faculty, onComplete }) {
                 <div className="rup-save" style={{ marginTop: 10 }}>
                   {reflectionSavedAt ? `SAVED · LAST SAVED ${new Date(reflectionSavedAt).toLocaleTimeString()}` : "Not yet saved"}
                 </div>
+
+                {recognizedConcepts.length > 0 && (
+                  <div style={{ marginTop: 20 }}>
+                    <div className="rup-panel-label">WHICH RECOGNIZED CONCEPTS DOES THIS CONNECT TO?</div>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 8 }}>
+                      {recognizedConcepts.map((slug) => (
+                        <button type="button" key={slug} className="rup-btn"
+                          aria-pressed={reflectionLinkedConcepts.includes(slug)}
+                          style={{ opacity: reflectionLinkedConcepts.includes(slug) ? 1 : 0.55 }}
+                          onClick={() => toggleReflectionConcept(slug)}>
+                          {conceptLabel(slug)}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                <button type="button" className="rup-btn" style={{ marginTop: 16 }}
+                  disabled={!reflection.trim()} onClick={commitReflection}>
+                  {reflectionCommitted ? "Reflection committed — recommit with changes" : "Commit reflection"}
+                </button>
+                {reflectionCommitted && (
+                  <div className="rup-save" style={{ marginTop: 8 }}>
+                    Committed{reflectionLinkedConcepts.length > 0
+                      ? ` — linked to ${reflectionLinkedConcepts.length} concept${reflectionLinkedConcepts.length === 1 ? "" : "s"} in your concept graph.`
+                      : "."}
+                  </div>
+                )}
               </section>
             )}
 
@@ -566,6 +676,11 @@ export default function PolarityModuleExperience({ faculty, onComplete }) {
                     </button>
                   ))}
                 </div>
+                {protocolLogged && (
+                  <div className="rup-save" style={{ marginBottom: 14 }}>
+                    Logged to your synthesis record — this is what the Artifact Compiler and the VMA see.
+                  </div>
+                )}
 
                 <div className="rup-panel accent">
                   <div className="rup-h3">{currentStep.n} · {currentStep.t}</div>

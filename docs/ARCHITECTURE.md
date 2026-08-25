@@ -1507,6 +1507,34 @@ bundle-checked clean in isolation (esbuild). Not verified: the actual
 signed-in interaction — same standing gap as above, no test Supabase
 account in this environment.
 
+**Third slice: the Protocol step (`tab === 8`).** Same bug, one step
+later. The Protocol step's own runtime criterion
+(`ctx.synthesis.protocolExecutions.some(execution => execution.moduleId
+=== ctx.module.moduleId)`) had nothing in this module that ever wrote
+one — the five-step field-exercise checklist ("Process — mark each step
+as you run it") only ever toggled local `steps` state. A learner could
+mark all five and the runtime would still consider Protocol
+incomplete forever. A "Log this protocol run" button, gated on all five
+steps actually marked (not just the tab opened), now dispatches
+`synthesis.executeProtocol('frequency-check', { stepsRun }, MODULE_ID)`
+— a real, explicit action rather than an effect firing silently on the
+fifth checkbox, matching the gated-button language the Key Concepts and
+Reflection slices already established. This is append-only log data
+(`protocolExecutions`), same as the runtime's other synthesis records;
+re-logging after unmarking and remarking adds a new entry rather than
+mutating one, which is what the reducer already does for every other
+caller of `executeProtocol`, not something introduced here.
+
+Verification: same 62-test reducer/steps/synthesis suite re-run clean,
+same esbuild bundle-check, same full-suite 312/318 with the same 6
+pre-existing failures. Not verified: the live interaction, same standing
+gap.
+
+Three of eleven steps in one of six modules now have runtime-real
+completion criteria (Key Concepts, Reflection, Protocol). The remaining
+eight steps in this module, and all eleven in the other five Hermetic
+Hall components, are unchanged.
+
 ## Phase 19: testing the system as an OS
 
 Every earlier phase's tests proved one function or one reducer case in

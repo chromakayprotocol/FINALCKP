@@ -1646,6 +1646,25 @@ introduced. Bundle-checked clean in isolation. Same standing gaps: no
 live signed-in verification; `sealArtifact()` still cross-journey and
 untouched everywhere.
 
+**Eighth slice: Gender, the last of the four shared-file modules.**
+Same treatment as Cause & Effect (its `goToIndex`/`advance` and
+`canGenerateArtifact` shape matched almost exactly): `curriculum.startModule`
+on mount, `advance()` now routes through an instrumented `goToIndex()`,
+`executeProtocol('force-dialogue', ...)` piggybacks on the existing
+`canGenerateArtifact` guard inside `generateArtifact()`, Key Concepts
+gets a real "Add to concept graph" action, Reflection gets the commit +
+concept-linking pipeline.
+
+All four modules sharing `curriculumSections.js` (Polarity, Rhythm,
+Cause & Effect, Gender) are now wired to the runtime the same way
+Vibration is. Only the Hermetic-Supplied module (the two
+faculty-supplied lessons, a different and smaller file) remains.
+
+Verification: full suite 312/318, same 6 pre-existing failures, 0
+introduced. Bundle-checked clean in isolation. Same standing gaps: no
+live signed-in verification; `sealArtifact()` still untouched
+everywhere.
+
 ## Phase 19: testing the system as an OS
 
 Every earlier phase's tests proved one function or one reducer case in

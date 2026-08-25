@@ -4,7 +4,7 @@ import {
   FileText, Flame, Globe2, Lightbulb, PenLine, RefreshCw, Sparkles,
   Target, Waves,
 } from "lucide-react";
-import { useSovereign } from "../../../sovereign/runtime";
+import { useSovereign, SOVEREIGN_STEP_IDS } from "../../../sovereign/runtime";
 import suppliedCopy from "../../../data/hermeticSuppliedModules.txt?raw";
 import "./hermeticMaterialExperience.css";
 import "./hermeticReferenceExperience.css";
@@ -21,6 +21,32 @@ const TABS = [
   ["PROTOCOL", "Protocol", Target],
   ["ARTIFACT", "Artifact", FileText],
   ["SUMMARY", "Summary", Check],
+];
+
+/* TABS above and SOVEREIGN_STEPS (sovereign/runtime/sovereignSteps.js)
+   describe the same eleven-step arc, in the same order -- see the
+   identical mapping built for VibrationModuleExperience.jsx (docs/
+   ARCHITECTURE.md, "post-migration correction"). This module has no
+   KEY_CONCEPTS array, PROTOCOL_STEPS checklist, or structured artifact
+   fields of its own -- MODULE_COPY is parsed prose, not per-concept
+   objects -- so unlike the other six Hermetic Hall modules there is no
+   real per-concept "Add to concept graph" action or protocol-execution
+   log to wire here without inventing structure the source content
+   doesn't have. What's real and worth doing is the same as everywhere
+   else: telling the runtime a step was actually viewed, and giving the
+   one real reflection prompt this module has a real commit action. */
+const TAB_STEP_IDS = [
+  SOVEREIGN_STEP_IDS.INTRO,
+  SOVEREIGN_STEP_IDS.PRINCIPLE,
+  SOVEREIGN_STEP_IDS.KEY_CONCEPTS,
+  SOVEREIGN_STEP_IDS.WHY_IT_MATTERS,
+  SOVEREIGN_STEP_IDS.DOMAINS,
+  SOVEREIGN_STEP_IDS.RECLAMATION,
+  SOVEREIGN_STEP_IDS.LENS_2026,
+  SOVEREIGN_STEP_IDS.REFLECTION,
+  SOVEREIGN_STEP_IDS.PROTOCOL,
+  SOVEREIGN_STEP_IDS.ARTIFACT,
+  SOVEREIGN_STEP_IDS.SUMMARY,
 ];
 
 const PRINCIPLES = [
@@ -164,11 +190,25 @@ function CopyScreen({ section, moduleTitle, moduleSlug, activeTab, response, onR
    between modules instead of resetting on every mount. */
 export default function HermeticSuppliedModuleExperience({ moduleSlug, progress = 0, onComplete }) {
   const moduleCopy = MODULE_COPY[moduleSlug];
-  const { reflection, session } = useSovereign();
+  const { reflection, session, curriculum, module: sovereignModule } = useSovereign();
   const MODULE_ID = `hermetic-hall/${moduleSlug}`;
   const [activeTab, setActiveTab] = useState("PRINCIPLE");
   const [response, setResponse] = useState("");
   const [hydrated, setHydrated] = useState(false);
+
+  /* Registers this as the active Sovereign module and keeps the runtime
+     step engine in sync with real navigation -- previously this
+     component never called either, so it never registered as active and
+     none of its steps could ever complete in the runtime's own terms. */
+  useEffect(() => {
+    curriculum.startModule(MODULE_ID);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [MODULE_ID]);
+  useEffect(() => {
+    if (!sovereignModule) return;
+    sovereignModule.advanceStep(TAB_STEP_IDS[TABS.findIndex(([id]) => id === activeTab)]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sovereignModule?.moduleId]);
 
   const applyRecord = useCallback((d) => {
     if (!d) return;
@@ -203,5 +243,23 @@ export default function HermeticSuppliedModuleExperience({ moduleSlug, progress 
   const completedProgressSteps = activeTab === "2026 LENS" ? 5 : Math.min(activeIndex + 1, 8);
   const screen = useMemo(() => <CopyScreen section={moduleCopy.sections[activeTab] || ""} moduleTitle={moduleCopy.title} moduleSlug={moduleSlug} activeTab={activeTab} response={response} onResponse={setResponse}/>, [activeTab, moduleCopy, moduleSlug, response]);
 
-  return <main className="hme-root"><header className="hme-header"><div className="hme-brand"><span><Sparkles/></span><strong>Reclamation<br/>University</strong><i/><small>Hermetic Hall</small></div><div className="hme-progress"><span>Your progress</span><i><b style={{ width: `${displayedProgress}%` }}/></i><strong>{displayedProgress}%</strong></div></header><div className="hme-shell"><aside className="hme-tabs">{TABS.map(([id, label, Icon]) => <button type="button" key={id} className={id === activeTab ? "is-active" : ""} onClick={() => setActiveTab(id)}><span><Icon size={22}/></span><strong>{label}</strong></button>)}</aside><section className="hme-main"><PrincipleStrip activePrinciple={moduleCopy.index}/><article className={`hme-stage hme-stage-${activeTab.toLowerCase().replace(/\s+/g, "-")}`}><header className="hme-lesson-title"><span>{PRINCIPLES[moduleCopy.index][0]}</span><div><h1>{moduleCopy.title}</h1><p>{moduleCopy.subtitle}</p></div></header><div className="hme-screen">{screen}</div><footer className="hme-footer"><div className="hme-stat"><small>Est. time</small><strong>18 min</strong></div><div className="hme-stat"><small>Principle {PRINCIPLES[moduleCopy.index][0]} of VII</small><strong>{moduleCopy.title}</strong></div><div className="hme-stat hme-lesson-progress"><small>Lesson progress</small><span>{Array.from({ length: 8 }, (_, index) => <i key={index} className={index < completedProgressSteps ? "is-complete" : ""}/>)}</span></div>{activeTab !== "SUMMARY" ? <button type="button" onClick={() => setActiveTab(next[0])}>Continue to {next[1]} <ArrowRight size={20}/></button> : <button type="button" onClick={onComplete}>Next Module <ArrowRight size={20}/></button>}</footer></article></section></div></main>;
+  const goToTab = (id) => {
+    setActiveTab(id);
+    sovereignModule?.advanceStep(TAB_STEP_IDS[TABS.findIndex(([tabId]) => tabId === id)]);
+  };
+
+  /* This module has no per-concept selection to link a reflection to
+     (see the TAB_STEP_IDS comment above), so unlike the other six
+     modules there are no concept-linking chips here -- just the same
+     real completion criterion (a committed entry) the runtime checks
+     everywhere else. */
+  const reflectionEntry = reflection.entries[`${MODULE_ID}:${SOVEREIGN_STEP_IDS.REFLECTION}`] ?? null;
+  const reflectionCommitted = reflectionEntry?.status === "committed";
+  const commitReflection = () => {
+    const text = response.trim();
+    if (!text) return;
+    reflection.commitReflection(SOVEREIGN_STEP_IDS.REFLECTION, text, [], MODULE_ID);
+  };
+
+  return <main className="hme-root"><header className="hme-header"><div className="hme-brand"><span><Sparkles/></span><strong>Reclamation<br/>University</strong><i/><small>Hermetic Hall</small></div><div className="hme-progress"><span>Your progress</span><i><b style={{ width: `${displayedProgress}%` }}/></i><strong>{displayedProgress}%</strong></div></header><div className="hme-shell"><aside className="hme-tabs">{TABS.map(([id, label, Icon]) => <button type="button" key={id} className={id === activeTab ? "is-active" : ""} onClick={() => goToTab(id)}><span><Icon size={22}/></span><strong>{label}</strong></button>)}</aside><section className="hme-main"><PrincipleStrip activePrinciple={moduleCopy.index}/><article className={`hme-stage hme-stage-${activeTab.toLowerCase().replace(/\s+/g, "-")}`}><header className="hme-lesson-title"><span>{PRINCIPLES[moduleCopy.index][0]}</span><div><h1>{moduleCopy.title}</h1><p>{moduleCopy.subtitle}</p></div></header><div className="hme-screen">{screen}</div>{activeTab === "REFLECTION" && <div className="hme-panel"><button type="button" onClick={commitReflection} disabled={!response.trim()}>{reflectionCommitted ? "Reflection committed — recommit with changes" : "Commit reflection"}</button>{reflectionCommitted && <p>Committed to your synthesis record.</p>}</div>}<footer className="hme-footer"><div className="hme-stat"><small>Est. time</small><strong>18 min</strong></div><div className="hme-stat"><small>Principle {PRINCIPLES[moduleCopy.index][0]} of VII</small><strong>{moduleCopy.title}</strong></div><div className="hme-stat hme-lesson-progress"><small>Lesson progress</small><span>{Array.from({ length: 8 }, (_, index) => <i key={index} className={index < completedProgressSteps ? "is-complete" : ""}/>)}</span></div>{activeTab !== "SUMMARY" ? <button type="button" onClick={() => goToTab(next[0])}>Continue to {next[1]} <ArrowRight size={20}/></button> : <button type="button" onClick={onComplete}>Next Module <ArrowRight size={20}/></button>}</footer></article></section></div></main>;
 }

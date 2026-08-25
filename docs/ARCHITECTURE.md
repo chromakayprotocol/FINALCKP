@@ -1695,6 +1695,123 @@ Verification: full suite 312/318 (including this file's own existing
 pre-existing failures elsewhere, 0 introduced. Bundle-checked clean in
 isolation. Same standing gap: no live signed-in verification.
 
+## Closing the gaps: sealArtifact() wired for real, and real verification
+
+Two things were explicitly flagged as deferred at the end of the six-
+module slice above — `sealArtifact()` never called anywhere, and every
+slice's own verification resting on reading code plus automated tests
+that never rendered a single component. Both are closed here, not
+deferred again.
+
+**`sealArtifact()`.** It's a single cross-journey action — one Living
+Artifact, not one per module — so no individual Hermetic Hall
+component's own UI was ever the right place to call it. `SovereignOSShell.jsx`'s
+Synthesis Status panel, the one place this whole journey's synthesis is
+actually visible across modules, now carries it for real: "Compile &
+seal your Living Artifact," gated on real substance (`concepts.selected.length
+> 0 || a committed reflection exists` — `sealArtifact()`'s own guard in
+`sovereignReducer.js` only refuses a *missing* draft, not an empty one,
+since `compileFromSynthesis()` always produces a structurally valid
+document even from nothing), with a Markdown export once sealed.
+Reachable today via `SovereignOSLive`
+(`/experiencemode/sovereign/reclamation-university/sovereign-os`,
+linked from the Hermetic Hall's own "Open Sovereign OS" button).
+
+**Real verification.** Every prior slice's "verification" was: the full
+test suite still passes, a bundle checks clean in isolation, and the
+dispatch path was read end to end. None of that ever rendered a
+component, clicked a button, or typed into a field — the actual claim
+("clicking this does X") was always inferred, never observed. That gap
+is closed by actually setting up the tooling and writing the tests,
+rather than continuing to note the gap and move on:
+
+- Installed `@testing-library/react`, `@testing-library/jest-dom`, and
+  `jsdom` as real devDependencies (they weren't present at all before —
+  two pre-existing test files, `ErrorBoundary.test.js` and
+  `AuthContext.test.js`, imported `@testing-library/react` and had
+  never once run, "Cannot find package" on both).
+- Added `frontend/vitest.config.js` (jsdom environment) and
+  `frontend/vitest.setup.js` (jest-dom matchers, RTL's `afterEach(cleanup)`
+  registered explicitly since this repo doesn't use vitest's implicit
+  globals, and permissive stubs for `matchMedia`/`ResizeObserver`/canvas
+  2D context/`scrollIntoView` — none of which jsdom implements, and
+  several Hermetic Hall modules use for decorative canvas art alongside
+  the real runtime wiring in the same components).
+- Fixed `ErrorBoundary.test.js`: swapped `jest.*` for `vi.*` (this repo
+  is vitest-only; the file was apparently never updated after an
+  earlier jest→vitest migration), and fixed a genuine test-logic bug —
+  it asserted a class error boundary would clear its caught-error state
+  just because its `children` prop changed, which isn't how React error
+  boundaries work; the fix reorders the test to match how `resetError()`
+  in `ErrorBoundary.jsx` actually recovers (fix the children first,
+  *then* click Try Again). All 5 tests pass for real now.
+- Rewrote `AuthContext.test.js` from scratch: the old version mocked
+  `axios` and asserted on a setTimeout-based token-refresh flow and an
+  axios 401 interceptor — none of which exist in the current,
+  Supabase-first `AuthContext.jsx` (see this file's own architecture
+  notes on the Supabase-first rewrite). Every async test in the old file
+  timed out waiting on a `loading` flag nothing was ever going to
+  resolve; it wasn't a jest/vitest syntax problem, it was testing removed
+  behavior. Rewritten against the real implementation, mocking
+  `services/supabase/client.js` (the one module `AuthContext.jsx`
+  actually depends on) — 10 tests, covering session restore, login,
+  register, logout, `updateProgress`, a real Supabase
+  `onAuthStateChange` event, and the `auth:session-expired` window
+  event listener. Along the way, found and worked around a real gotcha:
+  `AuthContext.jsx` memoizes its Supabase client promise at module
+  scope, outside React, so a naive per-test mock swap silently never
+  took effect after the first test — fixed by keeping one stable mock
+  object for the file and only swapping its `.auth` methods per test.
+- Wrote real interaction tests for two representative modules —
+  `VibrationModuleExperience.test.js` (its own bespoke `TABS`/`go()`
+  pattern) and `PolarityModuleExperience.test.js` (the `CurriculumSpine`/
+  `goToIndex` pattern shared by four other modules, which — unlike
+  Vibration — enforces real navigation locks, so reaching a later
+  section means actually advancing through the footer CTA the way a
+  real learner would, not jumping to a tab). Both mount a real
+  `SovereignProvider` (no namespace — local-only, no Supabase — exactly
+  the "signed-out" configuration the runtime is documented to support)
+  and a `SovereignOSShell.test.js` exercising the new seal action.
+  Together: mount, click through real tabs/sections, run a self-audit,
+  add a concept to the graph, write and commit a reflection, complete a
+  protocol and log it, seal an artifact and export it — and assert on
+  the real runtime state read back out via `SovereignContext`, not on
+  rendered text alone.
+
+**This surfaced a real, previously shipped bug**, not a hypothetical
+one: Vibration's "Add to concept graph" gate was written as
+`{auditValue && (...)}`. Picking the *first* self-audit option sets
+`auditValue` to `0` — and `0 && (...)` is falsy, so the button silently
+never appeared. This had been live on `main` since the Key Concepts PR
+merged earlier in this same migration; reading the dispatch path never
+would have caught it, because the dispatch path itself was correct —
+only the *gate* was wrong, and only for one specific, easy-to-pick
+option. Fixed to `auditValue != null`. This is the concrete case for
+why "verified by reading the code" and "verified by using it" are not
+the same claim.
+
+Verification: full suite 341/347 passing (was 312/318 — 29 net new
+passing tests: 5 ErrorBoundary + 10 AuthContext + 4 SovereignOSShell +
+5 Vibration + 5 Polarity), same 3 pre-existing legacy-content test
+files still failing (`hermeticImportedCurriculum.test.js`,
+`hermeticJourneyTabs.test.js`, `hermeticLearningExperience.test.js` —
+these test a superseded five-stage/seven-section curriculum engine this
+file's own header comment already says "should not be reintroduced";
+`HermeticCurriculumModule.jsx`, their subject, is unreachable dead code
+in the live route tree per `ReclamationModulePage.jsx`'s routing, not
+something this migration touches — left as pre-existing, unrelated
+technical debt rather than silently claimed as fixed). `npm run build`
+verified clean. The fixed root test command
+(`npm test --prefix frontend`) still passes unchanged.
+
+Not extended to the other four modules (Rhythm, Cause & Effect, Gender,
+Hermetic-Supplied): two representative patterns are now under real
+test, not all six. Real, remaining, honestly stated: the actual
+signed-in, deployed-site interaction is still not verified — no test
+Supabase account exists in this environment. That is a different claim
+than "clicking this does X was never checked at all," which was true
+before this pass and is no longer true.
+
 ## Phase 19: testing the system as an OS
 
 Every earlier phase's tests proved one function or one reducer case in

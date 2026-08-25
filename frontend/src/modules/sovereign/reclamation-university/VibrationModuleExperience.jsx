@@ -798,8 +798,13 @@ function Accordion({ item, open, audit, auditValue, onAudit, onToggle, inGraph, 
           <AuditStrip audit={audit} value={auditValue} onPick={onAudit} />
           {/* Real work (running the self-audit) is the gate — the graph
               reflects what was actually engaged with, not what's merely
-              expanded. */}
-          {auditValue && (
+              expanded. auditValue != null, not truthy: picking the very
+              first option in the list sets it to index 0, and `0 && (...)`
+              is falsy -- a real bug caught by an actual click on the
+              first option, not by reading this code, which is exactly
+              why the gate now checks for "was an option picked at all"
+              instead of "is the picked index truthy". */}
+          {auditValue != null && (
             <button
               type="button"
               className="rux-acc-add-graph"

@@ -5,8 +5,9 @@ import { ArrowRight, LayoutDashboard, Pencil, Download, FileDown } from "lucide-
 import jsPDF from "jspdf";
 import CurriculumSpine from "./CurriculumSpine";
 import ReclamationLessonMedia from "./ReclamationLessonMedia";
-import { CURRICULUM_SECTIONS } from "./curriculumSections";
-import { useSovereign } from "../../../sovereign/runtime";
+import { CURRICULUM_SECTIONS, sovereignStepIdForSection } from "./curriculumSections";
+import ConceptGraphView from "../../../components/sovereign-os/ConceptGraphView";
+import { useSovereign, SOVEREIGN_STEP_IDS } from "../../../sovereign/runtime";
 import {
   GENDER_META, PRINCIPLES, CURRENT_STATES, INTRO_CONTENT, PRINCIPLE_CONTENT, KEY_CONCEPTS,
   WHY_IT_MATTERS, DOMAINS, RECLAMATION_CONTENT, LENS_LEDE, LENS, REFLECTION_CONTENT,
@@ -73,11 +74,33 @@ const MIN_REFLECTION_CHARS = 80;
    navigating between modules. */
 export default function GenderModuleExperience({ faculty, onComplete }) {
   const navigate = useNavigate();
-  const { reflection: sovereignReflection, session } = useSovereign();
+  const {
+    reflection: sovereignReflection,
+    session,
+    concepts,
+    curriculum,
+    synthesis,
+    module: sovereignModule,
+  } = useSovereign();
+
+  /* Registers this as the active Sovereign module and keeps the runtime
+     step engine (sovereignSteps.js) in sync with real navigation --
+     previously this component never called either. */
+  useEffect(() => {
+    curriculum.startModule(MODULE_ID);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  useEffect(() => {
+    if (!sovereignModule) return;
+    sovereignModule.advanceStep(sovereignStepIdForSection(CURRICULUM_SECTIONS[0].id));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sovereignModule?.moduleId]);
+
   const [activeIndex, setActiveIndex] = useState(0);
   const [visited, setVisited] = useState(["intro"]);
   const [engaged, setEngaged] = useState([]);
   const [hydrated, setHydrated] = useState(false);
+  const [reflectionLinkedConcepts, setReflectionLinkedConcepts] = useState([]);
 
   const [currentState, setCurrentState] = useState(null);
   const [principleState, setPrincipleState] = useState(0);
@@ -158,7 +181,35 @@ export default function GenderModuleExperience({ faculty, onComplete }) {
     return () => clearTimeout(t);
   }, [reflection, hydrated]);
 
+  const reflectionConceptsSeeded = useRef(false);
+  useEffect(() => {
+    const entry = sovereignReflection.entries[`${MODULE_ID}:${SOVEREIGN_STEP_IDS.REFLECTION}`];
+    if (reflectionConceptsSeeded.current) return;
+    if (!entry?.retainedConcepts?.length) return;
+    reflectionConceptsSeeded.current = true;
+    setReflectionLinkedConcepts(entry.retainedConcepts);
+  }, [sovereignReflection]);
+
   const currentSection = CURRICULUM_SECTIONS[activeIndex];
+
+  /* Real content -> gated real action -> real runtime dispatch -> real
+     shared visual component reading live state -- same pattern proven in
+     the three modules above. */
+  const conceptSlug = (c) => c.title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+  const reflectionEntry = sovereignReflection.entries[`${MODULE_ID}:${SOVEREIGN_STEP_IDS.REFLECTION}`] ?? null;
+  const reflectionCommitted = reflectionEntry?.status === "committed";
+  const recognizedConcepts = sovereignModule?.selectedConcepts ?? [];
+  const conceptLabel = (slug) => KEY_CONCEPTS.find((c) => conceptSlug(c) === slug)?.title ?? slug;
+  const toggleReflectionConcept = (slug) =>
+    setReflectionLinkedConcepts((prev) => (prev.includes(slug) ? prev.filter((s) => s !== slug) : [...prev, slug]));
+  const commitReflection = () => {
+    const text = reflection.trim();
+    if (!text) return;
+    sovereignReflection.commitReflection(SOVEREIGN_STEP_IDS.REFLECTION, text, reflectionLinkedConcepts, MODULE_ID);
+  };
+  const protocolLogged = synthesis.protocolExecutions.some(
+    (execution) => execution.moduleId === MODULE_ID && execution.protocolId === "force-dialogue"
+  );
 
   const markVisited = (id) => setVisited((prev) => (prev.includes(id) ? prev : [...prev, id]));
   const markEngaged = (id) => setEngaged((prev) => (prev.includes(id) ? prev : [...prev, id]));
@@ -181,8 +232,12 @@ export default function GenderModuleExperience({ faculty, onComplete }) {
   );
   const canGenerateArtifact = unmetRequirements.length === 0;
 
+  /* generateArtifact() already only proceeds past canGenerateArtifact --
+     every ARTIFACT_REQUIREMENTS field actually filled -- so the log
+     piggybacks on this already-gated, already-explicit action. */
   const generateArtifact = () => {
     if (!canGenerateArtifact) return;
+    synthesis.executeProtocol("force-dialogue", { responses: protocolResponses }, MODULE_ID);
     setArtifact((current) => {
       const next = { ...current };
       ARTIFACT_FIELD_IDS.forEach((id) => {
@@ -258,8 +313,11 @@ export default function GenderModuleExperience({ faculty, onComplete }) {
     setTimeout(() => { setCeremonyPlaying(false); if (onComplete) onComplete(); }, 2600);
   };
 
-  const goToIndex = (index) => setActiveIndex(index);
-  const advance = () => setActiveIndex((i) => Math.min(CURRICULUM_SECTIONS.length - 1, i + 1));
+  const goToIndex = (index) => {
+    setActiveIndex(index);
+    sovereignModule?.advanceStep(sovereignStepIdForSection(CURRICULUM_SECTIONS[index].id));
+  };
+  const advance = () => goToIndex(Math.min(CURRICULUM_SECTIONS.length - 1, activeIndex + 1));
 
   const footerLabel = useMemo(() => {
     if (currentSection.id === "protocol") {
@@ -491,6 +549,8 @@ export default function GenderModuleExperience({ faculty, onComplete }) {
                 <div style={{ display: "grid", gap: 10, marginTop: 20 }}>
                   {KEY_CONCEPTS.map((c, i) => {
                     const open = openConcept === i;
+                    const slug = conceptSlug(c);
+                    const inGraph = concepts.selected.includes(slug);
                     return (
                       <div className={`rug-acc${open ? " is-open" : ""}`} key={c.id}>
                         <button
@@ -518,11 +578,20 @@ export default function GenderModuleExperience({ faculty, onComplete }) {
                                 {c.practice.map((line) => <span key={line.slice(0, 28)}>{line}</span>)}
                               </div>
                             </div>
+                            <button type="button" className="rug-btn" style={{ marginTop: 12 }}
+                              disabled={inGraph}
+                              onClick={() => concepts.selectConcept(slug, MODULE_ID)}>
+                              {inGraph ? "In your concept graph" : "Add to concept graph"}
+                            </button>
                           </div>
                         )}
                       </div>
                     );
                   })}
+                </div>
+                <div style={{ marginTop: 32 }}>
+                  <div className="rug-panel-label">YOUR CONCEPT GRAPH</div>
+                  <div style={{ marginTop: 10 }}><ConceptGraphView /></div>
                 </div>
               </section>
             )}
@@ -771,6 +840,33 @@ export default function GenderModuleExperience({ faculty, onComplete }) {
                   {reflectionSavedAt ? `SAVED · ${new Date(reflectionSavedAt).toLocaleTimeString()}` : "Not yet saved"}
                 </div>
 
+                {recognizedConcepts.length > 0 && (
+                  <div style={{ marginTop: 20 }}>
+                    <div className="rug-panel-label">WHICH RECOGNIZED CONCEPTS DOES THIS CONNECT TO?</div>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 8 }}>
+                      {recognizedConcepts.map((slug) => (
+                        <button type="button" key={slug} className="rug-btn"
+                          aria-pressed={reflectionLinkedConcepts.includes(slug)}
+                          style={{ opacity: reflectionLinkedConcepts.includes(slug) ? 1 : 0.55 }}
+                          onClick={() => toggleReflectionConcept(slug)}>
+                          {conceptLabel(slug)}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                <button type="button" className="rug-btn" style={{ marginTop: 16 }}
+                  disabled={!reflection.trim()} onClick={commitReflection}>
+                  {reflectionCommitted ? "Reflection committed — recommit with changes" : "Commit reflection"}
+                </button>
+                {reflectionCommitted && (
+                  <div className="rug-save" style={{ marginTop: 8 }}>
+                    Committed{reflectionLinkedConcepts.length > 0
+                      ? ` — linked to ${reflectionLinkedConcepts.length} concept${reflectionLinkedConcepts.length === 1 ? "" : "s"} in your concept graph.`
+                      : "."}
+                  </div>
+                )}
+
                 {/* Symbolic feedback: the currents calm as the learner writes.
                     They never fully settle — this is not a correctness signal. */}
                 <div style={{ marginTop: 22 }}>
@@ -816,6 +912,11 @@ export default function GenderModuleExperience({ faculty, onComplete }) {
                     </button>
                   ))}
                 </div>
+                {protocolLogged && (
+                  <div className="rug-save" style={{ marginBottom: 14 }}>
+                    Logged to your synthesis record — this is what the Artifact Compiler and the VMA see.
+                  </div>
+                )}
 
                 <div className="rug-panel accent">
                   <div className="rug-h3">{currentStep.n} · {currentStep.t}</div>

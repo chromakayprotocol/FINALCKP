@@ -1535,6 +1535,41 @@ completion criteria (Key Concepts, Reflection, Protocol). The remaining
 eight steps in this module, and all eleven in the other five Hermetic
 Hall components, are unchanged.
 
+**Fourth slice: closing the tab/step-engine gap directly, not just per-step.**
+`TABS` (the local tab array driving Vibration's visible UI) and
+`SOVEREIGN_STEPS` (the runtime's step engine) turned out to describe the
+exact same eleven-step arc, in the exact same order, under different
+id strings — but nothing ever connected them: visiting a tab only ever
+called `setTab`, never `module.advanceStep`. That meant every "viewed"
+criterion (Intro, Principle, Why It Matters, Domains, Reclamation,
+2026 Lens, Summary — seven of the eleven steps) could never become true
+no matter how much of the module a learner actually read, the same class
+of bug fixed individually for Key Concepts/Reflection/Protocol above,
+but structural this time rather than per-step. A `TAB_STEP_IDS` mapping
+(built once, next to `TABS`, so the two arrays can't silently drift
+apart) now drives a call to `module.advanceStep(TAB_STEP_IDS[n])` from
+both the initial mount (once the runtime confirms this module is
+active) and every call to `go()`, which every tab button and the
+"Continue" footer action already route through. This is the single
+change this migration has been missing since Phase 4: the runtime step
+engine and the visible tab UI are now reading and writing the same
+state for this module, not two parallel systems.
+
+All eleven of Vibration's steps now have runtime-real completion
+criteria. The other five Hermetic Hall modules are unchanged — and,
+per direct inspection, further behind than Vibration was before this
+work started: none of them call `curriculum.startModule` at all, so
+they don't even register as the active module today.
+
+Verification: full suite 312/318, same 6 pre-existing failures, 0
+introduced. Bundle-checked clean in isolation. No new automated test
+directly exercises `TAB_STEP_IDS`/`advanceStep` wiring — this
+component has no existing render-test harness (no
+`@testing-library/react` + `SovereignProvider` fixture for it), and
+building one is out of scope for this pass; verified by reading the
+dispatch path end to end instead. Not verified: the live interaction,
+same standing gap as every slice above.
+
 ## Phase 19: testing the system as an OS
 
 Every earlier phase's tests proved one function or one reducer case in

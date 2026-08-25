@@ -1665,6 +1665,36 @@ introduced. Bundle-checked clean in isolation. Same standing gaps: no
 live signed-in verification; `sealArtifact()` still untouched
 everywhere.
 
+**Ninth slice: the Hermetic-Supplied module (Mentalism, Correspondence)
+— last of the six, and structurally the thinnest.** This component
+(`HermeticSuppliedModuleExperience.jsx`) renders `MODULE_COPY`, prose
+parsed at module-load time out of a `.txt` file
+(`hermeticSuppliedModules.txt`) by section heading — there is no
+`KEY_CONCEPTS` array, no `PROTOCOL_STEPS` checklist, no structured
+artifact fields anywhere in it, unlike the other six modules. Wiring a
+per-concept "Add to concept graph" action or a protocol-execution log
+here the same way as the other five would mean inventing structure the
+source content doesn't actually have — exactly the kind of fabricated
+instrument this whole correction has been arguing against. So this
+slice is narrower on purpose: `curriculum.startModule` on mount; both
+places this component changes tabs (the sidebar buttons and the footer
+"Continue" action) now route through one `goToTab()` that also calls
+`module.advanceStep`, closing the "viewed" criteria; and the one real
+reflection prompt this module has (rendered by `CopyScreen` whenever a
+section contains "Reflection Prompt") gets a real "Commit reflection"
+button dispatching `commitReflection` at the canonical step id, same as
+every other module — with an empty `retainedConcepts` array, since
+there is genuinely nothing to link it to here.
+
+All six Hermetic Hall modules are now wired to the Sovereign Runtime.
+None of the six call `sealArtifact()` — that remains a single
+cross-journey action, correctly out of scope for any one module.
+
+Verification: full suite 312/318 (including this file's own existing
+`HermeticSuppliedModuleExperience.test.js`, 2/2, still passing), same 6
+pre-existing failures elsewhere, 0 introduced. Bundle-checked clean in
+isolation. Same standing gap: no live signed-in verification.
+
 ## Phase 19: testing the system as an OS
 
 Every earlier phase's tests proved one function or one reducer case in

@@ -1570,6 +1570,49 @@ building one is out of scope for this pass; verified by reading the
 dispatch path end to end instead. Not verified: the live interaction,
 same standing gap as every slice above.
 
+**Fifth slice: Polarity, the first of the five modules that had none of
+this at all.** Direct inspection (noted above) found the other five
+Hermetic Hall modules further behind than Vibration was before this
+work started — none called `curriculum.startModule`, so none registered
+as the active module, let alone advanced any step or dispatched any
+concept/reflection/protocol action. Polarity is the first fixed.
+
+Four modules (Polarity, Rhythm, Cause & Effect, Gender) share one file,
+`curriculumSections.js`, for their eleven-section arc — its `CURRICULUM_SECTIONS`
+ids turned out to already match `SOVEREIGN_STEP_IDS` one-to-one, just
+under different strings (`'key-concepts'` vs `'03-key-concepts'`, etc).
+Rather than repeat Vibration's per-file `TAB_STEP_IDS` table four times
+and risk the four copies drifting apart, that mapping now lives once in
+`curriculumSections.js` itself as `sovereignStepIdForSection()` — the
+single source of truth all four modules import.
+
+Applied to Polarity: `curriculum.startModule(MODULE_ID)` on mount;
+`goToIndex()` (the one choke point this module's navigation already
+runs through — spine clicks and the footer's primary action both call
+it) now also calls `module.advanceStep(sovereignStepIdForSection(...))`,
+closing all seven "viewed" criteria the same way Vibration's `go()` did.
+Key Concepts: this module has no per-concept self-audit like Vibration's,
+so the real-work gate here is structural rather than a separate flag —
+the "Add to concept graph" button only exists inside a concept's
+expanded accordion body, so clicking it is only possible after actually
+opening that concept. Reflection: a "Commit reflection" button, gated on
+non-empty text, with concept-linking chips drawn from
+`module.selectedConcepts` — same pipeline as Vibration. Protocol: rather
+than add a fifth button, the log piggybacks on `generateArtifact()`,
+which already only runs once `handlePrimaryAction` has confirmed
+`protocolComplete` (all five Spectrum Shift steps actually run) — an
+already-gated, already-explicit action, so `synthesis.executeProtocol`
+now fires from inside it instead of duplicating that gate with new UI.
+
+Not touched, same as Vibration: the Artifact step's `sealArtifact()` —
+that's a single cross-journey artifact, not one per module, and remains
+open work across every module including Vibration.
+
+Verification: full suite 312/318, same 6 pre-existing failures, 0
+introduced. Both touched files bundle-checked clean in isolation. Same
+standing gap as every slice above: no live signed-in verification (no
+test Supabase account in this environment).
+
 ## Phase 19: testing the system as an OS
 
 Every earlier phase's tests proved one function or one reducer case in

@@ -5,8 +5,9 @@ import { ArrowRight, LayoutDashboard, Pencil, Download, FileDown } from "lucide-
 import jsPDF from "jspdf";
 import CurriculumSpine from "./CurriculumSpine";
 import ReclamationLessonMedia from "./ReclamationLessonMedia";
-import { CURRICULUM_SECTIONS } from "./curriculumSections";
-import { useSovereign } from "../../../sovereign/runtime";
+import { CURRICULUM_SECTIONS, sovereignStepIdForSection } from "./curriculumSections";
+import ConceptGraphView from "../../../components/sovereign-os/ConceptGraphView";
+import { useSovereign, SOVEREIGN_STEP_IDS } from "../../../sovereign/runtime";
 import {
   CAUSE_EFFECT_META, PRINCIPLES, CHAIN_NODES, CASCADE, INTRO_CONTENT, PRINCIPLE_CONTENT,
   KEY_CONCEPTS_LEDE, KEY_CONCEPTS, CONCEPT_EXHIBIT, WHY_IT_MATTERS, DOMAINS_LEDE, DOMAINS,
@@ -79,11 +80,33 @@ const MIN_REFLECTION_CHARS = 80;
    navigating between modules. */
 export default function CauseEffectModuleExperience({ faculty, onComplete }) {
   const navigate = useNavigate();
-  const { reflection: sovereignReflection, session } = useSovereign();
+  const {
+    reflection: sovereignReflection,
+    session,
+    concepts,
+    curriculum,
+    synthesis,
+    module: sovereignModule,
+  } = useSovereign();
+
+  /* Registers this as the active Sovereign module and keeps the runtime
+     step engine (sovereignSteps.js) in sync with real navigation --
+     previously this component never called either. */
+  useEffect(() => {
+    curriculum.startModule(MODULE_ID);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  useEffect(() => {
+    if (!sovereignModule) return;
+    sovereignModule.advanceStep(sovereignStepIdForSection(CURRICULUM_SECTIONS[0].id));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sovereignModule?.moduleId]);
+
   const [activeIndex, setActiveIndex] = useState(0);
   const [visited, setVisited] = useState(["intro"]);
   const [engaged, setEngaged] = useState([]);
   const [hydrated, setHydrated] = useState(false);
+  const [reflectionLinkedConcepts, setReflectionLinkedConcepts] = useState([]);
 
   const [chainNode, setChainNode] = useState(null);
   const [cascadeStage, setCascadeStage] = useState(0);
@@ -171,7 +194,35 @@ export default function CauseEffectModuleExperience({ faculty, onComplete }) {
     return () => clearTimeout(t);
   }, [reflection, hydrated]);
 
+  const reflectionConceptsSeeded = useRef(false);
+  useEffect(() => {
+    const entry = sovereignReflection.entries[`${MODULE_ID}:${SOVEREIGN_STEP_IDS.REFLECTION}`];
+    if (reflectionConceptsSeeded.current) return;
+    if (!entry?.retainedConcepts?.length) return;
+    reflectionConceptsSeeded.current = true;
+    setReflectionLinkedConcepts(entry.retainedConcepts);
+  }, [sovereignReflection]);
+
   const currentSection = CURRICULUM_SECTIONS[activeIndex];
+
+  /* Real content -> gated real action -> real runtime dispatch -> real
+     shared visual component reading live state -- same pattern proven in
+     the three modules above. */
+  const conceptSlug = (c) => c.title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+  const reflectionEntry = sovereignReflection.entries[`${MODULE_ID}:${SOVEREIGN_STEP_IDS.REFLECTION}`] ?? null;
+  const reflectionCommitted = reflectionEntry?.status === "committed";
+  const recognizedConcepts = sovereignModule?.selectedConcepts ?? [];
+  const conceptLabel = (slug) => KEY_CONCEPTS.find((c) => conceptSlug(c) === slug)?.title ?? slug;
+  const toggleReflectionConcept = (slug) =>
+    setReflectionLinkedConcepts((prev) => (prev.includes(slug) ? prev.filter((s) => s !== slug) : [...prev, slug]));
+  const commitReflection = () => {
+    const text = reflection.trim();
+    if (!text) return;
+    sovereignReflection.commitReflection(SOVEREIGN_STEP_IDS.REFLECTION, text, reflectionLinkedConcepts, MODULE_ID);
+  };
+  const protocolLogged = synthesis.protocolExecutions.some(
+    (execution) => execution.moduleId === MODULE_ID && execution.protocolId === "causal-trace"
+  );
 
   /* Record that a section was read, and separately that its material was
      actually engaged with — the master forbids treating the two as the same. */
@@ -202,8 +253,13 @@ export default function CauseEffectModuleExperience({ faculty, onComplete }) {
   );
   const canGenerateArtifact = unmetRequirements.length === 0;
 
+  /* generateArtifact() already only proceeds past canGenerateArtifact --
+     every ARTIFACT_REQUIREMENTS field actually filled, which in practice
+     means protocolComplete -- so the log piggybacks on this already-gated,
+     already-explicit action rather than adding a new button. */
   const generateArtifact = () => {
     if (!canGenerateArtifact) return;
+    synthesis.executeProtocol("causal-trace", { responses: protocolResponses }, MODULE_ID);
     setArtifact((current) => {
       const next = { ...current };
       ARTIFACT_FIELD_IDS.forEach((id) => {
@@ -288,8 +344,11 @@ export default function CauseEffectModuleExperience({ faculty, onComplete }) {
     setTimeout(() => { setCeremonyPlaying(false); if (onComplete) onComplete(); }, 2200);
   };
 
-  const goToIndex = (index) => setActiveIndex(index);
-  const advance = () => setActiveIndex((i) => Math.min(CURRICULUM_SECTIONS.length - 1, i + 1));
+  const goToIndex = (index) => {
+    setActiveIndex(index);
+    sovereignModule?.advanceStep(sovereignStepIdForSection(CURRICULUM_SECTIONS[index].id));
+  };
+  const advance = () => goToIndex(Math.min(CURRICULUM_SECTIONS.length - 1, activeIndex + 1));
 
   const footerLabel = useMemo(() => {
     if (currentSection.id === "protocol") {
@@ -503,6 +562,8 @@ export default function CauseEffectModuleExperience({ faculty, onComplete }) {
                 <div style={{ display: "grid", gap: 10, marginTop: 20 }}>
                   {KEY_CONCEPTS.map((c, i) => {
                     const open = openConcept === i;
+                    const slug = conceptSlug(c);
+                    const inGraph = concepts.selected.includes(slug);
                     return (
                       <div className={`ruc-acc${open ? " is-open" : ""}`} key={c.id}>
                         <button
@@ -523,11 +584,20 @@ export default function CauseEffectModuleExperience({ faculty, onComplete }) {
                               <div className="ruc-ask-tag">ASK</div>
                               <div className="ruc-ask-txt">{c.practice}</div>
                             </div>
+                            <button type="button" className="ruc-btn" style={{ marginTop: 12 }}
+                              disabled={inGraph}
+                              onClick={() => concepts.selectConcept(slug, MODULE_ID)}>
+                              {inGraph ? "In your concept graph" : "Add to concept graph"}
+                            </button>
                           </div>
                         )}
                       </div>
                     );
                   })}
+                </div>
+                <div style={{ marginTop: 32 }}>
+                  <div className="ruc-panel-label">YOUR CONCEPT GRAPH</div>
+                  <div style={{ marginTop: 10 }}><ConceptGraphView /></div>
                 </div>
 
                 <div className="ruc-h3" style={{ marginTop: 28 }}>
@@ -855,6 +925,33 @@ export default function CauseEffectModuleExperience({ faculty, onComplete }) {
                   {reflectionSavedAt && !reflectionRecorded && " · keep going to record this section"}
                 </div>
 
+                {recognizedConcepts.length > 0 && (
+                  <div style={{ marginTop: 20 }}>
+                    <div className="ruc-panel-label">WHICH RECOGNIZED CONCEPTS DOES THIS CONNECT TO?</div>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 8 }}>
+                      {recognizedConcepts.map((slug) => (
+                        <button type="button" key={slug} className="ruc-btn"
+                          aria-pressed={reflectionLinkedConcepts.includes(slug)}
+                          style={{ opacity: reflectionLinkedConcepts.includes(slug) ? 1 : 0.55 }}
+                          onClick={() => toggleReflectionConcept(slug)}>
+                          {conceptLabel(slug)}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                <button type="button" className="ruc-btn" style={{ marginTop: 16 }}
+                  disabled={!reflection.trim()} onClick={commitReflection}>
+                  {reflectionCommitted ? "Reflection committed — recommit with changes" : "Commit reflection"}
+                </button>
+                {reflectionCommitted && (
+                  <div className="ruc-save" style={{ marginTop: 8 }}>
+                    Committed{reflectionLinkedConcepts.length > 0
+                      ? ` — linked to ${reflectionLinkedConcepts.length} concept${reflectionLinkedConcepts.length === 1 ? "" : "s"} in your concept graph.`
+                      : "."}
+                  </div>
+                )}
+
                 <div className="ruc-panel accent" style={{ marginTop: 22 }}>
                   <div className="ruc-panel-label">FINAL QUESTION</div>
                   <p className="ruc-p" style={{ margin: 0, color: "var(--green-bright)" }}>
@@ -894,6 +991,11 @@ export default function CauseEffectModuleExperience({ faculty, onComplete }) {
                     </button>
                   ))}
                 </div>
+                {protocolLogged && (
+                  <div className="ruc-save" style={{ marginBottom: 14 }}>
+                    Logged to your synthesis record — this is what the Artifact Compiler and the VMA see.
+                  </div>
+                )}
 
                 <div className="ruc-panel accent">
                   {currentStep.workspace && (

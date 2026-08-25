@@ -1628,6 +1628,24 @@ Verification: full suite 312/318, same 6 pre-existing failures, 0
 introduced. Bundle-checked clean in isolation. Same standing gap: no
 live signed-in verification.
 
+**Seventh slice: Cause & Effect, third of the four shared-file modules,
+with a structural wrinkle.** Same pattern as Polarity/Rhythm, with two
+adaptations this module's own architecture required: its navigation
+choke point is `advance()` calling `setActiveIndex` directly rather than
+routing through `goToIndex()` (fixed by making `advance()` call
+`goToIndex()`, so both the spine and the footer action now go through
+one instrumented function); and its Protocol→Artifact gate is
+`canGenerateArtifact` (every `ARTIFACT_REQUIREMENTS` field actually
+filled) rather than a plain `protocolComplete` flag, so the
+`executeProtocol('causal-trace', ...)` log sits right after that
+existing guard inside `generateArtifact()`, not a new button. Key
+Concepts and Reflection wired identically to the prior two modules.
+
+Verification: full suite 312/318, same 6 pre-existing failures, 0
+introduced. Bundle-checked clean in isolation. Same standing gaps: no
+live signed-in verification; `sealArtifact()` still cross-journey and
+untouched everywhere.
+
 ## Phase 19: testing the system as an OS
 
 Every earlier phase's tests proved one function or one reducer case in

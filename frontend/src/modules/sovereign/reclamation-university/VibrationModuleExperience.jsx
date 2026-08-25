@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect, useCallback, useMemo } from "react"
 import { useNavigate } from "react-router-dom";
 import { useSovereign, SOVEREIGN_STEP_IDS } from "../../../sovereign/runtime";
 import ConceptGraphView from "../../../components/sovereign-os/ConceptGraphView";
+import { PRINCIPLES as PRINCIPLE_ICONS } from "./hermeticIcons";
 import useFooterOffset from "./useFooterOffset";
 import "./vibrationModuleExperience.css";
 
@@ -1175,15 +1176,16 @@ export default function VibrationModuleExperience({ module, faculty, onComplete 
             previously seven disabled buttons that still showed a pointer and a
             hover state, promising an interaction that did not exist. */}
         <ol className="rux-rail" aria-label="Position in the Hermetic Hall">
-          {PRINCIPLES.map((p) => {
+          {PRINCIPLES.map((p, i) => {
             const active = p.n === "III";
+            const meta = PRINCIPLE_ICONS[i];
             return (
-              <li key={p.n}
+              <li key={p.n} style={{ "--node-color": meta?.color }}
                 className={`rux-node${active ? " is-active" : ""}${p.state === "COMPLETE" ? " is-done" : ""}`}
                 aria-current={active ? "step" : undefined}>
                 <div className="rux-node-row">
                   <span className="rux-node-num">{p.n}</span>
-                  <Sigil kind={p.k} size={16} color={active ? "#FF5545" : "#9D8862"} />
+                  <span className="rux-sigil"><Sigil kind={p.k} size={16} color={active ? "#1A1408" : (meta?.color ?? "#9D8862")} /></span>
                 </div>
                 <div className="rux-node-name">{p.name}</div>
                 <span className="rux-sr">{`${p.name} — ${p.state}`}</span>

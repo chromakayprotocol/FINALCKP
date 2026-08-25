@@ -11,9 +11,10 @@
 /* ---------------------------------------------------- COMPACT / MOBILE -- */
 .rus-current{
   display:flex; width:100%; align-items:center; justify-content:space-between; gap:12px;
-  padding:13px 16px; background:linear-gradient(180deg,var(--panel),var(--obsidian-2));
-  border:1px solid var(--line); border-radius:3px; color:var(--ivory); cursor:pointer;
+  padding:14px 18px; background:linear-gradient(180deg,var(--panel),var(--obsidian-2));
+  border:1px solid var(--line); border-radius:14px; color:var(--ivory); cursor:pointer;
   font-family:var(--f-read,inherit);
+  box-shadow:0 8px 24px -14px rgba(0,0,0,.5);
 }
 .rus-current-module{
   font-family:var(--f-hud); font-size:var(--ru-label); letter-spacing:.26em; color:var(--bronze-dim);
@@ -34,10 +35,10 @@
 
 /* --------------------------------------------------------------- LIST --- */
 .rus-list{
-  display:none; flex-direction:column; gap:0;
+  display:none; flex-direction:column; gap:3px;
   position:absolute; top:calc(100% + 6px); left:0; right:0; z-index:40;
   background:linear-gradient(180deg,var(--panel),var(--obsidian-2));
-  border:1px solid var(--line); border-radius:3px; padding:6px;
+  border:1px solid var(--line); border-radius:16px; padding:8px;
   max-height:min(70vh,520px); overflow-y:auto;
   box-shadow:0 18px 44px -16px rgba(0,0,0,.6);
 }
@@ -45,21 +46,46 @@
 .rus-thread{ display:none; }
 
 .rus-item{
-  display:flex; align-items:center; gap:10px; width:100%; text-align:left;
-  background:transparent; border:0; border-radius:2px; padding:10px 10px;
-  color:var(--bronze); cursor:pointer; transition:background .18s,color .18s;
+  position:relative;
+  display:flex; align-items:center; gap:14px; width:100%; text-align:left;
+  background:transparent; border:1px solid transparent; border-radius:10px; padding:9px 14px 9px 10px;
+  color:var(--bronze); cursor:pointer; transition:background .18s,color .18s,border-color .18s;
 }
 .rus-item:hover{ background:rgba(255,255,255,.035); color:var(--ivory); }
-.rus-mark{ width:6px; height:6px; border-radius:50%; background:var(--line-2); flex:0 0 auto; }
-.rus-num{ font-family:var(--f-hud); font-size:var(--ru-label); letter-spacing:.18em; color:var(--bronze-dim); flex:0 0 22px; }
-.rus-label{ font-family:var(--f-display); font-size:12.5px; letter-spacing:.05em; flex:1 1 auto; min-width:0; }
+
+/* A circular engraved seal, ringed in a hairline of gold, rather than a
+   filled square icon tile -- the linework-on-black language the rest of
+   the Hall's medallions (ribbon, header emblem) now share. */
+.rus-icon{
+  display:flex; align-items:center; justify-content:center; flex:0 0 auto;
+  width:34px; height:34px; border-radius:50%;
+  background:radial-gradient(circle at 50% 40%, color-mix(in srgb, var(--gold) 14%, transparent), transparent 70%);
+  border:1px solid var(--gold-dim);
+  color:var(--bronze-dim); transition:background .2s,color .2s,border-color .2s;
+}
+.rus-copy{ display:flex; flex-direction:column; gap:1px; flex:1 1 auto; min-width:0; }
+.rus-label{ font-family:var(--f-display); font-size:13px; letter-spacing:.04em; color:inherit; }
 .rus-state{ font-size:11px; color:var(--accent); flex:0 0 auto; width:14px; text-align:center; }
 .rus-sr{ position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
 
-.rus-item.is-active{ color:var(--ivory); background:rgba(255,255,255,.04); }
-.rus-item.is-active .rus-mark{ background:var(--accent); box-shadow:0 0 8px var(--accent); }
-.rus-item.is-active .rus-label{ color:var(--gold-bright,var(--gold)); }
-.rus-item.is-completed .rus-mark{ background:var(--gold); }
+.rus-item.is-active{
+  color:var(--ivory);
+  border-color:color-mix(in srgb, var(--gold) 55%, transparent);
+  background:linear-gradient(90deg, color-mix(in srgb, var(--gold) 8%, transparent), transparent);
+}
+/* A small glowing mark at the row's trailing edge, echoing the reference's
+   "you are here" dot, instead of a full-row colour wash. */
+.rus-item.is-active::after{
+  content:""; position:absolute; right:10px; top:50%; translate:0 -50%;
+  width:6px; height:6px; border-radius:50%;
+  background:var(--gold-bright); box-shadow:0 0 8px 1px var(--gold-bright);
+}
+.rus-item.is-active .rus-icon{
+  border-color:var(--gold-bright); color:var(--gold-bright);
+  box-shadow:0 0 12px -3px var(--gold);
+}
+.rus-item.is-active .rus-label{ color:var(--gold-bright,var(--gold)); font-weight:600; }
+.rus-item.is-completed .rus-icon{ border-color:var(--gold); color:var(--gold); }
 .rus-item.is-locked{ opacity:.4; cursor:not-allowed; }
 .rus-item.is-locked:hover{ background:transparent; color:var(--bronze); }
 
@@ -68,13 +94,13 @@
   .rus-current{ display:none; }
   .rus-list{
     display:flex; position:static; max-height:none; overflow:visible;
-    border:1px solid var(--line); padding:10px 6px; background:linear-gradient(180deg,var(--panel),var(--obsidian-2));
+    border:1px solid var(--line); border-radius:18px; padding:12px 8px;
+    background:linear-gradient(180deg,var(--panel),var(--obsidian-2));
+    box-shadow:0 20px 48px -28px rgba(0,0,0,.55);
   }
-  .rus-thread{
-    display:block; position:absolute; left:19px; top:14px; bottom:14px; width:1px;
-    background:var(--line-2);
-  }
+  .rus-thread{ display:none; }
   .rus-item{ padding:11px 12px; }
+  .rus-item:hover{ transform:translateX(2px); }
 }
 
 @media (prefers-reduced-motion:reduce){

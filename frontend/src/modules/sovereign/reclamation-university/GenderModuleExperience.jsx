@@ -7,6 +7,7 @@ import CurriculumSpine from "./CurriculumSpine";
 import ReclamationLessonMedia from "./ReclamationLessonMedia";
 import { CURRICULUM_SECTIONS, sovereignStepIdForSection } from "./curriculumSections";
 import ConceptGraphView from "../../../components/sovereign-os/ConceptGraphView";
+import { PRINCIPLES as PRINCIPLE_ICONS } from "./hermeticIcons";
 import { useSovereign, SOVEREIGN_STEP_IDS } from "../../../sovereign/runtime";
 import {
   GENDER_META, PRINCIPLES, CURRENT_STATES, INTRO_CONTENT, PRINCIPLE_CONTENT, KEY_CONCEPTS,
@@ -389,19 +390,23 @@ export default function GenderModuleExperience({ faculty, onComplete }) {
         {/* SEVEN-PRINCIPLE NAVIGATION */}
         {/* SEVEN-PRINCIPLE RIBBON — a position report, not navigation. */}
         <ol className="rug-rail" aria-label="Position in the Hermetic Hall">
-          {PRINCIPLES.map((p) => (
+          {PRINCIPLES.map((p, i) => {
+            const meta = PRINCIPLE_ICONS[i];
+            const Icon = meta?.Icon;
+            return (
             <li
-              key={p.n}
+              key={p.n} style={{ "--node-color": meta?.color }}
               className={`rug-node${p.n === "VII" ? " is-active" : ""}${p.state === "COMPLETE" ? " is-done" : ""}`}
             >
               <div className="rug-node-head">
                 <span className="rug-node-num">{p.n}</span>
-                {p.n === "VII" && <DualCurrentMark className="rug-node-sigil" />}
+                {p.n === "VII" ? <DualCurrentMark className="rug-node-sigil" /> : Icon && <span className="rug-sigil"><Icon size={16} strokeWidth={1.75} /></span>}
               </div>
               <div className="rug-node-name">{p.name}</div>
               <span className="ru-sr">{`${p.name} — ${p.state}`}</span>
             </li>
-          ))}
+            );
+          })}
         </ol>
 
         <div className="rug-layout">

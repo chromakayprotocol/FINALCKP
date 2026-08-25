@@ -37,6 +37,7 @@ const ReclamationUniversityPage = lazy(() => import('./pages/ReclamationUniversi
 const ReclamationFacultyRedirect = lazy(() => import('./pages/ReclamationFacultyRedirect'));
 const ReclamationModulePage = lazy(() => import('./pages/ReclamationModulePage'));
 const SovereignOSDemo = lazy(() => import('./pages/experience/SovereignOSDemo'));
+const HermeticHallQAPreview = lazy(() => import('./pages/experience/HermeticHallQAPreview'));
 const SovereignOSLive = lazy(() => import('./pages/experience/SovereignOSLive'));
 
 import AppShell from './components/layout/AppShell';
@@ -120,6 +121,10 @@ function AppRoutes() {
       {/* Phase 15 staging route — the Sovereign OS Shell, not linked from
           anywhere live. See SovereignOSShell.jsx's header comment. */}
       <Route path="/qa/sovereign-os" element={<SovereignOSDemo />} />
+      {/* Staging route for the six Hermetic Hall modules' visual design --
+          same precedent as /qa/sovereign-os, not linked from anywhere
+          live. See HermeticHallQAPreview.jsx. */}
+      <Route path="/qa/hermetic-hall/:moduleSlug" element={<HermeticHallQAPreview />} />
 
       {/* Phase 15/16/18 live: the real Shell + Concept Graph + VMA chat,
           authenticated, running the real SovereignProvider. Linked from

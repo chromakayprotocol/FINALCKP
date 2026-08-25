@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useId, useRef, useState } from 'react';
 import { CURRICULUM_SECTIONS, sectionState } from './curriculumSections';
-import { SECTION_ICONS } from './hermeticIcons';
 import './curriculumSpine.css';
 
 /* CurriculumSpine — the learner's persistent index through a module.
@@ -112,7 +111,6 @@ export default function CurriculumSpine({
           const state = stateFor(index);
           const isActive = state === 'active';
           const locked = state === 'locked';
-          const Icon = SECTION_ICONS[section.id];
           return (
             <button
               key={section.id}
@@ -128,10 +126,9 @@ export default function CurriculumSpine({
               className={`rus-item is-${state}`}
               onClick={() => select(index)}
             >
-              <span className="rus-icon" aria-hidden="true">{Icon && <Icon size={16} strokeWidth={1.75} />}</span>
-              <span className="rus-copy">
-                <span className="rus-label">{section.label}</span>
-              </span>
+              <i className="rus-mark" aria-hidden="true" />
+              <span className="rus-num">{section.n}</span>
+              <span className="rus-label">{section.label}</span>
               {/* State is carried by a glyph and a word, never by colour alone. */}
               <span className="rus-state" aria-hidden="true">
                 {state === 'completed' ? '✓' : state === 'locked' ? '✕' : ''}

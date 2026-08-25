@@ -15,22 +15,18 @@
    animation behind long-form reading. */
 
 .ruc{
-  /* Aliased to the shared --ru-* ground/material tokens (previously
-     hardcoded its own near-black/near-white copy, which silently
-     absorbed any brightening done in recUniSystem.css). --line/--line-2
-     keep their own green tint on purpose. */
-  --obsidian:var(--ru-bg);
-  --obsidian-2:var(--ru-bg-2);
-  --panel:var(--ru-panel);
-  --panel-2:var(--ru-panel-2);
-  --line:#23372A;
-  --line-2:#324B3A;
-  --gold:var(--ru-gold);
-  --gold-bright:var(--ru-gold-bright);
-  --gold-dim:var(--ru-gold-dim);
-  --ivory:var(--ru-ivory);
-  --bronze:var(--ru-bronze);
-  --bronze-dim:var(--ru-bronze-dim);
+  --obsidian:#08080B;
+  --obsidian-2:#0D0D12;
+  --panel:#111117;
+  --panel-2:#15151C;
+  --line:#16241B;
+  --line-2:#23372A;
+  --gold:#C9A227;
+  --gold-bright:#E9CE72;
+  --gold-dim:#6E5D2C;
+  --ivory:#F1ECE2;
+  --bronze:#9D8862;
+  --bronze-dim:#6E6149;
   --green:#4E9E6A;
   --green-bright:#8ED6A4;
   --green-glow:rgba(78,158,106,.32);

@@ -6,26 +6,18 @@
    reads these same tokens, so CurriculumSpine inherits the theme for free. */
 
 .rup{
-  /* These used to hardcode their own near-black/near-white values,
-     duplicating (and drifting from) recUniSystem.css's shared --ru-*
-     ground/material tokens -- exactly what that file's own header
-     comment warns against. Aliased to the shared tokens now, so
-     brightening the system in one place actually reaches this module,
-     instead of silently doing nothing because this file's own copy
-     always won. --line/--line-2 keep their own violet tint on purpose
-     (a real per-module identity choice, not drift). */
-  --obsidian:var(--ru-bg);
-  --obsidian-2:var(--ru-bg-2);
-  --panel:var(--ru-panel);
-  --panel-2:var(--ru-panel-2);
-  --line:#332C42;
-  --line-2:#453A5C;
-  --gold:var(--ru-gold);
-  --gold-bright:var(--ru-gold-bright);
-  --gold-dim:var(--ru-gold-dim);
-  --ivory:var(--ru-ivory);
-  --bronze:var(--ru-bronze);
-  --bronze-dim:var(--ru-bronze-dim);
+  --obsidian:#08080B;
+  --obsidian-2:#0D0D12;
+  --panel:#111117;
+  --panel-2:#15151C;
+  --line:#221E28;
+  --line-2:#31283A;
+  --gold:#C9A227;
+  --gold-bright:#E9CE72;
+  --gold-dim:#6E5D2C;
+  --ivory:#F1ECE2;
+  --bronze:#9D8862;
+  --bronze-dim:#6E6149;
   --violet:#8B6FD9;
   --violet-bright:#C3AEFF;
   --violet-glow:rgba(139,111,217,.32);

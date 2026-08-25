@@ -7,7 +7,6 @@ import CurriculumSpine from "./CurriculumSpine";
 import ReclamationLessonMedia from "./ReclamationLessonMedia";
 import { CURRICULUM_SECTIONS, sovereignStepIdForSection } from "./curriculumSections";
 import ConceptGraphView from "../../../components/sovereign-os/ConceptGraphView";
-import { PRINCIPLES as PRINCIPLE_ICONS } from "./hermeticIcons";
 import { useSovereign, SOVEREIGN_STEP_IDS } from "../../../sovereign/runtime";
 import {
   RHYTHM_META, PRINCIPLES, PHASES, INTRO_CONTENT, PRINCIPLE_CONTENT, KEY_CONCEPTS,
@@ -411,23 +410,16 @@ export default function RhythmModuleExperience({ faculty, onComplete }) {
         {/* SEVEN-PRINCIPLE NAVIGATION */}
         {/* SEVEN-PRINCIPLE RIBBON — a position report, not navigation. */}
         <ol className="rur-rail" aria-label="Position in the Hermetic Hall">
-          {PRINCIPLES.map((p, i) => {
-            const meta = PRINCIPLE_ICONS[i];
-            const Icon = meta?.Icon;
-            return (
-              <li
-                key={p.n} style={{ "--node-color": meta?.color }}
-                className={`rur-node${p.n === "V" ? " is-active" : ""}${p.state === "COMPLETE" ? " is-done" : ""}`}
-              >
-                <div className="rur-node-row">
-                  <span className="rur-node-num">{p.n}</span>
-                  {Icon && <span className="rur-sigil"><Icon size={16} strokeWidth={1.75} /></span>}
-                </div>
-                <div className="rur-node-name">{p.name}</div>
-                <span className="ru-sr">{`${p.name} — ${p.state}`}</span>
-              </li>
-            );
-          })}
+          {PRINCIPLES.map((p) => (
+            <li
+              key={p.n}
+              className={`rur-node${p.n === "V" ? " is-active" : ""}${p.state === "COMPLETE" ? " is-done" : ""}`}
+            >
+              <div className="rur-node-row"><span className="rur-node-num">{p.n}</span></div>
+              <div className="rur-node-name">{p.name}</div>
+              <span className="ru-sr">{`${p.name} — ${p.state}`}</span>
+            </li>
+          ))}
         </ol>
 
         {/* SPINE + STAGE */}

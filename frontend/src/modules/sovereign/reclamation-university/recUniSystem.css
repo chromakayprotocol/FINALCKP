@@ -28,42 +28,29 @@
 .rux, .rup, .rur, .ruc, .rug, .hermetic-hall {
 
   /* ---------------------------------------------------------------- GROUND */
-  /* Brightened well past a near-black #08080B ground: still dark-mode
-     for the reading/writing surfaces (a fully white 11-step reading
-     experience would be its own, larger redesign), but warm enough and
-     with enough separation between ground/panel/card that the page
-     reads as layered surfaces, not one flat black field with red text
-     laid on top of it. */
-  --ru-bg:          #241D14;
-  --ru-bg-2:        #2C2418;
-  --ru-panel:       #3C3120;
-  --ru-panel-2:     #493C26;
-  --ru-well:        #2A2216;
+  --ru-bg:          #08080B;
+  --ru-bg-2:        #0D0D12;
+  --ru-panel:       #111117;
+  --ru-panel-2:     #15151C;
+  --ru-well:        #0A0A10;
 
   /* ------------------------------------------------------------- MATERIALS */
-  --ru-gold:        #D4A72C;
-  --ru-gold-bright: #F2CE72;
-  --ru-gold-dim:    #7A6530;
-  --ru-ivory:       #FBF5E7;
-  --ru-read:        #EAE1CC;   /* long-form body */
-  --ru-bronze:      #C2A876;   /* secondary text, brighter for the lighter ground */
-  --ru-bronze-dim:  #A78F63;   /* micro-labels */
-  --ru-placeholder: #9C875F;
+  --ru-gold:        #C9A227;
+  --ru-gold-bright: #E9CE72;
+  --ru-gold-dim:    #6E5D2C;
+  --ru-ivory:       #F1ECE2;
+  --ru-read:        #DCD5C8;   /* long-form body                    11.9:1 */
+  --ru-bronze:      #9D8862;   /* secondary text                     5.8:1 */
+  --ru-bronze-dim:  #8A7A5C;   /* micro-labels, was #6E6149 (3.3:1)  4.8:1 */
+  --ru-placeholder: #8A7A5C;   /* was #4A443A (2.1:1)                4.8:1 */
 
   /* Default accent. Every module overrides this triplet and nothing else. */
   --ru-accent:        #D2382C;
-  --ru-accent-bright: #FF6A52;
+  --ru-accent-bright: #FF5545;
   --ru-accent-glow:   rgba(210, 56, 44, .30);
 
-  --ru-line:        #3A2F1E;
-  --ru-line-2:      #4F4127;
-
-  /* Card geometry: generous rounding + real elevation instead of a flat
-     3px-radius panel with only a hairline border to separate it from the
-     ground. */
-  --ru-radius-lg: 20px;
-  --ru-radius-md: 14px;
-  --ru-shadow-card: 0 14px 34px -18px rgba(0,0,0,.55);
+  --ru-line:        #241F16;
+  --ru-line-2:      #332B1E;
 
   /* ----------------------------------------------------------------- TYPE */
   --ru-f-display: 'Cinzel', Georgia, serif;
@@ -89,7 +76,7 @@
   --ru-s1: 4px;   --ru-s2: 8px;   --ru-s3: 12px;  --ru-s4: 16px;
   --ru-s5: 24px;  --ru-s6: 32px;  --ru-s7: 48px;  --ru-s8: 64px;
 
-  --ru-radius: 10px;
+  --ru-radius: 3px;
   --ru-measure: 68ch;
 
   /* Height of the fixed action bar. Set at runtime by useFooterOffset so the
@@ -333,14 +320,12 @@
 .rux-panel, .rup-panel, .rur-panel, .ruc-panel, .rug-panel, .ru-panel {
   background: linear-gradient(180deg, var(--ru-panel), var(--ru-bg-2));
   border: 1px solid var(--ru-line);
-  border-radius: var(--ru-radius-md);
+  border-radius: var(--ru-radius);
   padding: var(--ru-s5);
-  box-shadow: var(--ru-shadow-card);
 }
 .rux-panel.accent, .rup-panel.accent, .rur-panel.accent,
 .ruc-panel.accent, .rug-panel.accent, .ru-panel.accent {
-  border-color: color-mix(in srgb, var(--ru-accent) 42%, transparent);
-  box-shadow: var(--ru-shadow-card), inset 0 0 0 1px color-mix(in srgb, var(--ru-accent) 10%, transparent);
+  border-color: color-mix(in srgb, var(--ru-accent) 34%, transparent);
 }
 
 /* ============================================================== CONTROLS == */
@@ -351,8 +336,8 @@
   font-weight: 500;
   letter-spacing: .16em;
   text-transform: uppercase;
-  padding: 11px 20px;
-  border-radius: 999px;
+  padding: 11px 18px;
+  border-radius: 2px;
   cursor: pointer;
   background: transparent;
   border: 1px solid var(--ru-line-2);
@@ -360,29 +345,25 @@
   transition: border-color .22s, color .22s, background .22s;
 }
 .rux-btn:hover, .rup-btn:hover, .rur-btn:hover, .ruc-btn:hover, .rug-btn:hover,
-.ru-btn:hover { border-color: var(--ru-gold); color: var(--ru-gold-bright); background: color-mix(in srgb, var(--ru-gold) 10%, transparent); }
+.ru-btn:hover { border-color: var(--ru-gold); color: var(--ru-gold-bright); }
 .rux-btn.on, .rup-btn.on, .rur-btn.on, .ruc-btn.on, .rug-btn.on, .ru-btn.on {
   border-color: var(--ru-accent); color: var(--ru-accent-bright);
-  background: color-mix(in srgb, var(--ru-accent) 14%, transparent);
 }
 
 .rux-cta, .rup-cta, .rur-cta, .ruc-cta, .rug-cta, .ru-cta {
   font-family: var(--ru-f-display);
   font-size: var(--ru-caption);
   letter-spacing: .18em;
-  padding: 15px 28px;
-  border-radius: 999px;
+  padding: 14px 26px;
+  border-radius: 2px;
   cursor: pointer;
-  background: linear-gradient(180deg, var(--ru-gold), var(--ru-gold-dim));
+  background: linear-gradient(180deg, rgba(201,162,39,.16), rgba(201,162,39,.05));
   border: 1px solid var(--ru-gold);
-  color: #221A0C;
-  font-weight: 700;
-  transition: filter .22s, box-shadow .22s, transform .12s;
+  color: var(--ru-gold-bright);
+  transition: background .22s, box-shadow .22s;
 }
 .rux-cta:hover, .rup-cta:hover, .rur-cta:hover, .ruc-cta:hover, .rug-cta:hover,
-.ru-cta:hover { filter: brightness(1.08); box-shadow: 0 0 30px -6px rgba(242,206,114,.7); }
-.rux-cta:active, .rup-cta:active, .rur-cta:active, .ruc-cta:active, .rug-cta:active,
-.ru-cta:active { transform: translateY(1px); }
+.ru-cta:hover { background: rgba(201,162,39,.24); box-shadow: 0 0 26px -8px rgba(233,206,114,.6); }
 .rux-cta.done, .rup-cta.done, .rur-cta.done, .ruc-cta.done, .rug-cta.done,
 .ru-cta.done {
   border-color: var(--ru-accent);
@@ -395,7 +376,7 @@
   width: 100%;
   background: var(--ru-well);
   border: 1px solid var(--ru-line);
-  border-radius: var(--ru-radius);
+  border-radius: 2px;
   color: var(--ru-ivory);
   font-family: var(--ru-f-read);
   font-size: var(--ru-body-sm);
@@ -453,101 +434,58 @@
 }
 
 /* ================================================= PRINCIPLE RIBBON ====== */
-/* Where you are in the Hall, and where else you could go — seven cards on
-   a black ground, each an engraved medallion (a circular icon seal on a
-   soft radial glow of its own fixed principle colour, set per-node via
-   the inline custom property --node-color from hermeticIcons.js) inside
-   a fine gold hairline frame, rather than a flat colour-filled box. The
-   active card gets corner brackets, the way an illuminated manuscript
-   marks the page you're on. */
+/* Where you are in the Hall — a position report, not navigation. It was
+   previously the heaviest element on the page (seven bordered cards, some as
+   disabled buttons with a pointer cursor and a hover state) while the tab bar
+   that actually moves you through the module was a 10.5px strip. The weight
+   now matches the function. */
 
 .rux-rail, .rup-rail, .rur-rail, .ruc-rail, .rug-rail {
   display: flex;
-  gap: var(--ru-s3);
-  padding: var(--ru-s2) 0 var(--ru-s5);
+  gap: var(--ru-s2);
+  padding: var(--ru-s3) 0;
   margin: 0;
   list-style: none;
 }
 .rux-node, .rup-node, .rur-node, .ruc-node, .rug-node {
-  position: relative;
   flex: 1 1 0;
   min-width: 0;
-  background:
-    radial-gradient(60% 70% at 50% 32%, color-mix(in srgb, var(--node-color, var(--ru-gold)) 20%, transparent), transparent 72%),
-    linear-gradient(180deg, var(--ru-bg-2), var(--ru-bg));
-  text-align: center;
-  border: 1px solid color-mix(in srgb, var(--node-color, var(--ru-gold-dim)) 45%, var(--ru-line));
-  border-radius: var(--ru-radius-md);
-  padding: var(--ru-s4) var(--ru-s2) var(--ru-s3);
+  background: transparent;
+  text-align: left;
+  border: 0;
+  border-top: 2px solid var(--ru-line-2);
+  border-radius: 0;
+  padding: var(--ru-s2) 0 0;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  opacity: .8;
+  gap: 2px;
+  opacity: .5;
   color: inherit;
   cursor: default;
-  transition: border-color .25s, opacity .25s, box-shadow .25s;
+  transition: border-color .25s, opacity .25s;
 }
-.rux-node.is-done, .rup-node.is-done, .rur-node.is-done, .ruc-node.is-done, .rug-node.is-done { opacity: .92; }
-.rux-node.is-active, .rup-node.is-active, .rur-node.is-active, .ruc-node.is-active, .rug-node.is-active {
-  opacity: 1;
-  border-color: var(--ru-gold);
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--node-color, var(--ru-accent)) 40%, transparent),
-              0 16px 30px -16px color-mix(in srgb, var(--node-color, var(--ru-accent)) 55%, transparent);
-}
-/* Corner brackets on the active card — an illuminated-manuscript mark,
-   not a filled highlight. Four small L-shaped strokes, one per corner. */
-.rux-node.is-active::before, .rup-node.is-active::before, .rur-node.is-active::before, .ruc-node.is-active::before, .rug-node.is-active::before,
-.rux-node.is-active::after, .rup-node.is-active::after, .rur-node.is-active::after, .ruc-node.is-active::after, .rug-node.is-active::after {
-  content: ""; position: absolute; width: 14px; height: 14px;
-  border: 1.5px solid var(--ru-gold-bright); pointer-events: none;
-}
-.rux-node.is-active::before, .rup-node.is-active::before, .rur-node.is-active::before, .ruc-node.is-active::before, .rug-node.is-active::before {
-  top: -1px; left: -1px; border-right: 0; border-bottom: 0; border-top-left-radius: 6px;
-}
-.rux-node.is-active::after, .rup-node.is-active::after, .rur-node.is-active::after, .ruc-node.is-active::after, .rug-node.is-active::after {
-  bottom: -1px; right: -1px; border-left: 0; border-top: 0; border-bottom-right-radius: 6px;
-}
-.rux-node-row, .rup-node-row, .rur-node-row, .ruc-node-row, .rug-node-row { display: flex; align-items: center; justify-content: center; }
+.rux-node.is-done, .rup-node.is-done, .rur-node.is-done, .ruc-node.is-done, .rug-node.is-done { opacity: .75; border-top-color: var(--ru-gold-dim); }
+.rux-node.is-active, .rup-node.is-active, .rur-node.is-active, .ruc-node.is-active, .rug-node.is-active { opacity: 1; border-top-color: var(--ru-accent); }
+.rux-node-row, .rup-node-row, .rur-node-row, .ruc-node-row, .rug-node-row { display: flex; align-items: center; justify-content: space-between; gap: var(--ru-s2); }
 .rux-node-num, .rup-node-num, .rur-node-num, .ruc-node-num, .rug-node-num {
   font-family: var(--ru-f-hud);
   font-size: var(--ru-label);
   letter-spacing: .16em;
   color: var(--ru-bronze-dim);
-  position: absolute;
-  top: 10px; left: 14px;
 }
-.rux-node.is-active .rux-node-num, .rup-node.is-active .rup-node-num, .rur-node.is-active .rur-node-num, .ruc-node.is-active .ruc-node-num, .rug-node.is-active .rug-node-num { color: var(--ru-gold-bright); }
+.rux-node.is-active .rux-node-num, .rup-node.is-active .rup-node-num, .rur-node.is-active .rur-node-num, .ruc-node.is-active .ruc-node-num, .rug-node.is-active .rug-node-num { color: var(--ru-accent-bright); }
 .rux-node-name, .rup-node-name, .rur-node-name, .ruc-node-name, .rug-node-name {
   font-family: var(--ru-f-display);
   font-size: var(--ru-caption);
-  font-weight: 600;
   letter-spacing: .08em;
-  text-transform: uppercase;
   color: var(--ru-bronze);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 100%;
 }
-.rux-node.is-active .rux-node-name, .rup-node.is-active .rup-node-name, .rur-node.is-active .rur-node-name, .ruc-node.is-active .ruc-node-name, .rug-node.is-active .rug-node-name { color: var(--ru-gold-bright); }
-/* The medallion — a circular seal, ringed in gold, glowing with its own
-   principle colour rather than filled solid with it. */
-.rux-sigil, .rup-sigil, .rur-sigil, .ruc-sigil, .rug-sigil {
-  display: flex; align-items: center; justify-content: center;
-  width: 46px; height: 46px; border-radius: 50%;
-  background: radial-gradient(circle at 50% 40%, color-mix(in srgb, var(--node-color, var(--ru-gold)) 38%, transparent), color-mix(in srgb, var(--node-color, var(--ru-gold)) 8%, transparent) 70%);
-  border: 1px solid color-mix(in srgb, var(--node-color, var(--ru-gold-dim)) 70%, var(--ru-gold-dim));
-  color: color-mix(in srgb, var(--node-color, var(--ru-gold-bright)) 85%, white);
-  opacity: .88;
-  box-shadow: inset 0 0 10px -2px color-mix(in srgb, var(--node-color, var(--ru-gold)) 45%, transparent);
-}
-.rux-node.is-active .rux-sigil, .rup-node.is-active .rup-sigil, .rur-node.is-active .rur-sigil, .ruc-node.is-active .ruc-sigil, .rug-node.is-active .rug-sigil {
-  opacity: 1;
-  border-color: var(--ru-gold-bright);
-  box-shadow: inset 0 0 14px -2px color-mix(in srgb, var(--node-color, var(--ru-gold)) 70%, transparent),
-              0 0 18px -4px color-mix(in srgb, var(--node-color, var(--ru-accent)) 70%, transparent);
-}
+.rux-node.is-active .rux-node-name, .rup-node.is-active .rup-node-name, .rur-node.is-active .rur-node-name, .ruc-node.is-active .ruc-node-name, .rug-node.is-active .rug-node-name { color: var(--ru-ivory); }
+.rux-sigil, .rup-sigil, .rur-sigil, .ruc-sigil, .rug-sigil { opacity: .5; flex: 0 0 auto; }
+.rux-node.is-active .rux-sigil, .rup-node.is-active .rup-sigil, .rur-node.is-active .rur-sigil, .ruc-node.is-active .ruc-sigil, .rug-node.is-active .rug-sigil { opacity: 1; }
 /* The status word sat at 7.5px and was unreadable; the ribbon's colour already
    carries it, and .ru-sr keeps it available to assistive tech. */
 .rux-node-state, .rup-node-state, .rur-node-state, .ruc-node-state, .rug-node-state { display: none; }

@@ -12,22 +12,18 @@
    pulsing, no motion behind long-form reading. */
 
 .rur{
-  /* Aliased to the shared --ru-* ground/material tokens (previously
-     hardcoded its own near-black/near-white copy, which silently
-     absorbed any brightening done in recUniSystem.css). --line/--line-2
-     keep their own amber tint on purpose. */
-  --obsidian:var(--ru-bg);
-  --obsidian-2:var(--ru-bg-2);
-  --panel:var(--ru-panel);
-  --panel-2:var(--ru-panel-2);
-  --line:#3A2F16;
-  --line-2:#4F4020;
-  --gold:var(--ru-gold);
-  --gold-bright:var(--ru-gold-bright);
-  --gold-dim:var(--ru-gold-dim);
-  --ivory:var(--ru-ivory);
-  --bronze:var(--ru-bronze);
-  --bronze-dim:var(--ru-bronze-dim);
+  --obsidian:#08080B;
+  --obsidian-2:#0D0D12;
+  --panel:#111117;
+  --panel-2:#15151C;
+  --line:#26200F;
+  --line-2:#3A2F16;
+  --gold:#C9A227;
+  --gold-bright:#E9CE72;
+  --gold-dim:#6E5D2C;
+  --ivory:#F1ECE2;
+  --bronze:#9D8862;
+  --bronze-dim:#6E6149;
   --amber:#D98E2B;
   --amber-bright:#F5B860;
   --amber-glow:rgba(217,142,43,.34);

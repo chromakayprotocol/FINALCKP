@@ -1804,13 +1804,54 @@ technical debt rather than silently claimed as fixed). `npm run build`
 verified clean. The fixed root test command
 (`npm test --prefix frontend`) still passes unchanged.
 
-Not extended to the other four modules (Rhythm, Cause & Effect, Gender,
-Hermetic-Supplied): two representative patterns are now under real
-test, not all six. Real, remaining, honestly stated: the actual
-signed-in, deployed-site interaction is still not verified — no test
-Supabase account exists in this environment. That is a different claim
-than "clicking this does X was never checked at all," which was true
-before this pass and is no longer true.
+**Extended to all six modules the same day.** The two representative
+patterns proved out above (Vibration's bespoke tab strip, Polarity's
+shared lock-enforcing `CurriculumSpine`) turned out not to be the only
+two shapes in play — real testing surfaced two more real variations,
+each verified from the actual data files rather than assumed from the
+modules already covered:
+
+- **Rhythm** shares Polarity's plain `protocolComplete` gate, but its
+  own `PROTOCOL_STEPS` has eight entries, not six — reading
+  `rhythmModuleData.js` directly (`grep -c` on the real array) rather
+  than reusing Polarity's count was what caught this before the test
+  was written wrong.
+- **Cause & Effect** and **Gender** both gate Protocol → Artifact on
+  `canGenerateArtifact` (specific fields in `protocolResponses` actually
+  filled — `effect`/`causes`/`lever` for Cause & Effect,
+  `forces`/`exile`/`practice` for Gender), not on "all steps marked."
+  A test that just clicks through all the steps without typing into
+  those specific fields silently never logs anything — `generateArtifact()`
+  no-ops past its own `canGenerateArtifact` guard, and would report
+  nothing here rather than a helpful error. That gap between "I marked
+  every step" and "I actually filled what the artifact needs" is a
+  behavior a real learner would hit too, not just a testing subtlety —
+  and it only became visible by writing a test that clicked through
+  without typing first, watching it fail with an empty
+  `protocolExecutions` array, and then reading `causeEffectModuleData.js`
+  to find out why. Gender additionally has one Protocol step
+  (`forces`, step 01) that renders *two* textareas at once
+  (`situation` and `forces`), of which only one is actually required —
+  targeted by its own placeholder text, not a generic "the textbox on
+  this step."
+- **Hermetic-Supplied** (Mentalism, Correspondence) has no concept or
+  protocol structure to test at all (documented above, "Ninth slice") —
+  its test covers only what actually exists: the runtime registering as
+  active, tab navigation advancing the step engine, and the one real
+  reflection prompt committing for real.
+
+All six modules now have real interaction tests — 356/362 total
+(previous entry's 341/347 plus 15 more: 4 Rhythm + 4 Cause & Effect + 4
+Gender + 5 Hermetic-Supplied, one more than the other three because it
+inherited two pre-existing data-shape tests already in that file).
+`npm run build` re-verified clean. Same 3 pre-existing, unrelated
+legacy-content failures as every count above.
+
+Real, remaining, honestly stated: the actual signed-in, deployed-site
+interaction is still not verified — no test Supabase account exists in
+this environment. That is a different claim than "clicking this does X
+was never checked at all," which was true for all six modules before
+this pass and is no longer true for any of them.
 
 ## Phase 19: testing the system as an OS
 

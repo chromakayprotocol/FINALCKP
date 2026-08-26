@@ -28,7 +28,14 @@ export default function HermeticHallViewport() {
     <main className="hermetic-hall" aria-label="Reclamation University Hermetic Hall">
       <div className="hh-stage">
         <header className="hh-topbar" aria-label="Hermetic Hall heading">
-          <span className="hh-brand">Reclamation University</span>
+          <button
+            type="button"
+            className="hh-brand"
+            onClick={() => navigate('/experiencemode/sovereign/reclamation-university/nexus')}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, font: 'inherit' }}
+          >
+            Reclamation University
+          </button>
           <h1>Hermetic Hall</h1>
           <span className="hh-instruction">Select a Principle</span>
           <button

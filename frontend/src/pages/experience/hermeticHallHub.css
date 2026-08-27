@@ -183,12 +183,13 @@
 .hh-frame-corner.tr { top: 8px; right: 8px; border-top: 1px solid #c9a227; border-right: 1px solid #c9a227; }
 .hh-frame-corner.bl { bottom: 8px; left: 8px; border-bottom: 1px solid #c9a227; border-left: 1px solid #c9a227; }
 .hh-frame-corner.br { bottom: 8px; right: 8px; border-bottom: 1px solid #c9a227; border-right: 1px solid #c9a227; }
-.hh-skip {
+.hh-init-gate {
   position: absolute;
-  right: 20px;
-  bottom: 20px;
-  padding: 9px 18px;
-  font-size: 10.5px;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(6, 5, 10, 0.55);
 }
 
 .hh-briefing {

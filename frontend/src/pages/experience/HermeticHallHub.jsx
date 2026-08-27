@@ -29,6 +29,25 @@ const PRINCIPLES = [
 ];
 const PRINCIPLE_MODULE_IDS = PRINCIPLES.map((p) => p.moduleId);
 
+const INITIATION_SEEN_KEY = 'hermeticHall:initiationSeen';
+
+function hasSeenInitiationThisSession() {
+  try {
+    return sessionStorage.getItem(INITIATION_SEEN_KEY) === '1';
+  } catch {
+    return false;
+  }
+}
+
+function markInitiationSeen() {
+  try {
+    sessionStorage.setItem(INITIATION_SEEN_KEY, '1');
+  } catch {
+    // sessionStorage unavailable (private browsing, etc.) -- the video will
+    // just play again next visit, which is an acceptable fallback.
+  }
+}
+
 // Approximate wedge boundary angles across the dial's semicircle (180deg on
 // the left to 0deg on the right), evenly split seven ways. These drive the
 // clickable hit-areas overlaid on radial-dial.png -- tune once the asset's
@@ -61,10 +80,16 @@ function wedgeClipPath(index) {
 
 export default function HermeticHallHub() {
   const navigate = useNavigate();
-  const [phase, setPhase] = useState('video'); // video -> briefing -> hub
+  // The initiation video is mandatory the first time in a session, then
+  // skipped on every re-entry until the session ends.
+  const [phase, setPhase] = useState(() => (hasSeenInitiationThisSession() ? 'briefing' : 'video'));
   const [selected, setSelected] = useState(null);
   const [mended, setMended] = useState(() => new Set());
   const [progressLoaded, setProgressLoaded] = useState(false);
+  // Browsers block unmuted autoplay without a user gesture. play() is
+  // attempted immediately; if it's rejected, this gate asks for the one tap
+  // a browser requires and plays from that click instead.
+  const [needsGesture, setNeedsGesture] = useState(false);
   const videoRef = useRef(null);
 
   // A pillar is only "restored" once its module is actually completed --
@@ -90,8 +115,32 @@ export default function HermeticHallHub() {
     };
   }, []);
 
-  const advanceToBriefing = useCallback(() => setPhase('briefing'), []);
+  const handleVideoEnded = useCallback(() => {
+    markInitiationSeen();
+    setPhase('briefing');
+  }, []);
+
+  // A broken/unreachable video shouldn't permanently trap the user on this
+  // screen -- but it also isn't a genuine viewing, so the session flag is
+  // deliberately not set here: the video will be attempted again next visit.
+  const handleVideoError = useCallback(() => setPhase('briefing'), []);
+
   const beginRestoration = useCallback(() => setPhase('hub'), []);
+
+  useEffect(() => {
+    if (phase !== 'video') return;
+    const video = videoRef.current;
+    if (!video) return;
+    const attempt = video.play();
+    if (attempt && typeof attempt.catch === 'function') {
+      attempt.catch(() => setNeedsGesture(true));
+    }
+  }, [phase]);
+
+  const beginInitiationByGesture = useCallback(() => {
+    setNeedsGesture(false);
+    videoRef.current?.play().catch(() => {});
+  }, []);
 
   const handleSelectWedge = useCallback((principle) => {
     setSelected(principle);
@@ -169,11 +218,10 @@ export default function HermeticHallHub() {
               <video
                 ref={videoRef}
                 autoPlay
-                muted
                 playsInline
                 preload="auto"
-                onEnded={advanceToBriefing}
-                onError={advanceToBriefing}
+                onEnded={handleVideoEnded}
+                onError={handleVideoError}
               >
                 <source src={ASSETS.initiationVideo} type="video/mp4" />
               </video>
@@ -181,9 +229,13 @@ export default function HermeticHallHub() {
               <span className="hh-frame-corner tr" />
               <span className="hh-frame-corner bl" />
               <span className="hh-frame-corner br" />
-              <button type="button" className="hh-rune-btn hh-skip" onClick={advanceToBriefing}>
-                Skip
-              </button>
+              {needsGesture && (
+                <div className="hh-init-gate">
+                  <button type="button" className="hh-rune-btn" onClick={beginInitiationByGesture}>
+                    Begin Initiation
+                  </button>
+                </div>
+              )}
             </div>
           )}
 

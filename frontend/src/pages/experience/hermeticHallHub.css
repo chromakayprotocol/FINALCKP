@@ -1,0 +1,267 @@
+.hh-scene {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  background: #0a0a10;
+  font-family: 'Archivo', ui-sans-serif, system-ui, sans-serif;
+}
+
+.hh-bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center bottom;
+}
+
+/* ------------------------------------------------------------- TOPBAR - */
+.hh-topbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px clamp(18px, 3vw, 40px);
+  font-family: 'IBM Plex Mono', ui-monospace, monospace;
+  font-size: 10.5px;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: #a88f5e;
+  background: linear-gradient(180deg, rgba(6, 5, 10, 0.55), transparent);
+}
+.hh-topbar b {
+  color: #f3d488;
+  font-weight: 400;
+}
+
+/* ---------------------------------------------------------- COLUMNS --- */
+.hh-columns {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+}
+.hh-column-hotspot {
+  position: absolute;
+  top: 42%;
+  bottom: 10%;
+  width: 6%;
+  translate: -50% 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  padding: 0;
+}
+.hh-column-glow {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: radial-gradient(ellipse 60% 100% at 50% 50%, rgba(124, 92, 196, 0.28), transparent 70%);
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+.hh-column-hotspot:hover .hh-column-glow {
+  opacity: 0.55;
+}
+.hh-column-hotspot.is-mended .hh-column-glow {
+  opacity: 0.85;
+  background: radial-gradient(ellipse 60% 100% at 50% 50%, rgba(243, 212, 136, 0.4), transparent 70%);
+}
+
+/* ------------------------------------------------------------- DIAL --- */
+.hh-dial-wrap {
+  position: fixed;
+  left: 50%;
+  bottom: -2%;
+  translate: -50% 0;
+  z-index: 6;
+  width: min(760px, 84vw);
+}
+.hh-dial-img {
+  width: 100%;
+  height: auto;
+  display: block;
+  filter: drop-shadow(0 30px 60px rgba(0, 0, 0, 0.6));
+}
+.hh-dial-hotspots {
+  position: absolute;
+  inset: 0;
+}
+.hh-wedge {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: none;
+  padding: 0;
+  cursor: pointer;
+}
+.hh-wedge-fill {
+  position: absolute;
+  inset: 0;
+  background: rgba(243, 212, 136, 0.16);
+  opacity: 0;
+  transition: opacity 0.18s ease;
+}
+.hh-wedge:hover .hh-wedge-fill {
+  opacity: 1;
+}
+.hh-wedge.is-active .hh-wedge-fill {
+  opacity: 1;
+  background: rgba(243, 212, 136, 0.3);
+}
+
+/* ------------------------------------------------------------ ENTER --- */
+.hh-enter-tab {
+  position: fixed;
+  right: clamp(16px, 3vw, 40px);
+  bottom: 26px;
+  z-index: 7;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 24px;
+  border: 1px solid rgba(0, 0, 0, 0.5);
+  background: linear-gradient(180deg, #4a3a1c, #1c150a);
+  color: #f3d488;
+  font-weight: 600;
+  font-size: 12.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+  clip-path: polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16), 0 16px 30px -14px rgba(0, 0, 0, 0.75);
+  opacity: 0.4;
+  pointer-events: none;
+  transition: opacity 0.25s ease, filter 0.15s ease;
+}
+.hh-enter-tab.is-ready {
+  opacity: 1;
+  pointer-events: auto;
+}
+.hh-enter-tab:hover {
+  filter: brightness(1.14);
+}
+
+/* ---------------------------------------------------------- OVERLAY --- */
+.hh-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(6, 5, 10, 0.72);
+  backdrop-filter: blur(3px);
+}
+
+.hh-init-frame {
+  position: relative;
+  width: min(880px, 90vw);
+  aspect-ratio: 16 / 9;
+  background: #000;
+  border: 1px solid #7a5d24;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.6), 0 40px 90px -30px rgba(0, 0, 0, 0.9);
+}
+.hh-init-frame video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.hh-frame-corner {
+  position: absolute;
+  width: 26px;
+  height: 26px;
+  pointer-events: none;
+}
+.hh-frame-corner.tl { top: 8px; left: 8px; border-top: 1px solid #c9a227; border-left: 1px solid #c9a227; }
+.hh-frame-corner.tr { top: 8px; right: 8px; border-top: 1px solid #c9a227; border-right: 1px solid #c9a227; }
+.hh-frame-corner.bl { bottom: 8px; left: 8px; border-bottom: 1px solid #c9a227; border-left: 1px solid #c9a227; }
+.hh-frame-corner.br { bottom: 8px; right: 8px; border-bottom: 1px solid #c9a227; border-right: 1px solid #c9a227; }
+.hh-skip {
+  position: absolute;
+  right: 20px;
+  bottom: 20px;
+  padding: 9px 18px;
+  font-size: 10.5px;
+}
+
+.hh-briefing {
+  width: min(560px, 88vw);
+  padding: 38px 40px 34px;
+  background: linear-gradient(180deg, #241a10, #17110a);
+  border: 1px solid rgba(0, 0, 0, 0.6);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 40px 80px -30px rgba(0, 0, 0, 0.85);
+  text-align: center;
+}
+.hh-briefing-eyebrow {
+  font-family: 'IBM Plex Mono', ui-monospace, monospace;
+  font-size: 10.5px;
+  letter-spacing: 0.26em;
+  color: #b79bea;
+  text-transform: uppercase;
+  margin: 0 0 16px;
+}
+.hh-briefing h2 {
+  font-family: 'Fraunces', ui-serif, Georgia, serif;
+  font-weight: 600;
+  font-size: 26px;
+  color: #f3d488;
+  margin: 0 0 18px;
+}
+.hh-briefing-body {
+  font-family: 'Fraunces', ui-serif, Georgia, serif;
+  font-style: italic;
+  font-size: 18px;
+  line-height: 1.6;
+  color: #f6eedd;
+  margin: 0 0 28px;
+}
+.hh-briefing-status {
+  display: flex;
+  justify-content: center;
+  gap: 26px;
+  margin: 0 0 28px;
+  font-family: 'IBM Plex Mono', ui-monospace, monospace;
+  font-size: 10.5px;
+  letter-spacing: 0.16em;
+  color: #a88f5e;
+  text-transform: uppercase;
+}
+.hh-briefing-status b {
+  display: block;
+  margin-top: 4px;
+  font-size: 15px;
+  color: #f3d488;
+  letter-spacing: 0.04em;
+}
+
+.hh-rune-btn {
+  padding: 13px 30px;
+  border: 1px solid #c9a227;
+  background: linear-gradient(180deg, #4a3a1c, #1c150a);
+  color: #f3d488;
+  font-family: 'Archivo', ui-sans-serif, sans-serif;
+  font-weight: 600;
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+  clip-path: polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16), 0 14px 26px -12px rgba(0, 0, 0, 0.7);
+  transition: filter 0.15s;
+}
+.hh-rune-btn:hover {
+  filter: brightness(1.14);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hh-scene * {
+    transition-duration: 0.01ms !important;
+  }
+}

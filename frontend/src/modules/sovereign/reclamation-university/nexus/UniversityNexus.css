@@ -332,7 +332,13 @@
 /* Pathway hero art: a dark scrim over the supplied R2 artwork keeps card
    copy legible while still reading as a painted environment, not a flat
    panel. --card-image is set inline per element from lib/university/curriculum.js. */
-.un-domain-card,
+.un-domain-card {
+  background:
+    linear-gradient(180deg, rgba(5, 6, 7, 0.12) 0%, rgba(5, 6, 7, 0.35) 45%, rgba(5, 6, 7, 0.7) 68%, rgba(5, 6, 7, 0.96) 100%),
+    var(--card-image) center/cover no-repeat,
+    var(--un-panel);
+}
+
 .un-domain-sovereignty {
   background:
     linear-gradient(180deg, rgba(5, 6, 7, 0.55) 0%, rgba(5, 6, 7, 0.74) 40%, rgba(5, 6, 7, 0.94) 100%),
@@ -468,6 +474,7 @@
   padding: 1rem;
   display: flex;
   flex-direction: column;
+  justify-content: flex-end;
   gap: 0.5rem;
   transition: box-shadow 300ms ease, border-color 300ms ease, transform 300ms ease;
 }
@@ -525,7 +532,6 @@
   gap: 0.3rem;
   font-size: 0.75rem;
   color: var(--un-text);
-  flex: 1;
 }
 
 .un-domain-card__modules li::before {
@@ -571,24 +577,54 @@
   height: 190px;
   margin: 0.5rem 0 1rem;
   border-radius: 50%;
-  border: 1px solid var(--un-border);
+  border: 3px solid transparent;
+  background:
+    radial-gradient(circle, rgba(0, 0, 0, 0.35), rgba(0, 0, 0, 0.1) 70%, transparent) padding-box,
+    conic-gradient(
+      from 0deg,
+      #6b4f18, #f5d27a 12%, #caa653 25%, #7a5a1e 38%,
+      #f0c867 50%, #caa653 62%, #6b4f18 75%, #f5d27a 88%, #6b4f18
+    ) border-box;
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.5),
+    inset 0 0 22px rgba(0, 0, 0, 0.55),
+    0 0 32px rgba(201, 154, 61, 0.3);
   display: grid;
   place-items: center;
   animation: un-ring-spin 90s linear infinite;
 }
 
 .un-hermetic-hall__center {
+  position: relative;
   width: 76px;
   height: 76px;
   border-radius: 50%;
-  border: 1px solid var(--un-border-bright);
+  background:
+    radial-gradient(
+      circle at 34% 26%,
+      #fff6da 0%,
+      #f5d27a 22%,
+      #caa653 46%,
+      #93701f 72%,
+      #4a3510 100%
+    );
   display: grid;
   place-items: center;
+  box-shadow:
+    inset 0 3px 5px rgba(255, 250, 224, 0.65),
+    inset 0 -7px 12px rgba(40, 26, 4, 0.75),
+    0 0 28px rgba(201, 154, 61, 0.5),
+    0 5px 12px rgba(0, 0, 0, 0.55);
+  animation: un-ring-breathe 4s ease-in-out infinite;
+}
+
+.un-hermetic-hall__center span {
   font-family: var(--un-font-display);
   font-size: 1.9rem;
-  color: var(--un-gold-bright);
-  box-shadow: 0 0 26px rgba(201, 154, 61, 0.35);
-  animation: un-ring-breathe 4s ease-in-out infinite;
+  color: #2c1c04;
+  text-shadow:
+    0 1px 0 rgba(255, 244, 210, 0.75),
+    0 -1px 1px rgba(0, 0, 0, 0.5);
 }
 
 .un-hermetic-node {
@@ -599,34 +635,55 @@
   height: 30px;
   margin: -15px;
   border-radius: 50%;
-  border: 1px solid var(--un-border);
-  background: var(--un-panel);
-  color: var(--un-text-muted);
+  border: 1px solid rgba(201, 154, 61, 0.4);
+  background:
+    radial-gradient(
+      circle at 32% 26%,
+      rgba(255, 246, 224, 0.75) 0%,
+      rgba(201, 154, 61, 0.4) 40%,
+      rgba(15, 11, 3, 0.9) 100%
+    );
+  color: rgba(240, 200, 103, 0.8);
   font-family: var(--un-font-display);
   font-size: 0.7rem;
   display: grid;
   place-items: center;
+  box-shadow:
+    inset 0 2px 3px rgba(255, 250, 230, 0.4),
+    inset 0 -3px 5px rgba(0, 0, 0, 0.55),
+    0 2px 5px rgba(0, 0, 0, 0.45);
   transform: rotate(calc(360deg / var(--n) * var(--i))) translate(95px) rotate(calc(-360deg / var(--n) * var(--i)));
-  transition: border-color 200ms ease, color 200ms ease, box-shadow 200ms ease, transform 200ms ease;
+  transition: border-color 200ms ease, color 200ms ease, box-shadow 200ms ease, transform 200ms ease, background 200ms ease;
 }
 
 .un-hermetic-node:hover,
 .un-hermetic-node:focus-visible {
   border-color: var(--un-gold-bright);
   color: var(--un-gold-bright);
-  box-shadow: 0 0 14px rgba(240, 200, 103, 0.4);
+  box-shadow:
+    inset 0 2px 3px rgba(255, 250, 230, 0.55),
+    inset 0 -3px 5px rgba(0, 0, 0, 0.5),
+    0 0 14px rgba(240, 200, 103, 0.45);
 }
 
 .un-hermetic-node[data-complete] {
   border-color: var(--un-gold);
-  color: var(--un-gold-bright);
-  background: rgba(201, 154, 61, 0.15);
+  color: #2c1c04;
+  background:
+    radial-gradient(
+      circle at 32% 26%,
+      #fff6da 0%,
+      #f0c867 40%,
+      #8a6a24 100%
+    );
 }
 
 .un-hermetic-node[data-current] {
   border-color: var(--un-gold-bright);
-  color: var(--un-gold-bright);
-  box-shadow: 0 0 16px rgba(240, 200, 103, 0.5);
+  box-shadow:
+    inset 0 2px 3px rgba(255, 250, 230, 0.55),
+    inset 0 -3px 6px rgba(0, 0, 0, 0.5),
+    0 0 18px rgba(240, 200, 103, 0.6);
 }
 
 .un-hermetic-hall__tooltip {

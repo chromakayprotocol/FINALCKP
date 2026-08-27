@@ -39,6 +39,7 @@ const ReclamationModulePage = lazy(() => import('./pages/ReclamationModulePage')
 const SovereignOSDemo = lazy(() => import('./pages/experience/SovereignOSDemo'));
 const SovereignOSLive = lazy(() => import('./pages/experience/SovereignOSLive'));
 const HermeticHallHub = lazy(() => import('./pages/experience/HermeticHallHub'));
+const ReclamationNexus = lazy(() => import('./pages/experience/ReclamationNexus'));
 
 import AppShell from './components/layout/AppShell';
 import PaywallModal from './components/layout/PaywallModal';
@@ -270,6 +271,28 @@ function AppRoutes() {
         element={
           <ProtectedRoute withShell={false}>
             <ReclamationUniversityPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/experiencemode/sovereign/reclamation-university/nexus"
+        element={
+          <ProtectedRoute withShell={false}>
+            <ReclamationNexus />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* The Hermetic Hall's own gateway screen (radial dial + pillar
+          hotspots) -- reached from the Nexus via "Enter Hermetic Hall".
+          A literal route, so it's matched ahead of the dynamic
+          :facultySlug redirect below for this one slug. */}
+      <Route
+        path="/experiencemode/sovereign/reclamation-university/hermetic-hall"
+        element={
+          <ProtectedRoute withShell={false}>
+            <HermeticHallHub />
           </ProtectedRoute>
         }
       />

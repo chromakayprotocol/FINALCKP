@@ -70,53 +70,9 @@
   opacity: 0.85;
   background: radial-gradient(ellipse 60% 100% at 50% 50%, rgba(243, 212, 136, 0.4), transparent 70%);
 }
-
-/* ------------------------------------------------------------- DIAL --- */
-/* Small/decorative -- the hall + lit columns are the real selection UI. */
-.hh-dial-wrap {
-  position: fixed;
-  left: 50%;
-  bottom: 14px;
-  translate: -50% 0;
-  z-index: 4;
-  width: min(280px, 38vw);
-  pointer-events: none;
-}
-.hh-dial-img {
-  width: 100%;
-  height: auto;
-  display: block;
-  opacity: 0.9;
-  filter: drop-shadow(0 14px 26px rgba(0, 0, 0, 0.55));
-}
-.hh-dial-hotspots {
-  position: absolute;
-  inset: 0;
-  pointer-events: auto;
-}
-.hh-wedge {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  border: 0;
-  background: none;
-  padding: 0;
-  cursor: pointer;
-}
-.hh-wedge-fill {
-  position: absolute;
-  inset: 0;
-  background: rgba(243, 212, 136, 0.16);
-  opacity: 0;
-  transition: opacity 0.18s ease;
-}
-.hh-wedge:hover .hh-wedge-fill {
+.hh-column-hotspot.is-selected .hh-column-glow {
   opacity: 1;
-}
-.hh-wedge.is-active .hh-wedge-fill {
-  opacity: 1;
-  background: rgba(243, 212, 136, 0.3);
+  background: radial-gradient(ellipse 60% 100% at 50% 50%, rgba(243, 212, 136, 0.6), transparent 70%);
 }
 
 /* ------------------------------------------------------------ ENTER --- */

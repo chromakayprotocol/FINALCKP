@@ -5,18 +5,10 @@ import './hermeticHallHub.css';
 
 // Real production art, hosted on the project's R2 bucket -- see the URLs the
 // user supplied directly. Do not swap these for generated/placeholder art.
-// The dial is kept small/decorative at the bottom -- the hall + lit columns
-// (not the dial) are the primary, functional selection surface.
-//
-// The R2 URLs get reused in place when new art is uploaded (same path, new
-// file), so a cache-bust query param is required or browsers/CDN keep
-// serving the old cached image -- bump DIAL_ART_VERSION whenever the dial
-// asset is replaced.
-const DIAL_ART_VERSION = '20260827b';
+// The hall + lit columns are the entire selection surface -- no dial/wheel.
 const ASSETS = {
   hallOnline: 'https://pub-7db585eeeb464a9d9f749f0307532c22.r2.dev/images/shell/Hermetic-Hall-Online.png',
   hallOnline2: 'https://pub-7db585eeeb464a9d9f749f0307532c22.r2.dev/images/shell/Hernetic-Hall-Online2.png',
-  radialDial: `https://pub-7db585eeeb464a9d9f749f0307532c22.r2.dev/images/shell/radial-dial.png?v=${DIAL_ART_VERSION}`,
 };
 
 // Seven Hermetic principles, left-to-right, matching the column layout in
@@ -37,31 +29,6 @@ const PRINCIPLE_MODULE_IDS = PRINCIPLES.map((p) => p.moduleId);
 // Approximate column x-positions (percent of hall image width), left to
 // right, matching the seven broken columns in Hermetic-Hall.png.
 const COLUMN_X = [9, 22, 35, 50, 65, 78, 91];
-
-// Wedge boundary angles across the dial's semicircle (180deg on the left to
-// 0deg on the right), evenly split seven ways -- drives the clickable
-// hit-areas overlaid on the (now small/decorative) radial-dial.png.
-const WEDGE_STEP = 180 / PRINCIPLES.length;
-
-function polarPoint(cx, cy, r, angleDeg) {
-  const a = (angleDeg * Math.PI) / 180;
-  return { x: cx + r * Math.cos(a), y: cy - r * Math.sin(a) };
-}
-
-function wedgeClipPath(index) {
-  const startA = 180 - index * WEDGE_STEP;
-  const endA = 180 - (index + 1) * WEDGE_STEP;
-  const cx = 50, cy = 100;
-  const outer = 140;
-  const steps = 8;
-  const pts = [`${cx}% ${cy}%`];
-  for (let i = 0; i <= steps; i++) {
-    const a = startA + ((endA - startA) * i) / steps;
-    const p = polarPoint(cx, cy, outer, a);
-    pts.push(`${p.x}% ${p.y}%`);
-  }
-  return `polygon(${pts.join(', ')})`;
-}
 
 export default function HermeticHallHub() {
   const navigate = useNavigate();
@@ -92,7 +59,7 @@ export default function HermeticHallHub() {
     };
   }, []);
 
-  const handleSelectWedge = useCallback((principle) => {
+  const handleSelectPillar = useCallback((principle) => {
     setSelected(principle);
   }, []);
 
@@ -114,9 +81,9 @@ export default function HermeticHallHub() {
           <button
             key={p.key}
             type="button"
-            className={`hh-column-hotspot${mended.has(p.key) ? ' is-mended' : ''}`}
+            className={`hh-column-hotspot${mended.has(p.key) ? ' is-mended' : ''}${selected?.key === p.key ? ' is-selected' : ''}`}
             style={{ left: `${COLUMN_X[i]}%` }}
-            onClick={() => handleSelectWedge(p)}
+            onClick={() => handleSelectPillar(p)}
             aria-label={`Pillar of ${p.name}`}
           >
             <span className="hh-column-glow" />
@@ -128,24 +95,6 @@ export default function HermeticHallHub() {
         <span>Reclamation University &middot; Hermetic Hall</span>
         <span><b>{progressLoaded ? mended.size : '…'}</b> / 7 pillars restored</span>
       </header>
-
-      <div className="hh-dial-wrap">
-        <img className="hh-dial-img" src={ASSETS.radialDial} alt="" aria-hidden="true" />
-        <div className="hh-dial-hotspots">
-          {PRINCIPLES.map((p, i) => (
-            <button
-              key={p.key}
-              type="button"
-              className={`hh-wedge${selected?.key === p.key ? ' is-active' : ''}`}
-              style={{ clipPath: wedgeClipPath(i) }}
-              onClick={() => handleSelectWedge(p)}
-              aria-label={`The Principle of ${p.name}`}
-            >
-              <span className="hh-wedge-fill" />
-            </button>
-          ))}
-        </div>
-      </div>
 
       <button
         type="button"

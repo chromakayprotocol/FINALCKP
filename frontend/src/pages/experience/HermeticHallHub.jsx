@@ -1,4 +1,5 @@
 import { useCallback, useMemo, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import './hermeticHallHub.css';
 
 // Real production art, hosted on the project's R2 bucket -- see the URLs the
@@ -19,7 +20,7 @@ const PRINCIPLES = [
   { n: 'III', key: 'vibration', name: 'Vibration' },
   { n: 'IV', key: 'polarity', name: 'Polarity' },
   { n: 'V', key: 'rhythm', name: 'Rhythm' },
-  { n: 'VI', key: 'cause-effect', name: 'Cause & Effect' },
+  { n: 'VI', key: 'cause-and-effect', name: 'Cause & Effect' },
   { n: 'VII', key: 'gender', name: 'Gender' },
 ];
 
@@ -54,6 +55,7 @@ function wedgeClipPath(index) {
 }
 
 export default function HermeticHallHub() {
+  const navigate = useNavigate();
   const [phase, setPhase] = useState('video'); // video -> briefing -> hub
   const [selected, setSelected] = useState(null);
   const [mended, setMended] = useState(() => new Set());
@@ -70,6 +72,11 @@ export default function HermeticHallHub() {
       return next;
     });
   }, []);
+
+  const enterSelectedModule = useCallback(() => {
+    if (!selected) return;
+    navigate(`/experiencemode/sovereign/reclamation-university/hermetic-hall/${selected.key}`);
+  }, [navigate, selected]);
 
   const backgroundSrc = useMemo(() => {
     if (phase !== 'hub') return ASSETS.hallIdle;
@@ -124,6 +131,7 @@ export default function HermeticHallHub() {
             type="button"
             className={`hh-enter-tab${selected ? ' is-ready' : ''}`}
             disabled={!selected}
+            onClick={enterSelectedModule}
           >
             {selected ? `Enter ${selected.name}` : 'Select a Pillar'}
           </button>

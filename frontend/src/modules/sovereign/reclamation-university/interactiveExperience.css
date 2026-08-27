@@ -1,0 +1,15 @@
+.hcm-interactive { margin-top: 1.25rem; padding: 1rem; border: 1px solid rgba(255,255,255,.12); border-radius: 14px; background: rgba(0,0,0,.18); }
+.hcm-interactive-prompt { margin: 0 0 1rem; font-weight: 600; }
+.hcm-interactive-options { display: grid; gap: .75rem; }
+.hcm-interactive-option, .hcm-interactive button { cursor: pointer; }
+.hcm-interactive-option { display: grid; gap: .3rem; text-align: left; padding: .85rem 1rem; border: 1px solid rgba(255,255,255,.12); border-radius: 10px; background: transparent; color: inherit; }
+.hcm-interactive-option.is-selected, .hcm-interactive button.is-selected { outline: 2px solid currentColor; }
+.hcm-interactive textarea, .hcm-interactive input { width: 100%; box-sizing: border-box; margin: .75rem 0; padding: .8rem; border-radius: 9px; border: 1px solid rgba(255,255,255,.14); background: rgba(0,0,0,.2); color: inherit; }
+.hcm-interactive-classification { display: grid; gap: .5rem; padding: .75rem 0; }
+.hcm-interactive-classification > div { display: flex; flex-wrap: wrap; gap: .5rem; }
+.hcm-interactive button { padding: .55rem .8rem; border: 1px solid rgba(255,255,255,.14); border-radius: 8px; background: rgba(255,255,255,.04); color: inherit; }
+.hcm-interactive button:disabled { opacity: .45; cursor: not-allowed; }
+.hcm-interactive-sequence { display: grid; gap: .45rem; margin-bottom: 1rem; }
+.hcm-interactive-sequence span { padding: .55rem .7rem; border-radius: 8px; background: rgba(255,255,255,.05); }
+.hcm-interactive-actions { display: flex; gap: .5rem; margin-top: 1rem; flex-wrap: wrap; }
+@media (prefers-reduced-motion: reduce) { .hcm-interactive * { scroll-behavior: auto !important; transition: none !important; animation: none !important; } }

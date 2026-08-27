@@ -577,6 +577,19 @@
   height: 190px;
   margin: 0.5rem 0 1rem;
   border-radius: 50%;
+  display: grid;
+  place-items: center;
+}
+
+/* The gilded bezel is a separate, purely decorative layer so it can spin
+   forever without dragging the center "7" or the principle numerals
+   around with it -- they're real DOM content on top of this pseudo-
+   element, not part of the rotation, so they stay put and upright. */
+.un-hermetic-hall__ring::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
   border: 3px solid transparent;
   background:
     radial-gradient(circle, rgba(0, 0, 0, 0.35), rgba(0, 0, 0, 0.1) 70%, transparent) padding-box,
@@ -589,13 +602,12 @@
     0 0 0 1px rgba(0, 0, 0, 0.5),
     inset 0 0 22px rgba(0, 0, 0, 0.55),
     0 0 32px rgba(201, 154, 61, 0.3);
-  display: grid;
-  place-items: center;
   animation: un-ring-spin 90s linear infinite;
 }
 
 .un-hermetic-hall__center {
   position: relative;
+  z-index: 1;
   width: 76px;
   height: 76px;
   border-radius: 50%;
@@ -629,6 +641,7 @@
 
 .un-hermetic-node {
   position: absolute;
+  z-index: 1;
   top: 50%;
   left: 50%;
   width: 30px;

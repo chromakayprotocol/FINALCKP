@@ -37,7 +37,7 @@ const MODULES = [
     title: 'Reclamation University',
     code: 'RU',
     lightCode: "The Sun Don't Invoice?",
-    route: '/experiencemode/sovereign/reclamation-university',
+    route: '/experiencemode/sovereign/reclamation-university/nexus',
     card: '/ui/reclamation/Module_Cards/Sovereign/reclamation_university.png',
   },
   {

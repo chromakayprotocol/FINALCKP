@@ -1,14 +1,15 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { loadUserFacultyProgress } from '../../lib/supabase/reclamationUniversity';
 import './hermeticHallHub.css';
 
-// Real production art, hosted on the project's R2 bucket -- see the URLs the
-// user supplied directly. Do not swap these for generated/placeholder art.
+// Real production art, hosted on the project's R2 bucket -- see the URL the
+// user supplied directly. Do not swap this for generated/placeholder art.
 // The hall + lit columns are the entire selection surface -- no dial/wheel.
+// NOTE: the "-Online"/"-Online2" variants bake a wheel/dial graphic into the
+// art itself -- do not use them. Hermetic-Hall.png (no suffix) is correct.
 const ASSETS = {
-  hallOnline: 'https://pub-7db585eeeb464a9d9f749f0307532c22.r2.dev/images/shell/Hermetic-Hall-Online.png',
-  hallOnline2: 'https://pub-7db585eeeb464a9d9f749f0307532c22.r2.dev/images/shell/Hernetic-Hall-Online2.png',
+  hall: 'https://pub-7db585eeeb464a9d9f749f0307532c22.r2.dev/images/shell/Hermetic-Hall.png',
 };
 
 // Seven Hermetic principles, left-to-right, matching the column layout in
@@ -68,13 +69,9 @@ export default function HermeticHallHub() {
     navigate(`/experiencemode/sovereign/reclamation-university/hermetic-hall/${selected.key}`);
   }, [navigate, selected]);
 
-  const backgroundSrc = useMemo(() => {
-    return selected ? ASSETS.hallOnline2 : ASSETS.hallOnline;
-  }, [selected]);
-
   return (
     <div className="hh-scene">
-      <img className="hh-bg" src={backgroundSrc} alt="Hermetic Hall" />
+      <img className="hh-bg" src={ASSETS.hall} alt="Hermetic Hall" />
 
       <div className="hh-columns" aria-hidden="true">
         {PRINCIPLES.map((p, i) => (

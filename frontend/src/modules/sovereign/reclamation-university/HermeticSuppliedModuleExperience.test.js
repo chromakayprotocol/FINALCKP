@@ -66,12 +66,16 @@ describe('HermeticSuppliedModuleExperience — real Sovereign Runtime wiring', (
   });
 
   test('Reflection: writing real text and committing dispatches a real, committed entry', () => {
+    // Mentalism's REFLECTION tab renders the interactive "reflection" exercise
+    // (getMentalismInteraction) instead of the plain textarea + commit button
+    // every other supplied-module reflection uses -- CopyScreen hides its own
+    // textarea whenever an interaction is defined for the active tab.
     const { getState } = renderMentalism();
     fireEvent.click(screen.getByRole('button', { name: /reflection/i }));
 
-    const textarea = screen.getByPlaceholderText(/record what mentalism helps you notice/i);
+    const textarea = screen.getByPlaceholderText(/name the pattern, the trigger/i);
     fireEvent.change(textarea, { target: { value: 'I keep mistaking a rehearsed thought for a fact.' } });
-    fireEvent.click(screen.getByRole('button', { name: /^commit reflection$/i }));
+    fireEvent.click(screen.getByRole('button', { name: /^record reflection$/i }));
 
     const entry = getState().reflection.entries['hermetic-hall/mentalism:08-reflection'];
     expect(entry.status).toBe('committed');

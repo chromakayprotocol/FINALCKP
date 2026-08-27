@@ -6,8 +6,10 @@ import {
 } from "lucide-react";
 import { useSovereign, SOVEREIGN_STEP_IDS } from "../../../sovereign/runtime";
 import suppliedCopy from "../../../data/hermeticSuppliedModules.txt?raw";
+import InteractiveExperience from "./InteractiveExperience";
 import "./hermeticMaterialExperience.css";
 import "./hermeticReferenceExperience.css";
+import "./interactiveExperience.css";
 
 const TABS = [
   ["INTRO", "Intro", BookOpen],
@@ -64,7 +66,7 @@ const MODULES = {
   correspondence: { index: 1, marker: "MODULE II — CORRESPONDENCE", title: "Correspondence", subtitle: "As Within, So Without." },
 };
 
-const SECTION_PATTERN = new RegExp(`^(${TABS.map(([id]) => id.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|")})$`, "gm");
+const SECTION_PATTERN = new RegExp(`^(${TABS.map(([id]) => id.replace(/[.*+?^${}()|[\\]\\]/g, "\\$&")).join("|")})$`, "gm");
 
 function parseModules() {
   return Object.fromEntries(Object.entries(MODULES).map(([slug, metadata], moduleIndex, entries) => {
@@ -151,7 +153,7 @@ function MentalismLensScreen({ section }) {
   </div>;
 }
 
-function CopyScreen({ section, moduleTitle, moduleSlug, activeTab, response, onResponse }) {
+function CopyScreen({ section, moduleTitle, moduleSlug, activeTab, response, onResponse, hideReflection }) {
   if (moduleSlug === "mentalism" && activeTab === "PRINCIPLE") return <MentalismPrincipleScreen section={section}/>;
   if (moduleSlug === "mentalism" && activeTab === "2026 LENS") return <MentalismLensScreen section={section}/>;
   const blocks = section.split(/\n\s*\n/).map((item) => item.trim()).filter(Boolean);
@@ -172,22 +174,63 @@ function CopyScreen({ section, moduleTitle, moduleSlug, activeTab, response, onR
         return <p key={`${block}-${index}`} className={index === 0 ? "hme-lede" : undefined}>{block}</p>;
       })}
     </section>
-    {isReflection && <section className="hme-panel"><h3>Your Reflection</h3><textarea value={response} onChange={(event) => onResponse(event.target.value)} placeholder={`Record what ${moduleTitle} helps you notice...`}/></section>}
+    {isReflection && !hideReflection && <section className="hme-panel"><h3>Your Reflection</h3><textarea value={response} onChange={(event) => onResponse(event.target.value)} placeholder={`Record what ${moduleTitle} helps you notice...`}/></section>}
   </div>;
 }
 
-/* Persistence (Phase 8 of the Sovereign OS migration, docs/ARCHITECTURE.md):
-   this module previously had none at all — the active tab and reflection
-   textarea were plain useState, wiped on every unmount/reload
-   (SOVEREIGN_STATE_MAP.md duplication finding #3). Routes both through the
-   Sovereign Runtime's local+remote sync instead, keyed per module slug so
-   Mentalism and Correspondence don't collide.
+/* This module runs two independent layers: the Sovereign Runtime
+   (curriculum.startModule/advanceStep/commitReflection -- persists real
+   progress to the shared synthesis record, see docs/ARCHITECTURE.md) and,
+   for Mentalism only, a set of interactive exercises (InteractiveExperience
+   below) with their own local completion gating. A completed interactive
+   reflection also commits to the runtime so the Synthesis Status panel
+   reflects it; Correspondence has no interactive exercises defined, so it
+   still uses the plain textarea + commit button. */
+function getMentalismInteraction(tab) {
+  if (tab === "KEY CONCEPTS") {
+    return {
+      mode: "classification",
+      prompt: "Separate the event from the meaning assigned to it. Classify each statement as Observation or Interpretation.",
+      items: [
+        { id: "event", label: "Someone did not respond to your message.", options: ["Observation", "Interpretation"] },
+        { id: "meaning", label: "They are deliberately ignoring me.", options: ["Observation", "Interpretation"] },
+        { id: "story", label: "This proves I am not valued.", options: ["Observation", "Interpretation"] },
+      ],
+    };
+  }
+  if (tab === "REFLECTION") {
+    return {
+      mode: "reflection",
+      prompt: "Identify one recurring thought pattern you are ready to observe rather than automatically obey.",
+      placeholder: "Name the pattern, the trigger, and what you normally make it mean…",
+      rows: 7,
+    };
+  }
+  if (tab === "PROTOCOL") {
+    return {
+      mode: "sequence",
+      prompt: "Put the Mentalism reclamation loop in the order you will use it in the field.",
+      items: [
+        { id: "name", label: "Name the thought" },
+        { id: "observe", label: "Observe the mechanism" },
+        { id: "test", label: "Test the interpretation" },
+        { id: "choose", label: "Choose the response" },
+        { id: "prove", label: "Prove it through action" },
+      ],
+      correctOrder: ["name", "observe", "test", "choose", "prove"],
+    };
+  }
+  if (tab === "SUMMARY") {
+    return {
+      mode: "knowledge-lock",
+      prompt: "Knowledge Lock: complete the principle in your own words. What comes before manifestation in the Mentalism framework?",
+      placeholder: "Enter the key concept…",
+      answer: "mind",
+    };
+  }
+  return null;
+}
 
-   Phase 15 follow-up (docs/ARCHITECTURE.md): this component no longer
-   mounts its own SovereignProvider — ReclamationModulePage.jsx now hoists
-   one shared provider above all seven Hermetic Hall module components, so
-   state (concepts, reflections, artifact) actually survives navigating
-   between modules instead of resetting on every mount. */
 export default function HermeticSuppliedModuleExperience({ moduleSlug, progress = 0, onComplete }) {
   const moduleCopy = MODULE_COPY[moduleSlug];
   const { reflection, session, curriculum, module: sovereignModule } = useSovereign();
@@ -195,6 +238,15 @@ export default function HermeticSuppliedModuleExperience({ moduleSlug, progress 
   const [activeTab, setActiveTab] = useState("PRINCIPLE");
   const [response, setResponse] = useState("");
   const [hydrated, setHydrated] = useState(false);
+  const [interactiveValue, setInteractiveValue] = useState(() => {
+    if (typeof window === "undefined") return "";
+    try {
+      return JSON.parse(window.localStorage.getItem(`ru_interactive_${moduleSlug}`) || "{}")?.["PRINCIPLE"] || "";
+    } catch {
+      return "";
+    }
+  });
+  const [interactionComplete, setInteractionComplete] = useState(() => new Set());
 
   /* Registers this as the active Sovereign module and keeps the runtime
      step engine in sync with real navigation -- previously this
@@ -241,12 +293,7 @@ export default function HermeticSuppliedModuleExperience({ moduleSlug, progress 
   const next = TABS[Math.min(activeIndex + 1, TABS.length - 1)];
   const displayedProgress = progress || (activeTab === "2026 LENS" ? 72 : 42);
   const completedProgressSteps = activeTab === "2026 LENS" ? 5 : Math.min(activeIndex + 1, 8);
-  const screen = useMemo(() => <CopyScreen section={moduleCopy.sections[activeTab] || ""} moduleTitle={moduleCopy.title} moduleSlug={moduleSlug} activeTab={activeTab} response={response} onResponse={setResponse}/>, [activeTab, moduleCopy, moduleSlug, response]);
-
-  const goToTab = (id) => {
-    setActiveTab(id);
-    sovereignModule?.advanceStep(TAB_STEP_IDS[TABS.findIndex(([tabId]) => tabId === id)]);
-  };
+  const interaction = moduleSlug === "mentalism" ? getMentalismInteraction(activeTab) : null;
 
   /* This module has no per-concept selection to link a reflection to
      (see the TAB_STEP_IDS comment above), so unlike the other six
@@ -261,5 +308,44 @@ export default function HermeticSuppliedModuleExperience({ moduleSlug, progress 
     reflection.commitReflection(SOVEREIGN_STEP_IDS.REFLECTION, text, [], MODULE_ID);
   };
 
-  return <main className="hme-root"><header className="hme-header"><div className="hme-brand"><span><Sparkles/></span><strong>Reclamation<br/>University</strong><i/><small>Hermetic Hall</small></div><div className="hme-progress"><span>Your progress</span><i><b style={{ width: `${displayedProgress}%` }}/></i><strong>{displayedProgress}%</strong></div></header><div className="hme-shell"><aside className="hme-tabs">{TABS.map(([id, label, Icon]) => <button type="button" key={id} className={id === activeTab ? "is-active" : ""} onClick={() => goToTab(id)}><span><Icon size={22}/></span><strong>{label}</strong></button>)}</aside><section className="hme-main"><PrincipleStrip activePrinciple={moduleCopy.index}/><article className={`hme-stage hme-stage-${activeTab.toLowerCase().replace(/\s+/g, "-")}`}><header className="hme-lesson-title"><span>{PRINCIPLES[moduleCopy.index][0]}</span><div><h1>{moduleCopy.title}</h1><p>{moduleCopy.subtitle}</p></div></header><div className="hme-screen">{screen}</div>{activeTab === "REFLECTION" && <div className="hme-panel"><button type="button" onClick={commitReflection} disabled={!response.trim()}>{reflectionCommitted ? "Reflection committed — recommit with changes" : "Commit reflection"}</button>{reflectionCommitted && <p>Committed to your synthesis record.</p>}</div>}<footer className="hme-footer"><div className="hme-stat"><small>Est. time</small><strong>18 min</strong></div><div className="hme-stat"><small>Principle {PRINCIPLES[moduleCopy.index][0]} of VII</small><strong>{moduleCopy.title}</strong></div><div className="hme-stat hme-lesson-progress"><small>Lesson progress</small><span>{Array.from({ length: 8 }, (_, index) => <i key={index} className={index < completedProgressSteps ? "is-complete" : ""}/>)}</span></div>{activeTab !== "SUMMARY" ? <button type="button" onClick={() => goToTab(next[0])}>Continue to {next[1]} <ArrowRight size={20}/></button> : <button type="button" onClick={onComplete}>Next Module <ArrowRight size={20}/></button>}</footer></article></section></div></main>;
+  const persistInteraction = (value) => {
+    setInteractiveValue(value);
+    if (typeof window !== "undefined") {
+      try {
+        const key = `ru_interactive_${moduleSlug}`;
+        const current = JSON.parse(window.localStorage.getItem(key) || "{}");
+        window.localStorage.setItem(key, JSON.stringify({ ...current, [activeTab]: value }));
+      } catch {
+        // The curriculum remains usable if browser persistence is unavailable.
+      }
+    }
+  };
+
+  const openTab = (tab) => {
+    setActiveTab(tab);
+    sovereignModule?.advanceStep(TAB_STEP_IDS[TABS.findIndex(([tabId]) => tabId === tab)]);
+    if (typeof window !== "undefined") {
+      try {
+        const current = JSON.parse(window.localStorage.getItem(`ru_interactive_${moduleSlug}`) || "{}");
+        setInteractiveValue(current?.[tab] || "");
+      } catch {
+        setInteractiveValue("");
+      }
+    }
+  };
+
+  const screen = useMemo(() => <CopyScreen section={moduleCopy.sections[activeTab] || ""} moduleTitle={moduleCopy.title} moduleSlug={moduleSlug} activeTab={activeTab} response={response} onResponse={setResponse} hideReflection={Boolean(interaction)}/>, [activeTab, moduleCopy, moduleSlug, response, interaction]);
+
+  const finishInteraction = (value) => {
+    persistInteraction(value);
+    setInteractionComplete((current) => new Set([...current, activeTab]));
+    if (activeTab === "REFLECTION") {
+      const text = String(value ?? "").trim();
+      if (text) reflection.commitReflection(SOVEREIGN_STEP_IDS.REFLECTION, text, [], MODULE_ID);
+    }
+  };
+
+  const canContinue = !interaction || interactionComplete.has(activeTab);
+
+  return <main className="hme-root"><header className="hme-header"><div className="hme-brand"><span><Sparkles/></span><strong>Reclamation<br/>University</strong><i/><small>Hermetic Hall</small></div><div className="hme-progress"><span>Your progress</span><i><b style={{ width: `${displayedProgress}%` }}/></i><strong>{displayedProgress}%</strong></div></header><div className="hme-shell"><aside className="hme-tabs">{TABS.map(([id, label, Icon]) => <button type="button" key={id} className={id === activeTab ? "is-active" : ""} onClick={() => openTab(id)}><span><Icon size={22}/></span><strong>{label}</strong>{interactionComplete.has(id) && <Check size={13} aria-label="Interaction complete"/>}</button>)}</aside><section className="hme-main"><PrincipleStrip activePrinciple={moduleCopy.index}/><article className={`hme-stage hme-stage-${activeTab.toLowerCase().replace(/\s+/g, "-")}`}><header className="hme-lesson-title"><span>{PRINCIPLES[moduleCopy.index][0]}</span><div><h1>{moduleCopy.title}</h1><p>{moduleCopy.subtitle}</p></div></header><div className="hme-screen">{screen}{interaction ? <InteractiveExperience interaction={interaction} value={interactiveValue} onChange={persistInteraction} onComplete={finishInteraction}/> : activeTab === "REFLECTION" && <div className="hme-panel"><button type="button" onClick={commitReflection} disabled={!response.trim()}>{reflectionCommitted ? "Reflection committed — recommit with changes" : "Commit reflection"}</button>{reflectionCommitted && <p>Committed to your synthesis record.</p>}</div>}</div><footer className="hme-footer"><div className="hme-stat"><small>Est. time</small><strong>18 min</strong></div><div className="hme-stat"><small>Principle {PRINCIPLES[moduleCopy.index][0]} of VII</small><strong>{moduleCopy.title}</strong></div><div className="hme-stat hme-lesson-progress"><small>Lesson progress</small><span>{Array.from({ length: 8 }, (_, index) => <i key={index} className={index < completedProgressSteps ? "is-complete" : ""}/>)}</span></div>{activeTab !== "SUMMARY" ? <button type="button" disabled={!canContinue} onClick={() => openTab(next[0])}>{canContinue ? `Continue to ${next[1]}` : "Complete the exercise to continue"} <ArrowRight size={20}/></button> : <button type="button" disabled={!canContinue} onClick={onComplete}>{canContinue ? "Next Module" : "Complete the knowledge lock"} <ArrowRight size={20}/></button>}</footer></article></section></div></main>;
 }

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { loadUserFacultyProgress } from '../../lib/supabase/reclamationUniversity';
 import './hermeticHallHub.css';
@@ -14,11 +14,9 @@ import './hermeticHallHub.css';
 // asset is replaced.
 const DIAL_ART_VERSION = '20260827b';
 const ASSETS = {
-  hallIdle: 'https://pub-7db585eeeb464a9d9f749f0307532c22.r2.dev/images/shell/Hermetic-Hall.png',
   hallOnline: 'https://pub-7db585eeeb464a9d9f749f0307532c22.r2.dev/images/shell/Hermetic-Hall-Online.png',
   hallOnline2: 'https://pub-7db585eeeb464a9d9f749f0307532c22.r2.dev/images/shell/Hernetic-Hall-Online2.png',
   radialDial: `https://pub-7db585eeeb464a9d9f749f0307532c22.r2.dev/images/shell/radial-dial.png?v=${DIAL_ART_VERSION}`,
-  initiationVideo: 'https://media.chromakeyprotocol.com/video/hermetic_hall_initiation.mp4',
 };
 
 // Seven Hermetic principles, left-to-right, matching the column layout in
@@ -67,11 +65,9 @@ function wedgeClipPath(index) {
 
 export default function HermeticHallHub() {
   const navigate = useNavigate();
-  const [phase, setPhase] = useState('video'); // video -> briefing -> hub
   const [selected, setSelected] = useState(null);
   const [mended, setMended] = useState(() => new Set());
   const [progressLoaded, setProgressLoaded] = useState(false);
-  const videoRef = useRef(null);
 
   // A pillar is only "restored" once its module is actually completed --
   // reads real progress from rec_uni_user_progress, the same table the
@@ -96,9 +92,6 @@ export default function HermeticHallHub() {
     };
   }, []);
 
-  const advanceToBriefing = useCallback(() => setPhase('briefing'), []);
-  const beginRestoration = useCallback(() => setPhase('hub'), []);
-
   const handleSelectWedge = useCallback((principle) => {
     setSelected(principle);
   }, []);
@@ -109,110 +102,59 @@ export default function HermeticHallHub() {
   }, [navigate, selected]);
 
   const backgroundSrc = useMemo(() => {
-    if (phase !== 'hub') return ASSETS.hallIdle;
     return selected ? ASSETS.hallOnline2 : ASSETS.hallOnline;
-  }, [phase, selected]);
+  }, [selected]);
 
   return (
     <div className="hh-scene">
       <img className="hh-bg" src={backgroundSrc} alt="Hermetic Hall" />
 
-      {phase === 'hub' && (
-        <>
-          <div className="hh-columns" aria-hidden="true">
-            {PRINCIPLES.map((p, i) => (
-              <button
-                key={p.key}
-                type="button"
-                className={`hh-column-hotspot${mended.has(p.key) ? ' is-mended' : ''}`}
-                style={{ left: `${COLUMN_X[i]}%` }}
-                onClick={() => handleSelectWedge(p)}
-                aria-label={`Pillar of ${p.name}`}
-              >
-                <span className="hh-column-glow" />
-              </button>
-            ))}
-          </div>
-
-          <header className="hh-topbar">
-            <span>Reclamation University &middot; Hermetic Hall</span>
-            <span><b>{progressLoaded ? mended.size : '…'}</b> / 7 pillars restored</span>
-          </header>
-
-          <div className="hh-dial-wrap">
-            <img className="hh-dial-img" src={ASSETS.radialDial} alt="" aria-hidden="true" />
-            <div className="hh-dial-hotspots">
-              {PRINCIPLES.map((p, i) => (
-                <button
-                  key={p.key}
-                  type="button"
-                  className={`hh-wedge${selected?.key === p.key ? ' is-active' : ''}`}
-                  style={{ clipPath: wedgeClipPath(i) }}
-                  onClick={() => handleSelectWedge(p)}
-                  aria-label={`The Principle of ${p.name}`}
-                >
-                  <span className="hh-wedge-fill" />
-                </button>
-              ))}
-            </div>
-          </div>
-
+      <div className="hh-columns" aria-hidden="true">
+        {PRINCIPLES.map((p, i) => (
           <button
+            key={p.key}
             type="button"
-            className={`hh-enter-tab${selected ? ' is-ready' : ''}`}
-            disabled={!selected}
-            onClick={enterSelectedModule}
+            className={`hh-column-hotspot${mended.has(p.key) ? ' is-mended' : ''}`}
+            style={{ left: `${COLUMN_X[i]}%` }}
+            onClick={() => handleSelectWedge(p)}
+            aria-label={`Pillar of ${p.name}`}
           >
-            {selected ? `Enter ${selected.name}` : 'Select a Pillar'}
+            <span className="hh-column-glow" />
           </button>
-        </>
-      )}
+        ))}
+      </div>
 
-      {phase !== 'hub' && (
-        <div className="hh-overlay">
-          {phase === 'video' && (
-            <div className="hh-init-frame">
-              <video
-                ref={videoRef}
-                autoPlay
-                muted
-                playsInline
-                preload="auto"
-                onEnded={advanceToBriefing}
-                onError={advanceToBriefing}
-              >
-                <source src={ASSETS.initiationVideo} type="video/mp4" />
-              </video>
-              <span className="hh-frame-corner tl" />
-              <span className="hh-frame-corner tr" />
-              <span className="hh-frame-corner bl" />
-              <span className="hh-frame-corner br" />
-              <button type="button" className="hh-rune-btn hh-skip" onClick={advanceToBriefing}>
-                Skip
-              </button>
-            </div>
-          )}
+      <header className="hh-topbar">
+        <span>Reclamation University &middot; Hermetic Hall</span>
+        <span><b>{progressLoaded ? mended.size : '…'}</b> / 7 pillars restored</span>
+      </header>
 
-          {phase === 'briefing' && (
-            <div className="hh-briefing">
-              <p className="hh-briefing-eyebrow">Systemic Briefing</p>
-              <h2>The Foundation Has Cracked</h2>
-              <p className="hh-briefing-body">
-                &ldquo;Systemic foundations detected unstable. Seven pillars beneath Hermetic
-                Hall have fractured &mdash; the Seeker must complete the Seven Hermetic Modules
-                to restore what holds the structure up.&rdquo;
-              </p>
-              <div className="hh-briefing-status">
-                <div>Pillars Fractured<b>{PRINCIPLES.length - mended.size} / {PRINCIPLES.length}</b></div>
-                <div>Modules Required<b>{PRINCIPLES.length}</b></div>
-              </div>
-              <button type="button" className="hh-rune-btn" onClick={beginRestoration}>
-                Begin Restoration
-              </button>
-            </div>
-          )}
+      <div className="hh-dial-wrap">
+        <img className="hh-dial-img" src={ASSETS.radialDial} alt="" aria-hidden="true" />
+        <div className="hh-dial-hotspots">
+          {PRINCIPLES.map((p, i) => (
+            <button
+              key={p.key}
+              type="button"
+              className={`hh-wedge${selected?.key === p.key ? ' is-active' : ''}`}
+              style={{ clipPath: wedgeClipPath(i) }}
+              onClick={() => handleSelectWedge(p)}
+              aria-label={`The Principle of ${p.name}`}
+            >
+              <span className="hh-wedge-fill" />
+            </button>
+          ))}
         </div>
-      )}
+      </div>
+
+      <button
+        type="button"
+        className={`hh-enter-tab${selected ? ' is-ready' : ''}`}
+        disabled={!selected}
+        onClick={enterSelectedModule}
+      >
+        {selected ? `Enter ${selected.name}` : 'Select a Pillar'}
+      </button>
     </div>
   );
 }

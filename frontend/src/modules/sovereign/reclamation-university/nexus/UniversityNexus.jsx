@@ -31,6 +31,7 @@ import {
   defaultRecentActivity,
   getUniversityQuote,
   getUniversityTime,
+  hermeticHallImage,
 } from '../../../../lib/university/curriculum';
 import './UniversityNexus.css';
 
@@ -180,7 +181,7 @@ export default function UniversityNexus() {
           <section className="un-curriculum" aria-label="Curriculum domains">
             <DomainCard domain={universityDomains[0]} align="left" />
 
-            <div className="un-hermetic-hall">
+            <div className="un-hermetic-hall" style={{ '--card-image': `url(${hermeticHallImage})` }}>
               <span className="un-eyebrow">The</span>
               <h2>Hermetic Hall</h2>
               <span className="un-hermetic-hall__subtitle">The Foundation Chamber</span>
@@ -234,7 +235,12 @@ export default function UniversityNexus() {
             <DomainCard domain={universityDomains[1]} align="right" />
           </section>
 
-          <section className="un-domain-sovereignty" ref={domainsRef} aria-label="Domain III: Sovereignty">
+          <section
+            className="un-domain-sovereignty"
+            ref={domainsRef}
+            aria-label="Domain III: Sovereignty"
+            style={{ '--card-image': `url(${universityDomains[2].image})` }}
+          >
             <SovereigntyDomain domain={universityDomains[2]} />
           </section>
         </main>
@@ -307,6 +313,7 @@ function DomainCard({ domain, align }) {
     <article
       className={`un-domain-card un-domain-card--${domain.theme}`}
       data-align={align}
+      style={domain.image ? { '--card-image': `url(${domain.image})` } : undefined}
       onMouseEnter={() => setExpanded(true)}
       onMouseLeave={() => setExpanded(false)}
       onFocus={() => setExpanded(true)}

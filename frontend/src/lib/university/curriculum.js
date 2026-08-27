@@ -19,7 +19,15 @@
 // generated/placeholder art (same bucket/convention as HermeticHallHub.jsx).
 const R2_SHELL_BASE = 'https://pub-7db585eeeb464a9d9f749f0307532c22.r2.dev/images/shell';
 
-export const hermeticHallImage = `${R2_SHELL_BASE}/Reclamation_Hall_Pathway.png`;
+// Cache-busts these four pathway images specifically: the source files at
+// these URLs get replaced in place (same filename, new artwork) rather than
+// renamed, so without this the R2 edge cache and viewers' browsers can keep
+// serving a stale cached copy indefinitely. Bump this whenever the artwork
+// at these URLs is updated.
+const PATHWAY_ART_VERSION = '20260827';
+const withCacheBust = (url) => `${url}?v=${PATHWAY_ART_VERSION}`;
+
+export const hermeticHallImage = withCacheBust(`${R2_SHELL_BASE}/Reclamation_Hall_Pathway.png`);
 
 export const universityDomains = [
   {
@@ -28,7 +36,7 @@ export const universityDomains = [
     title: 'Foundation',
     subtitle: 'Understand Yourself',
     theme: 'foundation',
-    image: `${R2_SHELL_BASE}/Foundation_Pathway.png`,
+    image: withCacheBust(`${R2_SHELL_BASE}/Foundation_Pathway.png`),
     modules: ['Consciousness', 'Identity', 'Perception', 'Belief Systems', 'Mental Architecture'],
     available: false,
   },
@@ -38,7 +46,7 @@ export const universityDomains = [
     title: 'Language',
     subtitle: 'Understand the Code',
     theme: 'language',
-    image: `${R2_SHELL_BASE}/Language_Pathway.png`,
+    image: withCacheBust(`${R2_SHELL_BASE}/Language_Pathway.png`),
     modules: ['Language', 'Narrative', 'Symbols', 'Thought Forms', 'Programming', 'Media & Conditioning'],
     available: false,
   },
@@ -48,7 +56,7 @@ export const universityDomains = [
     title: 'Sovereignty',
     subtitle: 'Reclaim Your Power',
     theme: 'sovereignty',
-    image: `${R2_SHELL_BASE}/Sovereign_Pathway.png`,
+    image: withCacheBust(`${R2_SHELL_BASE}/Sovereign_Pathway.png`),
     modules: ['Agency', 'Boundaries', 'Decision Making', 'Power', 'Reclamation', 'Integration', 'Applied Protocols'],
     available: false,
   },

@@ -15,6 +15,12 @@
  * artifacts, user_activity) lands.
  */
 
+// R2-hosted pathway art, supplied directly — do not swap these for
+// generated/placeholder art (same bucket/convention as HermeticHallHub.jsx).
+const R2_SHELL_BASE = 'https://pub-7db585eeeb464a9d9f749f0307532c22.r2.dev/images/shell';
+
+export const hermeticHallImage = `${R2_SHELL_BASE}/Reclamation_Hall_Pathway.png`;
+
 export const universityDomains = [
   {
     id: 'foundation',
@@ -22,6 +28,7 @@ export const universityDomains = [
     title: 'Foundation',
     subtitle: 'Understand Yourself',
     theme: 'foundation',
+    image: `${R2_SHELL_BASE}/Foundation_Pathway.png`,
     modules: ['Consciousness', 'Identity', 'Perception', 'Belief Systems', 'Mental Architecture'],
     available: false,
   },
@@ -31,6 +38,7 @@ export const universityDomains = [
     title: 'Language',
     subtitle: 'Understand the Code',
     theme: 'language',
+    image: `${R2_SHELL_BASE}/Language_Pathway.png`,
     modules: ['Language', 'Narrative', 'Symbols', 'Thought Forms', 'Programming', 'Media & Conditioning'],
     available: false,
   },
@@ -40,6 +48,7 @@ export const universityDomains = [
     title: 'Sovereignty',
     subtitle: 'Reclaim Your Power',
     theme: 'sovereignty',
+    image: `${R2_SHELL_BASE}/Sovereign_Pathway.png`,
     modules: ['Agency', 'Boundaries', 'Decision Making', 'Power', 'Reclamation', 'Integration', 'Applied Protocols'],
     available: false,
   },

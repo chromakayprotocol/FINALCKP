@@ -131,15 +131,30 @@ export default function HermeticHallHub() {
     if (phase !== 'video') return;
     const video = videoRef.current;
     if (!video) return;
-    const attempt = video.play();
-    if (attempt && typeof attempt.catch === 'function') {
-      attempt.catch(() => setNeedsGesture(true));
-    }
+
+    const tryPlay = () => {
+      const attempt = video.play();
+      if (attempt && typeof attempt.then === 'function') {
+        attempt.then(() => setNeedsGesture(false)).catch(() => setNeedsGesture(true));
+      }
+    };
+
+    tryPlay();
+
+    // Belt-and-suspenders: the very first interaction anywhere on the page
+    // -- a click, a tap, a keypress, even a scroll -- re-attempts playback.
+    // Browsers count any of these as the user gesture unmuted autoplay
+    // needs, so in practice this starts the instant someone touches the
+    // page at all, not only if they hit the visible fallback button.
+    const events = ['pointerdown', 'keydown', 'touchstart', 'wheel'];
+    events.forEach((name) => window.addEventListener(name, tryPlay, { capture: true }));
+    return () => {
+      events.forEach((name) => window.removeEventListener(name, tryPlay, { capture: true }));
+    };
   }, [phase]);
 
   const beginInitiationByGesture = useCallback(() => {
-    setNeedsGesture(false);
-    videoRef.current?.play().catch(() => {});
+    videoRef.current?.play().then(() => setNeedsGesture(false)).catch(() => {});
   }, []);
 
   const handleSelectWedge = useCallback((principle) => {

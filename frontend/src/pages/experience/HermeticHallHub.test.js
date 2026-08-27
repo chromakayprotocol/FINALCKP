@@ -54,10 +54,11 @@ describe('HermeticHallHub', () => {
     expect(screen.queryByText('Skip')).not.toBeInTheDocument();
   });
 
-  test('falls back to a one-tap gate when the browser blocks unmuted autoplay', async () => {
+  test('falls back to a one-tap gate when the browser blocks unmuted autoplay, and the tap actually starts it', async () => {
     const playSpy = vi
       .spyOn(HTMLMediaElement.prototype, 'play')
-      .mockImplementation(() => Promise.reject(new Error('NotAllowedError')));
+      .mockImplementationOnce(() => Promise.reject(new Error('NotAllowedError')))
+      .mockImplementationOnce(() => Promise.resolve());
 
     loadUserFacultyProgress.mockResolvedValue({ data: [], error: null });
     renderHub();
@@ -66,8 +67,47 @@ describe('HermeticHallHub', () => {
     expect(playSpy).toHaveBeenCalledTimes(1);
 
     fireEvent.click(gateButton);
-    expect(playSpy).toHaveBeenCalledTimes(2);
-    expect(screen.queryByText('Begin Initiation')).not.toBeInTheDocument();
+    await waitFor(() => expect(playSpy).toHaveBeenCalledTimes(2));
+    await waitFor(() => {
+      expect(screen.queryByText('Begin Initiation')).not.toBeInTheDocument();
+    });
+
+    playSpy.mockRestore();
+  });
+
+  test('the gate keeps offering a retry if playback keeps failing, instead of silently giving up', async () => {
+    const playSpy = vi
+      .spyOn(HTMLMediaElement.prototype, 'play')
+      .mockImplementation(() => Promise.reject(new Error('NotAllowedError')));
+
+    loadUserFacultyProgress.mockResolvedValue({ data: [], error: null });
+    renderHub();
+
+    const gateButton = await screen.findByText('Begin Initiation');
+    fireEvent.click(gateButton);
+
+    await waitFor(() => expect(playSpy).toHaveBeenCalledTimes(2));
+    expect(await screen.findByText('Begin Initiation')).toBeInTheDocument();
+
+    playSpy.mockRestore();
+  });
+
+  test('any interaction with the page -- not just the gate button -- retries playback', async () => {
+    const playSpy = vi
+      .spyOn(HTMLMediaElement.prototype, 'play')
+      .mockImplementationOnce(() => Promise.reject(new Error('NotAllowedError')))
+      .mockImplementationOnce(() => Promise.resolve());
+
+    loadUserFacultyProgress.mockResolvedValue({ data: [], error: null });
+    renderHub();
+
+    await screen.findByText('Begin Initiation');
+    fireEvent.keyDown(window, { key: 'Enter' });
+
+    await waitFor(() => expect(playSpy).toHaveBeenCalledTimes(2));
+    await waitFor(() => {
+      expect(screen.queryByText('Begin Initiation')).not.toBeInTheDocument();
+    });
 
     playSpy.mockRestore();
   });

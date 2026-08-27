@@ -284,6 +284,18 @@ function AppRoutes() {
         }
       />
 
+      {/* The Hermetic Hall's game-style gateway screen (radial dial + pillar
+          hotspots, real production art). A literal route, so it's matched
+          ahead of the dynamic :facultySlug redirect below for this one slug. */}
+      <Route
+        path="/experiencemode/sovereign/reclamation-university/hermetic-hall"
+        element={
+          <ProtectedRoute withShell={false}>
+            <HermeticHallHub />
+          </ProtectedRoute>
+        }
+      />
+
       <Route
         path="/experiencemode/sovereign/reclamation-university/:facultySlug"
         element={

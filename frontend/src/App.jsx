@@ -34,6 +34,7 @@ const CKPVisualizerCore = lazy(() => import('./pages/CKPVisualizerCore'));
 const VisualizerCorePage = lazy(() => import('./pages/experience/VisualizerCorePage'));
 const ActTwoVisualizerPage = lazy(() => import('./pages/experience/ActTwoVisualizerPage'));
 const ReclamationUniversityPage = lazy(() => import('./pages/ReclamationUniversityPage'));
+const ReclamationUniversityNexusPage = lazy(() => import('./pages/ReclamationUniversityNexusPage'));
 const ReclamationFacultyRedirect = lazy(() => import('./pages/ReclamationFacultyRedirect'));
 const ReclamationModulePage = lazy(() => import('./pages/ReclamationModulePage'));
 const SovereignOSDemo = lazy(() => import('./pages/experience/SovereignOSDemo'));
@@ -270,6 +271,15 @@ function AppRoutes() {
         element={
           <ProtectedRoute withShell={false}>
             <ReclamationUniversityPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/experiencemode/sovereign/reclamation-university/nexus"
+        element={
+          <ProtectedRoute withShell={false}>
+            <ReclamationUniversityNexusPage />
           </ProtectedRoute>
         }
       />

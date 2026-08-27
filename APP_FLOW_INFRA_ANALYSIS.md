@@ -1,5 +1,7 @@
 # App User Flow & Infrastructure Analysis
 
+> **Status: historical.** The backend "split-brain" this document describes (`backend/server.py` vs. `backend/app/main.py` + `backend/app/routes/*`) has since been resolved: `backend/app/main.py` is now a one-line shim re-exporting `backend/server.py`'s app, and `backend/app/routes/`, `backend/app/services/` are legacy/dead code that is no longer mounted. `backend/server.py` is the single canonical API. This doc is kept for historical context; see `docs/ARCHITECTURE.md` for the current and target (Sovereign OS) architecture.
+
 ## Executive Summary
 
 Your app has strong ambition and a lot of surface area, but right now it is split across **two partially overlapping backend architectures** and a frontend that assumes one auth contract while parts of the backend expose a different one. The result is brittle login/session behavior, inconsistent routing behavior, and high maintenance overhead.

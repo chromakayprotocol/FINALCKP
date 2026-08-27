@@ -1,11 +1,13 @@
-import { Fragment, useEffect, useMemo, useState } from "react";
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import useFooterOffset from "./useFooterOffset";
 import { ArrowRight, LayoutDashboard, Pencil, Download, FileDown } from "lucide-react";
 import jsPDF from "jspdf";
 import CurriculumSpine from "./CurriculumSpine";
 import ReclamationLessonMedia from "./ReclamationLessonMedia";
-import { CURRICULUM_SECTIONS } from "./curriculumSections";
+import { CURRICULUM_SECTIONS, sovereignStepIdForSection } from "./curriculumSections";
+import ConceptGraphView from "../../../components/sovereign-os/ConceptGraphView";
+import { useSovereign, SOVEREIGN_STEP_IDS } from "../../../sovereign/runtime";
 import {
   CAUSE_EFFECT_META, PRINCIPLES, CHAIN_NODES, CASCADE, INTRO_CONTENT, PRINCIPLE_CONTENT,
   KEY_CONCEPTS_LEDE, KEY_CONCEPTS, CONCEPT_EXHIBIT, WHY_IT_MATTERS, DOMAINS_LEDE, DOMAINS,
@@ -17,7 +19,7 @@ import {
 import "./curriculumSpine.css";
 import "./causeEffectModuleExperience.css";
 
-const STORE_KEY = "ckp-hermetic-hall-module-6";
+const MODULE_ID = "hermetic-hall/cause-and-effect";
 
 const PRIMARY_ACTION = {
   intro: "Continue to Principle",
@@ -64,12 +66,47 @@ const ARTIFACT_REQUIREMENTS = [
 
 const MIN_REFLECTION_CHARS = 80;
 
+/* Persistence (Phase 8 of the Sovereign OS migration, docs/ARCHITECTURE.md):
+   this module previously persisted only to localStorage (STORE_KEY
+   "ckp-hermetic-hall-module-6"), so progress never reached the server and
+   was lost on a new device or cleared storage (SOVEREIGN_STATE_MAP.md §1).
+   Routes the same payload through the Sovereign Runtime's local+remote
+   sync instead — the hydrate/save shape below is otherwise unchanged from
+   the localStorage version.
+
+   Phase 15 follow-up (docs/ARCHITECTURE.md): no longer mounts its own
+   SovereignProvider — ReclamationModulePage.jsx hoists one shared provider
+   above all seven Hermetic Hall module components so state survives
+   navigating between modules. */
 export default function CauseEffectModuleExperience({ faculty, onComplete }) {
   const navigate = useNavigate();
+  const {
+    reflection: sovereignReflection,
+    session,
+    concepts,
+    curriculum,
+    synthesis,
+    module: sovereignModule,
+  } = useSovereign();
+
+  /* Registers this as the active Sovereign module and keeps the runtime
+     step engine (sovereignSteps.js) in sync with real navigation --
+     previously this component never called either. */
+  useEffect(() => {
+    curriculum.startModule(MODULE_ID);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  useEffect(() => {
+    if (!sovereignModule) return;
+    sovereignModule.advanceStep(sovereignStepIdForSection(CURRICULUM_SECTIONS[0].id));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sovereignModule?.moduleId]);
+
   const [activeIndex, setActiveIndex] = useState(0);
   const [visited, setVisited] = useState(["intro"]);
   const [engaged, setEngaged] = useState([]);
   const [hydrated, setHydrated] = useState(false);
+  const [reflectionLinkedConcepts, setReflectionLinkedConcepts] = useState([]);
 
   const [chainNode, setChainNode] = useState(null);
   const [cascadeStage, setCascadeStage] = useState(0);
@@ -102,31 +139,35 @@ export default function CauseEffectModuleExperience({ faculty, onComplete }) {
   const [ceremonyPlaying, setCeremonyPlaying] = useState(false);
 
   /* -------------------------------------------------------- PERSISTENCE -- */
-  useEffect(() => {
-    try {
-      const raw = window.localStorage.getItem(STORE_KEY);
-      if (raw) {
-        const d = JSON.parse(raw);
-        if (d.activeIndex != null) setActiveIndex(d.activeIndex);
-        if (Array.isArray(d.visited)) setVisited(d.visited);
-        if (Array.isArray(d.engaged)) setEngaged(d.engaged);
-        if (d.reflection != null) setReflection(d.reflection);
-        if (d.reflectionSavedAt != null) setReflectionSavedAt(d.reflectionSavedAt);
-        if (d.protocolResponses) setProtocolResponses({ ...EMPTY_PROTOCOL, ...d.protocolResponses });
-        if (Array.isArray(d.protocolDone)) setProtocolDone(d.protocolDone);
-        if (d.protocolStepIndex != null) setProtocolStepIndex(d.protocolStepIndex);
-        if (d.artifactGenerated) setArtifactGenerated(true);
-        if (d.artifact) setArtifact({ ...EMPTY_ARTIFACT, ...d.artifact });
-        if (d.draftPattern != null) setDraftPattern(d.draftPattern);
-        if (d.draftAccepted) setDraftAccepted(true);
-        if (d.artifactCreatedAt != null) setArtifactCreatedAt(d.artifactCreatedAt);
-        if (d.artifactUpdatedAt != null) setArtifactUpdatedAt(d.artifactUpdatedAt);
-        if (d.dashboardSavedAt != null) setDashboardSavedAt(d.dashboardSavedAt);
-        if (d.moduleCompleted) setModuleCompleted(true);
-      }
-    } catch (e) { /* private mode or disabled storage */ }
-    setHydrated(true);
+  const applyRecord = useCallback((d) => {
+    if (!d) return;
+    if (d.activeIndex != null) setActiveIndex(d.activeIndex);
+    if (Array.isArray(d.visited)) setVisited(d.visited);
+    if (Array.isArray(d.engaged)) setEngaged(d.engaged);
+    if (d.reflection != null) setReflection(d.reflection);
+    if (d.reflectionSavedAt != null) setReflectionSavedAt(d.reflectionSavedAt);
+    if (d.protocolResponses) setProtocolResponses({ ...EMPTY_PROTOCOL, ...d.protocolResponses });
+    if (Array.isArray(d.protocolDone)) setProtocolDone(d.protocolDone);
+    if (d.protocolStepIndex != null) setProtocolStepIndex(d.protocolStepIndex);
+    if (d.artifactGenerated) setArtifactGenerated(true);
+    if (d.artifact) setArtifact({ ...EMPTY_ARTIFACT, ...d.artifact });
+    if (d.draftPattern != null) setDraftPattern(d.draftPattern);
+    if (d.draftAccepted) setDraftAccepted(true);
+    if (d.artifactCreatedAt != null) setArtifactCreatedAt(d.artifactCreatedAt);
+    if (d.artifactUpdatedAt != null) setArtifactUpdatedAt(d.artifactUpdatedAt);
+    if (d.dashboardSavedAt != null) setDashboardSavedAt(d.dashboardSavedAt);
+    if (d.moduleCompleted) setModuleCompleted(true);
   }, []);
+
+  const appliedSyncStatusRef = useRef(null);
+  useEffect(() => {
+    if (session.syncStatus === "syncing") return;
+    if (appliedSyncStatusRef.current === session.syncStatus) return;
+    appliedSyncStatusRef.current = session.syncStatus;
+    const record = sovereignReflection.entries[`${MODULE_ID}:record`]?.response ?? null;
+    applyRecord(record);
+    setHydrated(true);
+  }, [session.syncStatus, sovereignReflection, applyRecord]);
 
   useEffect(() => {
     if (!hydrated) return;
@@ -137,7 +178,11 @@ export default function CauseEffectModuleExperience({ faculty, onComplete }) {
       artifactGenerated, artifact, draftPattern, draftAccepted,
       artifactCreatedAt, artifactUpdatedAt, dashboardSavedAt, moduleCompleted,
     };
-    try { window.localStorage.setItem(STORE_KEY, JSON.stringify(payload)); } catch (e) { /* ignore */ }
+    const t = setTimeout(() => {
+      sovereignReflection.recordReflection(MODULE_ID, "record", payload);
+    }, 800);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hydrated, activeIndex, visited, engaged, reflection, reflectionSavedAt,
       protocolResponses, protocolDone, protocolStepIndex, artifactGenerated, artifact,
       draftPattern, draftAccepted, artifactCreatedAt, artifactUpdatedAt, dashboardSavedAt,
@@ -149,7 +194,35 @@ export default function CauseEffectModuleExperience({ faculty, onComplete }) {
     return () => clearTimeout(t);
   }, [reflection, hydrated]);
 
+  const reflectionConceptsSeeded = useRef(false);
+  useEffect(() => {
+    const entry = sovereignReflection.entries[`${MODULE_ID}:${SOVEREIGN_STEP_IDS.REFLECTION}`];
+    if (reflectionConceptsSeeded.current) return;
+    if (!entry?.retainedConcepts?.length) return;
+    reflectionConceptsSeeded.current = true;
+    setReflectionLinkedConcepts(entry.retainedConcepts);
+  }, [sovereignReflection]);
+
   const currentSection = CURRICULUM_SECTIONS[activeIndex];
+
+  /* Real content -> gated real action -> real runtime dispatch -> real
+     shared visual component reading live state -- same pattern proven in
+     the three modules above. */
+  const conceptSlug = (c) => c.title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+  const reflectionEntry = sovereignReflection.entries[`${MODULE_ID}:${SOVEREIGN_STEP_IDS.REFLECTION}`] ?? null;
+  const reflectionCommitted = reflectionEntry?.status === "committed";
+  const recognizedConcepts = sovereignModule?.selectedConcepts ?? [];
+  const conceptLabel = (slug) => KEY_CONCEPTS.find((c) => conceptSlug(c) === slug)?.title ?? slug;
+  const toggleReflectionConcept = (slug) =>
+    setReflectionLinkedConcepts((prev) => (prev.includes(slug) ? prev.filter((s) => s !== slug) : [...prev, slug]));
+  const commitReflection = () => {
+    const text = reflection.trim();
+    if (!text) return;
+    sovereignReflection.commitReflection(SOVEREIGN_STEP_IDS.REFLECTION, text, reflectionLinkedConcepts, MODULE_ID);
+  };
+  const protocolLogged = synthesis.protocolExecutions.some(
+    (execution) => execution.moduleId === MODULE_ID && execution.protocolId === "causal-trace"
+  );
 
   /* Record that a section was read, and separately that its material was
      actually engaged with — the master forbids treating the two as the same. */
@@ -180,8 +253,13 @@ export default function CauseEffectModuleExperience({ faculty, onComplete }) {
   );
   const canGenerateArtifact = unmetRequirements.length === 0;
 
+  /* generateArtifact() already only proceeds past canGenerateArtifact --
+     every ARTIFACT_REQUIREMENTS field actually filled, which in practice
+     means protocolComplete -- so the log piggybacks on this already-gated,
+     already-explicit action rather than adding a new button. */
   const generateArtifact = () => {
     if (!canGenerateArtifact) return;
+    synthesis.executeProtocol("causal-trace", { responses: protocolResponses }, MODULE_ID);
     setArtifact((current) => {
       const next = { ...current };
       ARTIFACT_FIELD_IDS.forEach((id) => {
@@ -266,8 +344,11 @@ export default function CauseEffectModuleExperience({ faculty, onComplete }) {
     setTimeout(() => { setCeremonyPlaying(false); if (onComplete) onComplete(); }, 2200);
   };
 
-  const goToIndex = (index) => setActiveIndex(index);
-  const advance = () => setActiveIndex((i) => Math.min(CURRICULUM_SECTIONS.length - 1, i + 1));
+  const goToIndex = (index) => {
+    setActiveIndex(index);
+    sovereignModule?.advanceStep(sovereignStepIdForSection(CURRICULUM_SECTIONS[index].id));
+  };
+  const advance = () => goToIndex(Math.min(CURRICULUM_SECTIONS.length - 1, activeIndex + 1));
 
   const footerLabel = useMemo(() => {
     if (currentSection.id === "protocol") {
@@ -481,6 +562,8 @@ export default function CauseEffectModuleExperience({ faculty, onComplete }) {
                 <div style={{ display: "grid", gap: 10, marginTop: 20 }}>
                   {KEY_CONCEPTS.map((c, i) => {
                     const open = openConcept === i;
+                    const slug = conceptSlug(c);
+                    const inGraph = concepts.selected.includes(slug);
                     return (
                       <div className={`ruc-acc${open ? " is-open" : ""}`} key={c.id}>
                         <button
@@ -501,11 +584,20 @@ export default function CauseEffectModuleExperience({ faculty, onComplete }) {
                               <div className="ruc-ask-tag">ASK</div>
                               <div className="ruc-ask-txt">{c.practice}</div>
                             </div>
+                            <button type="button" className="ruc-btn" style={{ marginTop: 12 }}
+                              disabled={inGraph}
+                              onClick={() => concepts.selectConcept(slug, MODULE_ID)}>
+                              {inGraph ? "In your concept graph" : "Add to concept graph"}
+                            </button>
                           </div>
                         )}
                       </div>
                     );
                   })}
+                </div>
+                <div style={{ marginTop: 32 }}>
+                  <div className="ruc-panel-label">YOUR CONCEPT GRAPH</div>
+                  <div style={{ marginTop: 10 }}><ConceptGraphView /></div>
                 </div>
 
                 <div className="ruc-h3" style={{ marginTop: 28 }}>
@@ -833,6 +925,33 @@ export default function CauseEffectModuleExperience({ faculty, onComplete }) {
                   {reflectionSavedAt && !reflectionRecorded && " · keep going to record this section"}
                 </div>
 
+                {recognizedConcepts.length > 0 && (
+                  <div style={{ marginTop: 20 }}>
+                    <div className="ruc-panel-label">WHICH RECOGNIZED CONCEPTS DOES THIS CONNECT TO?</div>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 8 }}>
+                      {recognizedConcepts.map((slug) => (
+                        <button type="button" key={slug} className="ruc-btn"
+                          aria-pressed={reflectionLinkedConcepts.includes(slug)}
+                          style={{ opacity: reflectionLinkedConcepts.includes(slug) ? 1 : 0.55 }}
+                          onClick={() => toggleReflectionConcept(slug)}>
+                          {conceptLabel(slug)}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                <button type="button" className="ruc-btn" style={{ marginTop: 16 }}
+                  disabled={!reflection.trim()} onClick={commitReflection}>
+                  {reflectionCommitted ? "Reflection committed — recommit with changes" : "Commit reflection"}
+                </button>
+                {reflectionCommitted && (
+                  <div className="ruc-save" style={{ marginTop: 8 }}>
+                    Committed{reflectionLinkedConcepts.length > 0
+                      ? ` — linked to ${reflectionLinkedConcepts.length} concept${reflectionLinkedConcepts.length === 1 ? "" : "s"} in your concept graph.`
+                      : "."}
+                  </div>
+                )}
+
                 <div className="ruc-panel accent" style={{ marginTop: 22 }}>
                   <div className="ruc-panel-label">FINAL QUESTION</div>
                   <p className="ruc-p" style={{ margin: 0, color: "var(--green-bright)" }}>
@@ -872,6 +991,11 @@ export default function CauseEffectModuleExperience({ faculty, onComplete }) {
                     </button>
                   ))}
                 </div>
+                {protocolLogged && (
+                  <div className="ruc-save" style={{ marginBottom: 14 }}>
+                    Logged to your synthesis record — this is what the Artifact Compiler and the VMA see.
+                  </div>
+                )}
 
                 <div className="ruc-panel accent">
                   {currentStep.workspace && (

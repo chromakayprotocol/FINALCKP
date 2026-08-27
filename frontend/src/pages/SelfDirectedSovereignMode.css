@@ -119,6 +119,19 @@
   border: 1px solid rgba(211,32,32,.32);
   clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% calc(100% - 14px), calc(100% - 14px) 100%, 14px 100%, 0 calc(100% - 14px));
 }
+.sos-brand-block {
+  pointer-events: auto;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color .2s ease, box-shadow .2s ease;
+}
+.sos-brand-block:hover, .sos-brand-block:focus-visible {
+  border-color: var(--sos-red-bright);
+  box-shadow: 0 0 18px rgba(211,32,32,.28);
+  outline: none;
+}
 .sos-brand-block img, .sos-user-block img { width: 50px; height: 50px; object-fit: contain; filter: drop-shadow(0 0 9px rgba(255,42,32,.65)); }
 .sos-brand-block div, .sos-user-block div { display: flex; flex-direction: column; gap: 2px; }
 .sos-brand-block strong { color: var(--sos-text-primary); font-size: .96rem; font-weight: 500; letter-spacing: .15em; }

@@ -31,6 +31,10 @@ jobs:
           VITE_APP_BACKEND_URL: ${{ secrets.VITE_APP_BACKEND_URL }}
           VITE_APP_GOOGLE_CLIENT_ID: ${{ secrets.VITE_APP_GOOGLE_CLIENT_ID }}
           VITE_APP_R2_PUBLIC_BASE_URL: ${{ secrets.VITE_APP_R2_PUBLIC_BASE_URL }}
+          # Public *.workers.dev endpoint (frontend/vma-worker) -- not
+          # secret, so hardcoded here rather than requiring a new repo
+          # secret just to unblock the live VMA chat widget.
+          VITE_APP_VMA_WORKER_URL: https://chroma-key-vma.matrixmediamoguls.workers.dev
 
       - name: Verify Cloudflare Pages project access
         uses: cloudflare/wrangler-action@v3

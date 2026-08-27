@@ -8,6 +8,8 @@
  * ReclamationModuleEngine flow. Neither should be reintroduced for a Hall module.
  */
 
+import { SOVEREIGN_STEP_IDS } from '../../../sovereign/runtime';
+
 export const CURRICULUM_SECTIONS = [
   { id: 'intro',          n: '01', label: 'Intro',          phase: 'UNDERSTAND' },
   { id: 'principle',      n: '02', label: 'Principle',      phase: 'UNDERSTAND' },
@@ -43,4 +45,29 @@ export function sectionState({ index, activeIndex, maxIndex, completedIds = [] }
   if (section && completedIds.includes(section.id)) return 'completed';
   if (index > maxIndex) return 'locked';
   return 'available';
+}
+
+/* This eleven-section arc and the Sovereign Runtime's SOVEREIGN_STEPS
+   (sovereign/runtime/sovereignSteps.js) describe the same journey in the
+   same order, under different id strings — 'key-concepts' here versus
+   '03-key-concepts' there, etc. Every module built against this file
+   should route its navigation through this map (not invent its own),
+   so a section id here and the runtime step it advances can never drift
+   independently across the four modules that share this file. */
+const SOVEREIGN_STEP_ID_BY_SECTION = {
+  'intro': SOVEREIGN_STEP_IDS.INTRO,
+  'principle': SOVEREIGN_STEP_IDS.PRINCIPLE,
+  'key-concepts': SOVEREIGN_STEP_IDS.KEY_CONCEPTS,
+  'why-it-matters': SOVEREIGN_STEP_IDS.WHY_IT_MATTERS,
+  'domains': SOVEREIGN_STEP_IDS.DOMAINS,
+  'reclamation': SOVEREIGN_STEP_IDS.RECLAMATION,
+  '2026-lens': SOVEREIGN_STEP_IDS.LENS_2026,
+  'reflection': SOVEREIGN_STEP_IDS.REFLECTION,
+  'protocol': SOVEREIGN_STEP_IDS.PROTOCOL,
+  'artifact': SOVEREIGN_STEP_IDS.ARTIFACT,
+  'summary': SOVEREIGN_STEP_IDS.SUMMARY,
+};
+
+export function sovereignStepIdForSection(sectionId) {
+  return SOVEREIGN_STEP_ID_BY_SECTION[sectionId] ?? null;
 }

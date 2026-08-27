@@ -2,6 +2,7 @@ import { getSovereignSupabase } from './sovereignHelpers';
 import { getSuppliedVisualizerLyrics } from '../../data/suppliedVisualizerLyrics';
 
 const VISUALIZER_PLAYLIST_SLUG = 'reclamation-visualizer-preview';
+const ACT_TWO_VISUALIZER_PLAYLIST_SLUG = 'act-two-visualizer-preview';
 const R2_PUBLIC_BASE_URL = (
   import.meta.env.VITE_APP_R2_PUBLIC_BASE_URL || 'https://media.chromakeyprotocol.com'
 ).replace(/\/+$/, '');
@@ -55,7 +56,8 @@ function normalizeTrack(row, position = null, lyricData = null, visualAssets = n
     display_text: lyrics,
     lyrics,
     lyrics_track_id: lyrics ? row.id : null,
-    light_code: protocol?.primary_light_code || null,
+    light_code: row.light_code || protocol?.primary_light_code || null,
+    shadow_code: row.shadow_code || null,
     lyric_summary: protocol?.lyric_summary || null,
     timed_lyrics: timedLyrics,
     visual_preset: row.visual_presets || null,
@@ -72,6 +74,8 @@ const TRACK_COLUMNS = `
   queue_index,
   r2_audio_key,
   r2_cover_key,
+  light_code,
+  shadow_code,
   preset_id,
   visual_presets (
     id,
@@ -82,14 +86,14 @@ const TRACK_COLUMNS = `
   )
 `;
 
-export async function getActThreeTracks() {
+async function getVisualizerTracksByPlaylist(slug) {
   const supabase = getSovereignSupabase();
   if (!supabase) return [];
 
   const { data: playlist, error: playlistError } = await supabase
     .from('visualizer_playlists')
     .select('id, name, slug')
-    .eq('slug', VISUALIZER_PLAYLIST_SLUG)
+    .eq('slug', slug)
     .eq('is_active', true)
     .maybeSingle();
 
@@ -143,6 +147,14 @@ export async function getActThreeTracks() {
       viewportBackground: backgroundsByTrack[item.track_id],
     }))
     .filter(Boolean);
+}
+
+export async function getActThreeTracks() {
+  return getVisualizerTracksByPlaylist(VISUALIZER_PLAYLIST_SLUG);
+}
+
+export async function getActTwoTracks() {
+  return getVisualizerTracksByPlaylist(ACT_TWO_VISUALIZER_PLAYLIST_SLUG);
 }
 
 export async function getTrackById(trackId) {

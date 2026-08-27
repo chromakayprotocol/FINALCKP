@@ -1,0 +1,55 @@
+name: Deploy Protected Media Worker (manual)
+
+# Manual-only on purpose: this Worker (frontend/protected-media-worker)
+# is not wired into any live route or into the frontend's audio path —
+# see docs/ARCHITECTURE.md's Phase 17 section. It should only ever be
+# deployed by an explicit decision, never automatically on a push.
+on:
+  workflow_dispatch: {}
+
+jobs:
+  deploy-protected-media-worker:
+    runs-on: ubuntu-latest
+    name: Worker → chroma-key-protected-media
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          # wrangler 4.x requires Node >=22 (confirmed by a real CI
+          # failure here: "Wrangler requires at least Node.js v22.0.0").
+          # Node 20 is fine for the frontend Pages build (deploy.yml),
+          # but not for the wrangler CLI itself.
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: frontend/protected-media-worker/package-lock.json
+
+      - name: Install dependencies
+        working-directory: frontend/protected-media-worker
+        run: npm ci
+
+      - name: Run tests
+        working-directory: frontend/protected-media-worker
+        run: npx vitest run
+
+      - name: Require SUPABASE_SERVICE_ROLE_KEY secret
+        run: |
+          if [ -z "${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" ]; then
+            echo "::error::SUPABASE_SERVICE_ROLE_KEY repo secret is not set — refusing to deploy a Worker that would silently fail every gating check. Add it under Settings > Secrets and variables > Actions, then re-run this workflow."
+            exit 1
+          fi
+
+      - name: Set SUPABASE_SERVICE_ROLE_KEY Worker secret
+        working-directory: frontend/protected-media-worker
+        run: echo "${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" | npx wrangler secret put SUPABASE_SERVICE_ROLE_KEY
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFARE_ACCOUNT_ID }}
+
+      - name: Deploy Worker
+        working-directory: frontend/protected-media-worker
+        run: npx wrangler deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFARE_ACCOUNT_ID }}

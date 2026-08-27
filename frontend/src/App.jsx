@@ -32,12 +32,18 @@ const ChromaKeyProtocolPremium = lazy(() => import('./pages/ChromaKeyProtocolPre
 const SelfDirectedSovereignMode = lazy(() => import('./pages/SelfDirectedSovereignMode'));
 const CKPVisualizerCore = lazy(() => import('./pages/CKPVisualizerCore'));
 const VisualizerCorePage = lazy(() => import('./pages/experience/VisualizerCorePage'));
+const ActTwoVisualizerPage = lazy(() => import('./pages/experience/ActTwoVisualizerPage'));
 const ReclamationUniversityPage = lazy(() => import('./pages/ReclamationUniversityPage'));
+const ReclamationUniversityNexusPage = lazy(() => import('./pages/ReclamationUniversityNexusPage'));
 const ReclamationFacultyRedirect = lazy(() => import('./pages/ReclamationFacultyRedirect'));
 const ReclamationModulePage = lazy(() => import('./pages/ReclamationModulePage'));
+const SovereignOSDemo = lazy(() => import('./pages/experience/SovereignOSDemo'));
+const SovereignOSLive = lazy(() => import('./pages/experience/SovereignOSLive'));
+const HermeticHallHub = lazy(() => import('./pages/experience/HermeticHallHub'));
 
 import AppShell from './components/layout/AppShell';
 import PaywallModal from './components/layout/PaywallModal';
+import VMAChatWidget from './components/sovereign-os/VMAChatWidget';
 import { UNLOCK_ALL_ACCESS } from './lib/accessFlags';
 import { getAuthRedirectPath } from './lib/authRedirects';
 
@@ -99,6 +105,7 @@ const AppShellWrapper = ({ children }) => {
         isOpen={showPaywall}
         onClose={() => setShowPaywall(false)}
       />
+      <VMAChatWidget />
     </AppShell>
   );
 };
@@ -112,6 +119,22 @@ function AppRoutes() {
   return (
     <Routes>
       <Route path="/qa/sovereign" element={<SelfDirectedSovereignMode />} />
+      {/* Phase 15 staging route — the Sovereign OS Shell, not linked from
+          anywhere live. See SovereignOSShell.jsx's header comment. */}
+      <Route path="/qa/sovereign-os" element={<SovereignOSDemo />} />
+      <Route path="/qa/hermetic-hall" element={<HermeticHallHub />} />
+
+      {/* Phase 15/16/18 live: the real Shell + Concept Graph + VMA chat,
+          authenticated, running the real SovereignProvider. Linked from
+          Reclamation University's landing page. */}
+      <Route
+        path="/experiencemode/sovereign/reclamation-university/sovereign-os"
+        element={
+          <ProtectedRoute withShell={false}>
+            <SovereignOSLive />
+          </ProtectedRoute>
+        }
+      />
 
       {/* AUTH */}
 
@@ -138,7 +161,7 @@ function AppRoutes() {
 
       <Route
         path="/"
-        element={user ? <Navigate to="/acts" replace /> : <Login />}
+        element={user ? <Navigate to="/experiencemode/sovereign" replace /> : <Login />}
       />
 
       {/* ACT NAVIGATION */}
@@ -235,10 +258,40 @@ function AppRoutes() {
       />
 
       <Route
+        path="/experiencemode/act-two/visualizer"
+        element={
+          <ProtectedRoute withShell={false}>
+            <ActTwoVisualizerPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
         path="/experiencemode/sovereign/reclamation-university"
         element={
           <ProtectedRoute withShell={false}>
             <ReclamationUniversityPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/experiencemode/sovereign/reclamation-university/nexus"
+        element={
+          <ProtectedRoute withShell={false}>
+            <ReclamationUniversityNexusPage />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* The Hermetic Hall's game-style gateway screen (radial dial + pillar
+          hotspots, real production art). A literal route, so it's matched
+          ahead of the dynamic :facultySlug redirect below for this one slug. */}
+      <Route
+        path="/experiencemode/sovereign/reclamation-university/hermetic-hall"
+        element={
+          <ProtectedRoute withShell={false}>
+            <HermeticHallHub />
           </ProtectedRoute>
         }
       />
@@ -429,7 +482,8 @@ function AppWithBackground() {
   if (
     path.includes("/protocol/2") ||
     path.includes("/act/2") ||
-    path.includes("act_two")
+    path.includes("act_two") ||
+    path.includes("act-two")
   ) {
     act = "water";
   }

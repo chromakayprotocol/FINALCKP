@@ -1,11 +1,13 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import useFooterOffset from "./useFooterOffset";
 import { ArrowRight, LayoutDashboard, Pencil, Download, FileDown } from "lucide-react";
 import jsPDF from "jspdf";
 import CurriculumSpine from "./CurriculumSpine";
 import ReclamationLessonMedia from "./ReclamationLessonMedia";
-import { CURRICULUM_SECTIONS } from "./curriculumSections";
+import { CURRICULUM_SECTIONS, sovereignStepIdForSection } from "./curriculumSections";
+import ConceptGraphView from "../../../components/sovereign-os/ConceptGraphView";
+import { useSovereign, SOVEREIGN_STEP_IDS } from "../../../sovereign/runtime";
 import {
   POLARITY_META, PRINCIPLES, INTRO_CONTENT, PRINCIPLE_CONTENT, KEY_CONCEPTS,
   WHY_IT_MATTERS, DOMAINS, RECLAMATION_CONTENT, LENS, LENS_SOURCES, REFLECTION_CONTENT,
@@ -14,7 +16,7 @@ import {
 import "./curriculumSpine.css";
 import "./polarityModuleExperience.css";
 
-const STORE_KEY = "ckp-hermetic-hall-module-4";
+const MODULE_ID = "hermetic-hall/polarity";
 
 const PRIMARY_ACTION = {
   intro: "Continue to Principle",
@@ -33,14 +35,51 @@ const PRIMARY_ACTION = {
 const EMPTY_PROTOCOL = { poles: "", continuum: "", degree: "", bothTruths: "", movement: "", evidence: "" };
 const EMPTY_ARTIFACT = { binary: "", situation: "", continuum: "", degree: "", bothTruths: "", direction: "", practice: "", evidence: "", carryForward: "" };
 
+/* Persistence (Phase 8 of the Sovereign OS migration, docs/ARCHITECTURE.md):
+   this module previously persisted only to localStorage (STORE_KEY
+   "ckp-hermetic-hall-module-4"), so progress never reached the server and
+   was lost on a new device or cleared storage (SOVEREIGN_STATE_MAP.md §1).
+   Routes the same payload through the Sovereign Runtime's local+remote
+   sync instead — the hydrate/save shape below is otherwise unchanged from
+   the localStorage version.
+
+   Phase 15 follow-up (docs/ARCHITECTURE.md): no longer mounts its own
+   SovereignProvider — ReclamationModulePage.jsx hoists one shared provider
+   above all seven Hermetic Hall module components so state survives
+   navigating between modules. */
 export default function PolarityModuleExperience({ faculty, onComplete }) {
   const navigate = useNavigate();
+  const {
+    reflection: sovereignReflection,
+    session,
+    concepts,
+    curriculum,
+    synthesis,
+    module: sovereignModule,
+  } = useSovereign();
+
+  /* Registers this as the active Sovereign module and, from here on, keeps
+     the runtime step engine (sovereignSteps.js) in sync with real
+     navigation — previously this component never called either, so it
+     never registered as active and none of its steps could ever complete
+     in the runtime's own terms, no matter what a learner actually did. */
+  useEffect(() => {
+    curriculum.startModule(MODULE_ID);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  useEffect(() => {
+    if (!sovereignModule) return;
+    sovereignModule.advanceStep(sovereignStepIdForSection(CURRICULUM_SECTIONS[0].id));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sovereignModule?.moduleId]);
+
   const [activeIndex, setActiveIndex] = useState(0);
   const [maxIndex, setMaxIndex] = useState(0);
   const [completedIds, setCompletedIds] = useState([]);
   const [hydrated, setHydrated] = useState(false);
 
   const [openConcept, setOpenConcept] = useState(0);
+  const [reflectionLinkedConcepts, setReflectionLinkedConcepts] = useState([]);
   const [openDomain, setOpenDomain] = useState(null);
   const [spectrumValue, setSpectrumValue] = useState(5);
   const [showSources, setShowSources] = useState(false);
@@ -66,30 +105,34 @@ export default function PolarityModuleExperience({ faculty, onComplete }) {
   const [ceremonyPlaying, setCeremonyPlaying] = useState(false);
 
   /* -------------------------------------------------------- PERSISTENCE -- */
-  useEffect(() => {
-    try {
-      const raw = window.localStorage.getItem(STORE_KEY);
-      if (raw) {
-        const d = JSON.parse(raw);
-        if (d.activeIndex != null) setActiveIndex(d.activeIndex);
-        if (d.maxIndex != null) setMaxIndex(d.maxIndex);
-        if (Array.isArray(d.completedIds)) setCompletedIds(d.completedIds);
-        if (d.reflection != null) setReflection(d.reflection);
-        if (d.reflectionSavedAt != null) setReflectionSavedAt(d.reflectionSavedAt);
-        if (d.protocolResponses) setProtocolResponses({ ...EMPTY_PROTOCOL, ...d.protocolResponses });
-        if (Array.isArray(d.protocolDone)) setProtocolDone(d.protocolDone);
-        if (d.protocolStepIndex != null) setProtocolStepIndex(d.protocolStepIndex);
-        if (d.artifactGenerated) setArtifactGenerated(true);
-        if (d.artifact) setArtifact({ ...EMPTY_ARTIFACT, ...d.artifact });
-        if (d.artifactSituation != null) setArtifactSituation(d.artifactSituation);
-        if (d.patternStatement != null) setPatternStatement(d.patternStatement);
-        if (d.artifactCreatedAt != null) setArtifactCreatedAt(d.artifactCreatedAt);
-        if (d.artifactUpdatedAt != null) setArtifactUpdatedAt(d.artifactUpdatedAt);
-        if (d.moduleCompleted) setModuleCompleted(true);
-      }
-    } catch (e) { /* private mode or disabled storage */ }
-    setHydrated(true);
+  const applyRecord = useCallback((d) => {
+    if (!d) return;
+    if (d.activeIndex != null) setActiveIndex(d.activeIndex);
+    if (d.maxIndex != null) setMaxIndex(d.maxIndex);
+    if (Array.isArray(d.completedIds)) setCompletedIds(d.completedIds);
+    if (d.reflection != null) setReflection(d.reflection);
+    if (d.reflectionSavedAt != null) setReflectionSavedAt(d.reflectionSavedAt);
+    if (d.protocolResponses) setProtocolResponses({ ...EMPTY_PROTOCOL, ...d.protocolResponses });
+    if (Array.isArray(d.protocolDone)) setProtocolDone(d.protocolDone);
+    if (d.protocolStepIndex != null) setProtocolStepIndex(d.protocolStepIndex);
+    if (d.artifactGenerated) setArtifactGenerated(true);
+    if (d.artifact) setArtifact({ ...EMPTY_ARTIFACT, ...d.artifact });
+    if (d.artifactSituation != null) setArtifactSituation(d.artifactSituation);
+    if (d.patternStatement != null) setPatternStatement(d.patternStatement);
+    if (d.artifactCreatedAt != null) setArtifactCreatedAt(d.artifactCreatedAt);
+    if (d.artifactUpdatedAt != null) setArtifactUpdatedAt(d.artifactUpdatedAt);
+    if (d.moduleCompleted) setModuleCompleted(true);
   }, []);
+
+  const appliedSyncStatusRef = useRef(null);
+  useEffect(() => {
+    if (session.syncStatus === "syncing") return;
+    if (appliedSyncStatusRef.current === session.syncStatus) return;
+    appliedSyncStatusRef.current = session.syncStatus;
+    const record = sovereignReflection.entries[`${MODULE_ID}:record`]?.response ?? null;
+    applyRecord(record);
+    setHydrated(true);
+  }, [session.syncStatus, sovereignReflection, applyRecord]);
 
   useEffect(() => {
     if (!hydrated) return;
@@ -99,7 +142,11 @@ export default function PolarityModuleExperience({ faculty, onComplete }) {
       artifactGenerated, artifact, artifactSituation, patternStatement,
       artifactCreatedAt, artifactUpdatedAt, moduleCompleted,
     };
-    try { window.localStorage.setItem(STORE_KEY, JSON.stringify(payload)); } catch (e) { /* ignore */ }
+    const t = setTimeout(() => {
+      sovereignReflection.recordReflection(MODULE_ID, "record", payload);
+    }, 800);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hydrated, activeIndex, maxIndex, completedIds, reflection, reflectionSavedAt,
       protocolResponses, protocolDone, protocolStepIndex, artifactGenerated, artifact, artifactSituation,
       patternStatement, artifactCreatedAt, artifactUpdatedAt, moduleCompleted]);
@@ -111,12 +158,47 @@ export default function PolarityModuleExperience({ faculty, onComplete }) {
     return () => clearTimeout(t);
   }, [reflection, hydrated]);
 
+  // Restores which concepts a previously-committed reflection was linked
+  // to — the entry itself is real persisted runtime state, so it's the
+  // source of truth on remount, not this component's own local blob.
+  const reflectionConceptsSeeded = useRef(false);
+  useEffect(() => {
+    const entry = sovereignReflection.entries[`${MODULE_ID}:${SOVEREIGN_STEP_IDS.REFLECTION}`];
+    if (reflectionConceptsSeeded.current) return;
+    if (!entry?.retainedConcepts?.length) return;
+    reflectionConceptsSeeded.current = true;
+    setReflectionLinkedConcepts(entry.retainedConcepts);
+  }, [sovereignReflection]);
+
   const currentSection = CURRICULUM_SECTIONS[activeIndex];
   const progressPct = Math.round(((maxIndex + 1) / CURRICULUM_SECTIONS.length) * 100);
+
+  /* conceptSlug/reflectionEntry/protocolLogged below follow the exact
+     pattern proven in VibrationModuleExperience.jsx (see docs/
+     ARCHITECTURE.md, "post-migration correction"): real content -> a
+     gated real action -> a real runtime dispatch -> a real shared
+     visual component reading live state. */
+  const conceptSlug = (c) => c.title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+  const toggleConcept = (i) => setOpenConcept((cur) => (cur === i ? null : i));
+  const reflectionEntry = sovereignReflection.entries[`${MODULE_ID}:${SOVEREIGN_STEP_IDS.REFLECTION}`] ?? null;
+  const reflectionCommitted = reflectionEntry?.status === "committed";
+  const recognizedConcepts = sovereignModule?.selectedConcepts ?? [];
+  const conceptLabel = (slug) => KEY_CONCEPTS.find((c) => conceptSlug(c) === slug)?.title ?? slug;
+  const toggleReflectionConcept = (slug) =>
+    setReflectionLinkedConcepts((prev) => (prev.includes(slug) ? prev.filter((s) => s !== slug) : [...prev, slug]));
+  const commitReflection = () => {
+    const text = reflection.trim();
+    if (!text) return;
+    sovereignReflection.commitReflection(SOVEREIGN_STEP_IDS.REFLECTION, text, reflectionLinkedConcepts, MODULE_ID);
+  };
+  const protocolLogged = synthesis.protocolExecutions.some(
+    (execution) => execution.moduleId === MODULE_ID && execution.protocolId === "spectrum-shift"
+  );
 
   const goToIndex = (index) => {
     setActiveIndex(index);
     setMaxIndex((m) => Math.max(m, index));
+    sovereignModule?.advanceStep(sovereignStepIdForSection(CURRICULUM_SECTIONS[index].id));
   };
 
   const markCompleteAndAdvance = () => {
@@ -138,7 +220,14 @@ export default function PolarityModuleExperience({ faculty, onComplete }) {
   };
 
   /* --------------------------------------------------------------- ARTIFACT -- */
+  /* generateArtifact() only ever runs once handlePrimaryAction has already
+     confirmed protocolComplete (all five Spectrum Shift steps actually
+     run) — the same real-work gate the Protocol step's own runtime
+     criterion needs, so this is the one correct place to log the
+     execution: piggybacking on an already-gated, already-explicit user
+     action rather than adding a second button that duplicates it. */
   const generateArtifact = () => {
+    synthesis.executeProtocol("spectrum-shift", { responses: protocolResponses }, MODULE_ID);
     const r = protocolResponses;
     setArtifact({
       binary: r.poles || "The false binary you named in the Protocol.",
@@ -346,9 +435,11 @@ export default function PolarityModuleExperience({ faculty, onComplete }) {
                 <div style={{ display: "grid", gap: 10, marginTop: 18 }}>
                   {KEY_CONCEPTS.map((c, i) => {
                     const open = openConcept === i;
+                    const slug = conceptSlug(c);
+                    const inGraph = concepts.selected.includes(slug);
                     return (
                       <div className={`rup-acc${open ? " is-open" : ""}`} key={c.n}>
-                        <button type="button" className="rup-acc-head" onClick={() => setOpenConcept(open ? null : i)} aria-expanded={open}>
+                        <button type="button" className="rup-acc-head" onClick={() => toggleConcept(i)} aria-expanded={open}>
                           <span className="rup-acc-mark">{c.n}</span>
                           <span style={{ flex: 1, minWidth: 0 }}>
                             <span className="rup-acc-title" style={{ display: "block" }}>{c.title}</span>
@@ -363,11 +454,25 @@ export default function PolarityModuleExperience({ faculty, onComplete }) {
                               <div className="rup-practice-tag">PRACTICE</div>
                               <div className="rup-practice-txt">{c.practice}</div>
                             </div>
+                            {/* Real work (having actually opened and read this
+                                concept) gates the graph, same as Vibration's
+                                self-audit gate — weaker signal since this
+                                module has no per-concept audit, but still real
+                                engagement rather than an automatic add. */}
+                            <button type="button" className="rup-btn" style={{ marginTop: 12 }}
+                              disabled={inGraph}
+                              onClick={() => concepts.selectConcept(slug, MODULE_ID)}>
+                              {inGraph ? "In your concept graph" : "Add to concept graph"}
+                            </button>
                           </div>
                         )}
                       </div>
                     );
                   })}
+                </div>
+                <div style={{ marginTop: 32 }}>
+                  <div className="rup-panel-label">YOUR CONCEPT GRAPH</div>
+                  <div style={{ marginTop: 10 }}><ConceptGraphView /></div>
                 </div>
               </section>
             )}
@@ -520,6 +625,33 @@ export default function PolarityModuleExperience({ faculty, onComplete }) {
                 <div className="rup-save" style={{ marginTop: 10 }}>
                   {reflectionSavedAt ? `SAVED · LAST SAVED ${new Date(reflectionSavedAt).toLocaleTimeString()}` : "Not yet saved"}
                 </div>
+
+                {recognizedConcepts.length > 0 && (
+                  <div style={{ marginTop: 20 }}>
+                    <div className="rup-panel-label">WHICH RECOGNIZED CONCEPTS DOES THIS CONNECT TO?</div>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 8 }}>
+                      {recognizedConcepts.map((slug) => (
+                        <button type="button" key={slug} className="rup-btn"
+                          aria-pressed={reflectionLinkedConcepts.includes(slug)}
+                          style={{ opacity: reflectionLinkedConcepts.includes(slug) ? 1 : 0.55 }}
+                          onClick={() => toggleReflectionConcept(slug)}>
+                          {conceptLabel(slug)}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                <button type="button" className="rup-btn" style={{ marginTop: 16 }}
+                  disabled={!reflection.trim()} onClick={commitReflection}>
+                  {reflectionCommitted ? "Reflection committed — recommit with changes" : "Commit reflection"}
+                </button>
+                {reflectionCommitted && (
+                  <div className="rup-save" style={{ marginTop: 8 }}>
+                    Committed{reflectionLinkedConcepts.length > 0
+                      ? ` — linked to ${reflectionLinkedConcepts.length} concept${reflectionLinkedConcepts.length === 1 ? "" : "s"} in your concept graph.`
+                      : "."}
+                  </div>
+                )}
               </section>
             )}
 
@@ -544,6 +676,11 @@ export default function PolarityModuleExperience({ faculty, onComplete }) {
                     </button>
                   ))}
                 </div>
+                {protocolLogged && (
+                  <div className="rup-save" style={{ marginBottom: 14 }}>
+                    Logged to your synthesis record — this is what the Artifact Compiler and the VMA see.
+                  </div>
+                )}
 
                 <div className="rup-panel accent">
                   <div className="rup-h3">{currentStep.n} · {currentStep.t}</div>

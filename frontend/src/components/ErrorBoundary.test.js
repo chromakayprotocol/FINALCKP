@@ -1,10 +1,11 @@
+import { describe, test, expect, beforeEach, afterEach, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import ErrorBoundary from './ErrorBoundary';
 
 describe('ErrorBoundary', () => {
   // Mock console.error to avoid noise during tests
   beforeEach(() => {
-    jest.spyOn(console, 'error').mockImplementation(() => {});
+    vi.spyOn(console, 'error').mockImplementation(() => {});
   });
 
   afterEach(() => {
@@ -63,16 +64,23 @@ describe('ErrorBoundary', () => {
 
     expect(screen.getByText('Something went wrong')).toBeInTheDocument();
 
-    // After clicking Try Again, if child no longer throws, it should render normally
-    const tryAgainBtn = screen.getByText('Try Again');
-    fireEvent.click(tryAgainBtn);
-
-    // After reset, render a working component
+    // ErrorBoundary.jsx's resetError() only clears hasError -- it doesn't
+    // re-run whatever fixed the underlying problem, and React doesn't
+    // clear a caught error just because a boundary's children prop
+    // changes. So the realistic order is: whatever was going to fix the
+    // problem happens first (here, simulated by rerendering with content
+    // that no longer throws, while the boundary is still showing its
+    // fallback), *then* the user clicks Try Again to actually leave the
+    // fallback UI -- not the other way around.
     rerender(
       <ErrorBoundary>
         <div>Test Content</div>
       </ErrorBoundary>
     );
+    expect(screen.getByText('Something went wrong')).toBeInTheDocument();
+
+    const tryAgainBtn = screen.getByText('Try Again');
+    fireEvent.click(tryAgainBtn);
 
     expect(screen.getByText('Test Content')).toBeInTheDocument();
   });

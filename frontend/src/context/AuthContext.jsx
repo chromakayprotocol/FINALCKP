@@ -118,7 +118,7 @@ export const AuthProvider = ({ children }) => {
     return appUser;
   };
 
-  const socialLogin = async (provider, redirectPath = '/acts') => {
+  const socialLogin = async (provider, redirectPath = '/experiencemode/sovereign') => {
     const supabase = await getAuthClient();
     if (!supabase) throw new Error('Supabase is not configured. Check frontend environment variables.');
 

@@ -1,8 +1,16 @@
 import React, { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { loadUserProgress, saveUserProgress } from "../../../lib/supabase/reclamationUniversity";
+import { useSovereign, SOVEREIGN_STEP_IDS } from "../../../sovereign/runtime";
+import ConceptGraphView from "../../../components/sovereign-os/ConceptGraphView";
 import useFooterOffset from "./useFooterOffset";
 import "./vibrationModuleExperience.css";
+
+/* Stable, readable concept ids from this module's own real content
+   (CONCEPTS below), not generic placeholders — "01 MOVEMENT IS OFTEN
+   INVISIBLE" becomes movement-is-often-invisible. */
+function conceptSlug(concept) {
+  return concept.title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+}
 
 /* ============================================================================
    RECLAMATION UNIVERSITY — HERMETIC HALL
@@ -275,6 +283,35 @@ const TABS = [
   { id: "summary", label: "Summary", phase: "INTEGRATE", action: "Return to Hermetic Hall", time: "3 min",
     skill: "Making detection a standing habit" },
 ];
+
+/* TABS above and SOVEREIGN_STEPS (sovereignSteps.js) describe the same
+   eleven-step arc in the same order — this is the missing link between
+   them. Visiting a tab now tells the runtime's step engine that step was
+   actually viewed (module.advanceStep), which is what most of
+   SOVEREIGN_STEPS' isComplete criteria check (viewed(stepId)). Before
+   this, the local `tab` useState and the runtime's step engine were two
+   parallel systems that never spoke: a learner could read all eleven
+   tabs and the runtime would still report every "viewed" step as
+   incomplete forever, because nothing ever called advanceStep. Key
+   Concepts, Reflection, and Protocol have their own, stricter,
+   real-work criteria (a concept actually selected, a reflection actually
+   committed, a protocol actually logged) — calling advanceStep for them
+   too is harmless (it only affects currentStep/viewedSteps, not those
+   criteria) and keeps this one array as the single source of the
+   tab-id -> step-id mapping. */
+const TAB_STEP_IDS = TABS.map((t) => ({
+  intro: SOVEREIGN_STEP_IDS.INTRO,
+  principle: SOVEREIGN_STEP_IDS.PRINCIPLE,
+  concepts: SOVEREIGN_STEP_IDS.KEY_CONCEPTS,
+  why: SOVEREIGN_STEP_IDS.WHY_IT_MATTERS,
+  domains: SOVEREIGN_STEP_IDS.DOMAINS,
+  reclamation: SOVEREIGN_STEP_IDS.RECLAMATION,
+  lens: SOVEREIGN_STEP_IDS.LENS_2026,
+  reflection: SOVEREIGN_STEP_IDS.REFLECTION,
+  protocol: SOVEREIGN_STEP_IDS.PROTOCOL,
+  artifact: SOVEREIGN_STEP_IDS.ARTIFACT,
+  summary: SOVEREIGN_STEP_IDS.SUMMARY,
+}[t.id]));
 
 /* One tap, early. Converts the Intro from reading into recognition. */
 const INTRO_CHECK = {
@@ -736,7 +773,7 @@ function AuditStrip({ audit, value, onPick }) {
 /* One of the four operating principles. Collapsed it shows the claim; opened
    it shows the argument and then hands the learner the self-audit, so the
    concept always ends in something they do rather than something they read. */
-function Accordion({ item, open, audit, auditValue, onAudit, onToggle }) {
+function Accordion({ item, open, audit, auditValue, onAudit, onToggle, inGraph, onAddToGraph }) {
   const panelId = `rux-acc-${item.n}`;
   return (
     <div className={`rux-acc${open ? " is-open" : ""}`}>
@@ -759,6 +796,36 @@ function Accordion({ item, open, audit, auditValue, onAudit, onToggle }) {
             <div className="rux-practice-txt">{item.practice}</div>
           </div>
           <AuditStrip audit={audit} value={auditValue} onPick={onAudit} />
+          {/* Real work (running the self-audit) is the gate — the graph
+              reflects what was actually engaged with, not what's merely
+              expanded. auditValue != null, not truthy: picking the very
+              first option in the list sets it to index 0, and `0 && (...)`
+              is falsy -- a real bug caught by an actual click on the
+              first option, not by reading this code, which is exactly
+              why the gate now checks for "was an option picked at all"
+              instead of "is the picked index truthy". */}
+          {auditValue != null && (
+            <button
+              type="button"
+              className="rux-acc-add-graph"
+              onClick={onAddToGraph}
+              disabled={inGraph}
+              style={{
+                marginTop: 12,
+                padding: "6px 14px",
+                fontSize: 11,
+                letterSpacing: "0.12em",
+                textTransform: "uppercase",
+                border: "1px solid rgba(239,68,68,0.4)",
+                borderRadius: 999,
+                background: inGraph ? "rgba(239,68,68,0.12)" : "transparent",
+                color: "#fca5a5",
+                cursor: inGraph ? "default" : "pointer",
+              }}
+            >
+              {inGraph ? "In your concept graph" : "Add to concept graph"}
+            </button>
+          )}
         </div>
       )}
     </div>
@@ -827,11 +894,50 @@ function ManualPlate({ v, sealed }) {
 }
 
 /* =========================================================== MAIN ========= */
-const STORE_KEY = "ckp-hermetic-hall-module-3";
 const MODULE_ID = "hermetic-hall/vibration";
 
+/* Persistence (Phase 8 of the Sovereign OS migration, docs/ARCHITECTURE.md)
+   used to be hand-rolled here: a raw localStorage read/write plus a call to
+   saveUserProgress() whose actual argument shape didn't match what that
+   function destructures, so `progress`/`state`/`completed` were silently
+   dropped and every save quietly wiped this module's remote progress back
+   to empty defaults (SOVEREIGN_STATE_MAP.md duplication finding #1/#2).
+   This wrapper swaps that for the Sovereign Runtime's local+remote sync,
+   which doesn't have that failure mode and works while signed out. It's a
+   persistence-layer swap only — this module's own reflect/plate/steps/
+   audits state still lives in plain useState below; a full structural
+   migration onto the runtime's typed module/reflection/artifact domains is
+   future work, not this pass.
+
+   Phase 15 follow-up (docs/ARCHITECTURE.md): no longer mounts its own
+   SovereignProvider — ReclamationModulePage.jsx hoists one shared provider
+   above all seven Hermetic Hall module components so state survives
+   navigating between modules. */
 export default function VibrationModuleExperience({ module, faculty, onComplete }) {
   const navigate = useNavigate();
+  const { reflection, session, concepts, curriculum, synthesis, module: sovereignModule } = useSovereign();
+
+  /* Registers this as the active Sovereign module so concepts selected
+     below are attributed to it (curriculum.modules['hermetic-hall/
+     vibration'].selectedConcepts), not left module-unscoped. Previously
+     never called — this component ran under the hoisted SovereignProvider
+     but never told the runtime it was the active module. */
+  useEffect(() => {
+    curriculum.startModule(MODULE_ID);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  /* Marks the initial tab (Intro) as viewed once this module actually
+     becomes the active one in the runtime — startModule() above dispatches
+     but doesn't take effect until the next render, so sovereignModule is
+     still null on the very first pass through the effect above. Every
+     later tab visit is covered by go() itself; this only covers the one
+     tab a learner sees without ever calling go(). */
+  useEffect(() => {
+    if (!sovereignModule) return;
+    sovereignModule.advanceStep(TAB_STEP_IDS[0]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sovereignModule?.moduleId]);
   const [tab, setTab] = useState(0);
   const [maxTab, setMaxTab] = useState(0);
   const [openConcepts, setOpenConcepts] = useState([0]);
@@ -840,6 +946,7 @@ export default function VibrationModuleExperience({ module, faculty, onComplete 
   const [hoverWave, setHoverWave] = useState(false);
   const [lyricOpen, setLyricOpen] = useState(false);
   const [reflect, setReflect] = useState({ primary: "", s1: "", s2: "", s3: "", s4: "" });
+  const [reflectionLinkedConcepts, setReflectionLinkedConcepts] = useState([]);
   const [steps, setSteps] = useState([]);
   const [audits, setAudits] = useState({});
   const [introPick, setIntroPick] = useState(null);
@@ -869,6 +976,7 @@ export default function VibrationModuleExperience({ module, faculty, onComplete 
     const n = Math.max(0, Math.min(TABS.length - 1, i));
     setTab(n);
     setMaxTab((m) => Math.max(m, n));
+    sovereignModule?.advanceStep(TAB_STEP_IDS[n]);
     if (topRef.current) topRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
     // The strip scrolls independently of the page, so the newly selected tab
     // has to be brought into it or advancing can select something off-screen.
@@ -899,6 +1007,47 @@ export default function VibrationModuleExperience({ module, faculty, onComplete 
   };
 
   const toggle = (arr, set, i) => set(arr.includes(i) ? arr.filter((x) => x !== i) : [...arr, i]);
+
+  /* Structured Reflection (Phase 12, sovereignActions.js) made real: the
+     Reflection step's own runtime completion criterion checks for a
+     committed entry at promptId SOVEREIGN_STEP_IDS.REFLECTION — this
+     module used to only ever write its whole local state under promptId
+     "record" (see the persistence effect below), so that criterion could
+     never actually become true no matter what the learner wrote here.
+     Committing here also runs the real "Decision" stage: concepts the
+     learner ties this reflection to become real Concept Graph facts via
+     retainedConcepts, the same as the Key Concepts step's "Add to concept
+     graph" button. */
+  const reflectionEntry = reflection.entries[`${MODULE_ID}:${SOVEREIGN_STEP_IDS.REFLECTION}`] ?? null;
+  const reflectionCommitted = reflectionEntry?.status === "committed";
+  const recognizedConcepts = sovereignModule?.selectedConcepts ?? [];
+  const conceptLabel = (slug) => CONCEPTS.find((c) => conceptSlug(c) === slug)?.title ?? slug;
+  const toggleReflectionConcept = (slug) => toggle(reflectionLinkedConcepts, setReflectionLinkedConcepts, slug);
+  const commitPrimaryReflection = () => {
+    const text = reflect.primary.trim();
+    if (!text) return;
+    reflection.commitReflection(SOVEREIGN_STEP_IDS.REFLECTION, text, reflectionLinkedConcepts, MODULE_ID);
+  };
+
+  /* Same gap, one step later: the Protocol step's own runtime criterion
+     (sovereignSteps.js) checks synthesis.protocolExecutions for an entry
+     scoped to this module — nothing here ever wrote one, so it could
+     never become true either, no matter how many of the five field-
+     exercise steps a learner actually marked. Logging is an explicit
+     action (not an effect firing the moment the 5th box is checked) so
+     it matches the rest of this module's gated-button language, and
+     stays gated on having marked every step, not just opened the tab. */
+  const protocolLogged = synthesis.protocolExecutions.some(
+    (execution) => execution.moduleId === MODULE_ID && execution.protocolId === "frequency-check"
+  );
+  const logProtocolRun = () => {
+    if (steps.length !== PROTOCOL_STEPS.length) return;
+    synthesis.executeProtocol(
+      "frequency-check",
+      { stepsRun: steps.map((i) => PROTOCOL_STEPS[i].t) },
+      MODULE_ID
+    );
+  };
 
   // The reflection prompt seeds the artifact — a pathway between tabs, not a repeated task.
   useEffect(() => {
@@ -933,9 +1082,15 @@ export default function VibrationModuleExperience({ module, faculty, onComplete 
   const drifting = motion - progress >= 30;
 
   /* --- PERSISTENCE ---------------------------------------------------------
-     Supabase is the record of truth so the Manual follows the learner across
-     devices. localStorage mirrors it so a signed-out or offline session still
-     keeps the learner's work. Neither failing blocks the lesson. */
+     Local restore is synchronous (SovereignProvider hydrates from
+     localStorage before first paint), so it's applied as soon as this
+     effect first runs. If signed in, Supabase reconciliation happens
+     shortly after in the background (session.syncStatus: local -> syncing
+     -> synced/error); when it settles, the record is applied a second time
+     to pick up anything that only existed remotely (e.g. progress made on
+     another device). appliedSyncStatusRef guards against reapplying on
+     every render — this component's own saves change `reflection` too, but
+     don't change syncStatus, so they don't retrigger this. */
   const applyRecord = useCallback((d) => {
     if (!d) return;
     if (d.reflect) setReflect((p) => ({ ...p, ...d.reflect }));
@@ -948,39 +1103,39 @@ export default function VibrationModuleExperience({ module, faculty, onComplete 
     if (d.plate && Object.values(d.plate).some(Boolean)) seeded.current = true;
   }, []);
 
+  const appliedSyncStatusRef = useRef(null);
   useEffect(() => {
-    let live = true;
-    (async () => {
-      let record = null;
-      try {
-        const local = window.localStorage.getItem(STORE_KEY);
-        if (local) record = JSON.parse(local);
-      } catch (e) { /* private mode or disabled storage */ }
-      try {
-        const { data } = await loadUserProgress(MODULE_ID);
-        const remote = data?.state ? (typeof data.state === "string" ? JSON.parse(data.state) : data.state) : null;
-        if (remote) record = { ...record, ...remote };
-      } catch (e) { /* signed out or offline — local record still applies */ }
-      if (live) { applyRecord(record); setHydrated(true); }
-    })();
-    return () => { live = false; };
-  }, [applyRecord]);
+    if (session.syncStatus === "syncing") return;
+    if (appliedSyncStatusRef.current === session.syncStatus) return;
+    appliedSyncStatusRef.current = session.syncStatus;
+    const record = reflection.entries[`${MODULE_ID}:record`]?.response ?? null;
+    applyRecord(record);
+    setHydrated(true);
+  }, [session.syncStatus, reflection, applyRecord]);
+
+  // Restores which concepts a previously-committed reflection was linked to
+  // — the entry itself is real persisted runtime state (unlike the rest of
+  // this component's fields, mirrored above only in the "record" blob), so
+  // its own retainedConcepts is the source of truth on remount, not localStorage.
+  const reflectionConceptsSeeded = useRef(false);
+  useEffect(() => {
+    if (reflectionConceptsSeeded.current) return;
+    if (!reflectionEntry?.retainedConcepts?.length) return;
+    reflectionConceptsSeeded.current = true;
+    setReflectionLinkedConcepts(reflectionEntry.retainedConcepts);
+  }, [reflectionEntry]);
 
   useEffect(() => {
     if (!hydrated) return;
     setSaveState("saving");
     const payload = { reflect, plate, steps, audits, introPick, maxTab, complete };
-    const t = setTimeout(async () => {
-      let ok = false;
-      try { window.localStorage.setItem(STORE_KEY, JSON.stringify(payload)); ok = true; } catch (e) { /* ignore */ }
-      try {
-        await saveUserProgress({ moduleId: MODULE_ID, progress: work.pct, state: payload, completed: complete });
-        ok = true;
-      } catch (e) { /* offline — local mirror stands */ }
-      setSaveState(ok ? "saved" : "off");
+    const t = setTimeout(() => {
+      reflection.recordReflection(MODULE_ID, "record", payload);
+      setSaveState("saved");
     }, 800);
     return () => clearTimeout(t);
-  }, [reflect, plate, steps, audits, introPick, maxTab, complete, hydrated, work.pct]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [reflect, plate, steps, audits, introPick, maxTab, complete, hydrated]);
 
   const phases = useMemo(() => {
     const out = [];
@@ -1277,11 +1432,24 @@ export default function VibrationModuleExperience({ module, faculty, onComplete 
                     const narrow = typeof window !== "undefined" && window.innerWidth < 900;
                     if (narrow) setOpenConcepts(openConcepts.includes(i) ? [] : [i]);
                     else toggle(openConcepts, setOpenConcepts, i);
-                  }} />
+                  }}
+                  inGraph={concepts.selected.includes(conceptSlug(c))}
+                  onAddToGraph={() => concepts.selectConcept(conceptSlug(c))} />
               ))}
             </div>
             <div className="rux-count">
               {Object.keys(audits).length}/4 SELF-AUDITS RUN
+            </div>
+
+            {/* The instrument this step actually builds: not a count, a
+                live, interactive graph of what's been added — same
+                ConceptGraphView Phase 16 built, reading the real
+                concepts.selected/connections this module's own audits
+                just wrote to. Empty until something's genuinely earned
+                a place in it. */}
+            <div style={{ marginTop: 32 }}>
+              <div className="rux-eyebrow">YOUR CONCEPT GRAPH</div>
+              <ConceptGraphView />
             </div>
           </section>
         )}
@@ -1552,6 +1720,48 @@ export default function VibrationModuleExperience({ module, faculty, onComplete 
               <div className="rux-note rux-note-top">
                 Stays on this device. Nothing is submitted. This answer carries forward into your Energy Map.
               </div>
+
+              {recognizedConcepts.length > 0 && (
+                <div style={{ marginTop: 20 }}>
+                  <div className="rux-field-k is-accent">WHICH RECOGNIZED CONCEPTS DOES THIS CONNECT TO?</div>
+                  <div className="rux-chips" style={{ marginTop: 8 }}>
+                    {recognizedConcepts.map((slug) => (
+                      <button type="button" key={slug}
+                        className={`rux-chip${reflectionLinkedConcepts.includes(slug) ? " on" : ""}`}
+                        aria-pressed={reflectionLinkedConcepts.includes(slug)}
+                        onClick={() => toggleReflectionConcept(slug)}>
+                        {conceptLabel(slug)}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Real work (a written reflection) gates the commit — same
+                  pattern as the Key Concepts self-audit gate. */}
+              <button type="button" onClick={commitPrimaryReflection}
+                disabled={!reflect.primary.trim()}
+                style={{
+                  marginTop: 18,
+                  padding: "8px 18px",
+                  fontSize: 11,
+                  letterSpacing: "0.12em",
+                  textTransform: "uppercase",
+                  border: "1px solid rgba(239,68,68,0.4)",
+                  borderRadius: 999,
+                  background: reflectionCommitted ? "rgba(239,68,68,0.12)" : "transparent",
+                  color: reflect.primary.trim() ? "#fca5a5" : "#5c4646",
+                  cursor: reflect.primary.trim() ? "pointer" : "default",
+                }}>
+                {reflectionCommitted ? "Reflection committed — recommit with changes" : "Commit reflection"}
+              </button>
+              {reflectionCommitted && (
+                <div className="rux-note rux-note-top">
+                  Committed{reflectionLinkedConcepts.length > 0
+                    ? ` — linked to ${reflectionLinkedConcepts.length} concept${reflectionLinkedConcepts.length === 1 ? "" : "s"} in your concept graph.`
+                    : "."}
+                </div>
+              )}
             </div>
 
             <div className="rux-panel-label" style={{ margin: "34px 0 14px" }}>SUPPORTING PROMPTS</div>
@@ -1618,6 +1828,30 @@ export default function VibrationModuleExperience({ module, faculty, onComplete 
             <div className="rux-count">
               {steps.length}/5 STEPS MARKED
             </div>
+
+            {/* Real work (all five steps actually marked) gates the log —
+                same pattern as the Key Concepts and Reflection gates. */}
+            <button type="button" onClick={logProtocolRun}
+              disabled={steps.length !== PROTOCOL_STEPS.length}
+              style={{
+                marginTop: 14,
+                padding: "8px 18px",
+                fontSize: 11,
+                letterSpacing: "0.12em",
+                textTransform: "uppercase",
+                border: "1px solid rgba(239,68,68,0.4)",
+                borderRadius: 999,
+                background: protocolLogged ? "rgba(239,68,68,0.12)" : "transparent",
+                color: steps.length === PROTOCOL_STEPS.length ? "#fca5a5" : "#5c4646",
+                cursor: steps.length === PROTOCOL_STEPS.length ? "pointer" : "default",
+              }}>
+              {protocolLogged ? "Protocol run logged — log again" : "Log this protocol run"}
+            </button>
+            {protocolLogged && (
+              <div className="rux-note rux-note-top">
+                Logged to your synthesis record — this is what the Artifact Compiler and the VMA see.
+              </div>
+            )}
 
             <hr className="rux-rule" />
 

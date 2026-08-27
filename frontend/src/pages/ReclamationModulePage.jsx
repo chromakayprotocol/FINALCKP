@@ -1,5 +1,7 @@
 import { useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import { SovereignProvider } from '../sovereign/runtime';
 import ReclamationModuleEngine from '../modules/sovereign/reclamation-university/ReclamationModuleEngine';
 import HermeticCurriculumModule from '../modules/sovereign/reclamation-university/HermeticCurriculumModule';
 import HermeticSuppliedModuleExperience from '../modules/sovereign/reclamation-university/HermeticSuppliedModuleExperience';
@@ -22,10 +24,24 @@ import { HERMETIC_HALL_FACULTY, getHermeticHallModule } from '../data/hermeticHa
  * dedicated, fully-authored experience with instrumented progress. Gender is the
  * seventh and final principle, so it completes back to the Hall rather than
  * onward. Non-Hermetic-Hall faculties use the original module engine.
+ *
+ * Phase 15 follow-up (docs/ARCHITECTURE.md): the six Sovereign-consuming
+ * Hermetic Hall experiences below used to each mount their own
+ * SovereignProvider, so navigating from one module to the next (the normal
+ * onComplete flow) remounted a fresh instance and lost in-memory state —
+ * "did module A's concept selection survive into module B" was never
+ * actually true. React Router keeps this page's own component instance
+ * mounted across :moduleSlug changes (same matched Route, just new params),
+ * so hoisting one SovereignProvider here — around only the six components
+ * that actually read useSovereign(), not HermeticCurriculumModule or
+ * ReclamationModuleEngine, which don't — makes that memory real without
+ * touching any of those six components' own internals beyond removing their
+ * now-redundant individual providers.
  */
 export default function ReclamationModulePage() {
   const navigate = useNavigate();
   const { facultySlug, moduleSlug } = useParams();
+  const { user } = useAuth();
 
   const isHermeticHall = facultySlug === HERMETIC_HALL_FACULTY.slug;
   const faculty = useMemo(
@@ -63,8 +79,10 @@ export default function ReclamationModulePage() {
     );
   }
 
+  let hermeticHallElement = null;
+
   if (isHermeticHall && module.slug === 'vibration') {
-    return (
+    hermeticHallElement = (
       <VibrationModuleExperience
         module={module}
         faculty={faculty}
@@ -73,10 +91,8 @@ export default function ReclamationModulePage() {
         }
       />
     );
-  }
-
-  if (isHermeticHall && module.slug === 'polarity') {
-    return (
+  } else if (isHermeticHall && module.slug === 'polarity') {
+    hermeticHallElement = (
       <PolarityModuleExperience
         module={module}
         faculty={faculty}
@@ -85,10 +101,8 @@ export default function ReclamationModulePage() {
         }
       />
     );
-  }
-
-  if (isHermeticHall && module.slug === 'rhythm') {
-    return (
+  } else if (isHermeticHall && module.slug === 'rhythm') {
+    hermeticHallElement = (
       <RhythmModuleExperience
         module={module}
         faculty={faculty}
@@ -97,10 +111,8 @@ export default function ReclamationModulePage() {
         }
       />
     );
-  }
-
-  if (isHermeticHall && module.slug === 'cause-and-effect') {
-    return (
+  } else if (isHermeticHall && module.slug === 'cause-and-effect') {
+    hermeticHallElement = (
       <CauseEffectModuleExperience
         module={module}
         faculty={faculty}
@@ -109,10 +121,8 @@ export default function ReclamationModulePage() {
         }
       />
     );
-  }
-
-  if (isHermeticHall && module.slug === 'gender') {
-    return (
+  } else if (isHermeticHall && module.slug === 'gender') {
+    hermeticHallElement = (
       <GenderModuleExperience
         module={module}
         faculty={faculty}
@@ -121,10 +131,8 @@ export default function ReclamationModulePage() {
         }
       />
     );
-  }
-
-  if (isHermeticHall && ['mentalism', 'correspondence'].includes(module.slug)) {
-    return (
+  } else if (isHermeticHall && ['mentalism', 'correspondence'].includes(module.slug)) {
+    hermeticHallElement = (
       <HermeticSuppliedModuleExperience
         moduleSlug={module.slug}
         progress={0}
@@ -136,6 +144,15 @@ export default function ReclamationModulePage() {
           )
         }
       />
+    );
+  }
+
+  if (hermeticHallElement) {
+    const namespace = user?.id || 'anonymous';
+    return (
+      <SovereignProvider namespace={namespace} userId={user?.id}>
+        {hermeticHallElement}
+      </SovereignProvider>
     );
   }
 

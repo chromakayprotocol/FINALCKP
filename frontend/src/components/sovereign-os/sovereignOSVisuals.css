@@ -1,0 +1,20 @@
+/* Phase 16 (Visual Interaction Layer) — the flowing-dash animation on a
+   causal concept-connection edge in ConceptGraphView.jsx. A visual cue
+   for "this is a cause -> effect relationship," not decoration attached
+   to state that doesn't exist — the edge itself only renders when
+   concepts.connections actually has a CAUSES-type entry. */
+@keyframes sovereign-causal-flow {
+  to {
+    stroke-dashoffset: -20;
+  }
+}
+
+.sovereign-causal-edge {
+  animation: sovereign-causal-flow 1.2s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sovereign-causal-edge {
+    animation: none;
+  }
+}

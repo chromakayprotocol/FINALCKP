@@ -38,7 +38,10 @@ import './UniversityNexus.css';
 const NAV_ICONS = { Compass, LayoutGrid, Landmark, BookOpen, BookMarked, Gem, Wrench };
 const DOCK_ICONS = { Zap, Target, ScrollText, FlaskConical, ClipboardCheck, GraduationCap };
 
-const HERMETIC_HALL_ROUTE = '/experiencemode/sovereign/reclamation-university';
+// The Hermetic Hall's real gateway screen (radial dial + column/pillar
+// hotspots) — not the base reclamation-university route, which renders the
+// older circular principle-selector viewport instead.
+const HERMETIC_HALL_ROUTE = '/experiencemode/sovereign/reclamation-university/hermetic-hall';
 
 export default function UniversityNexus() {
   const navigate = useNavigate();

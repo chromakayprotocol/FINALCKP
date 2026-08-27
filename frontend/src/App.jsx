@@ -33,7 +33,6 @@ const SelfDirectedSovereignMode = lazy(() => import('./pages/SelfDirectedSoverei
 const CKPVisualizerCore = lazy(() => import('./pages/CKPVisualizerCore'));
 const VisualizerCorePage = lazy(() => import('./pages/experience/VisualizerCorePage'));
 const ActTwoVisualizerPage = lazy(() => import('./pages/experience/ActTwoVisualizerPage'));
-const ReclamationUniversityPage = lazy(() => import('./pages/ReclamationUniversityPage'));
 const ReclamationUniversityNexusPage = lazy(() => import('./pages/ReclamationUniversityNexusPage'));
 const ReclamationFacultyRedirect = lazy(() => import('./pages/ReclamationFacultyRedirect'));
 const ReclamationModulePage = lazy(() => import('./pages/ReclamationModulePage'));
@@ -266,13 +265,15 @@ function AppRoutes() {
         }
       />
 
+      {/* The old circular principle-selector viewport (HermeticHallViewport)
+          used to render here. It's been retired in favor of the Nexus
+          dashboard as the University's home screen -- every "return to
+          university" exit button across the module experiences targets this
+          exact path, so redirecting it (rather than just deleting the route)
+          sends all of them to the Nexus too instead of 404ing. */}
       <Route
         path="/experiencemode/sovereign/reclamation-university"
-        element={
-          <ProtectedRoute withShell={false}>
-            <ReclamationUniversityPage />
-          </ProtectedRoute>
-        }
+        element={<Navigate to="/experiencemode/sovereign/reclamation-university/nexus" replace />}
       />
 
       <Route

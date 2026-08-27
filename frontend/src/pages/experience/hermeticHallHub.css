@@ -72,23 +72,27 @@
 }
 
 /* ------------------------------------------------------------- DIAL --- */
+/* Small/decorative -- the hall + lit columns are the real selection UI. */
 .hh-dial-wrap {
   position: fixed;
   left: 50%;
-  bottom: -2%;
+  bottom: 14px;
   translate: -50% 0;
-  z-index: 6;
-  width: min(760px, 84vw);
+  z-index: 4;
+  width: min(280px, 38vw);
+  pointer-events: none;
 }
 .hh-dial-img {
   width: 100%;
   height: auto;
   display: block;
-  filter: drop-shadow(0 30px 60px rgba(0, 0, 0, 0.6));
+  opacity: 0.9;
+  filter: drop-shadow(0 14px 26px rgba(0, 0, 0, 0.55));
 }
 .hh-dial-hotspots {
   position: absolute;
   inset: 0;
+  pointer-events: auto;
 }
 .hh-wedge {
   position: absolute;

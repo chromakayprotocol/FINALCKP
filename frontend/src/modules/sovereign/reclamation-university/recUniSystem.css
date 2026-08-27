@@ -25,7 +25,7 @@
    • Font sizes live here, not in a JSX style={{}}.
    ========================================================================= */
 
-.rux, .rup, .rur, .ruc, .rug, .hermetic-hall {
+.rux, .rup, .rur, .ruc, .rug, .hme-root, .hermetic-hall {
 
   /* ---------------------------------------------------------------- GROUND */
   --ru-bg:          #08080B;
@@ -428,7 +428,7 @@
 /* ================================================================ A11Y === */
 
 .rux :focus-visible, .rup :focus-visible, .rur :focus-visible,
-.ruc :focus-visible, .rug :focus-visible, .hermetic-hall :focus-visible {
+.ruc :focus-visible, .rug :focus-visible, .hme-root :focus-visible, .hermetic-hall :focus-visible {
   outline: 2px solid var(--ru-gold-bright);
   outline-offset: 2px;
 }
@@ -713,7 +713,7 @@
 /* ================================================================== RWD == */
 
 @media (max-width: 900px) {
-  .rux, .rup, .rur, .ruc, .rug, .hermetic-hall {
+  .rux, .rup, .rur, .ruc, .rug, .hme-root, .hermetic-hall {
     --ru-body: 15.5px;
     --ru-lede: 16.5px;
   }

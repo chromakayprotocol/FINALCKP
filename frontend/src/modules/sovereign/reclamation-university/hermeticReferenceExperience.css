@@ -40,10 +40,10 @@
 .hme-central-question{margin:0 0 18px;padding-bottom:17px;border-bottom:1px solid #7a5721;color:#d3a04b!important;font:italic 1rem/1.4 Georgia,serif!important}
 .hme-principle-copy h2{margin:0 0 10px;color:#dab15e;font:500 1.45rem Cinzel,Georgia,serif;letter-spacing:.08em;text-transform:uppercase}
 .hme-principle-copy>blockquote{margin:0 0 10px;padding:9px 0;border:0;border-top:1px solid #5e441d;border-bottom:1px solid #5e441d;background:none;color:#e7ddcb;font:600 1rem/1.4 Georgia,serif}
-.hme-principle-copy>p:not(.hme-central-question){margin:0 0 10px;color:#cfc3af;font:400 .9rem/1.52 Inter,serif}
+.hme-principle-copy>p:not(.hme-central-question){margin:0 0 12px;color:#cfc3af;font:400 var(--ru-body)/1.6 Georgia,'Times New Roman',serif}
 .hme-principle-copy>aside{display:flex;align-items:center;gap:15px;margin-top:13px;padding:11px 14px;border:1px solid #6b4d20;color:#d7a953}
 .hme-principle-copy>aside svg{flex:0 0 auto}
-.hme-principle-copy>aside em{font-size:.9rem;line-height:1.35}
+.hme-principle-copy>aside em{font-size:var(--ru-body-sm);line-height:1.45}
 .hme-mind-figure{position:relative;min-height:0;margin:0;overflow:hidden}
 .hme-mind-figure>img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;filter:contrast(1.06) brightness(.88)}
 .hme-mind-figure figcaption{position:absolute;top:9%;right:1%;bottom:8%;display:flex;flex-direction:column;justify-content:space-around;width:190px}
@@ -65,21 +65,36 @@
 @media(max-width:820px){.hme-root{height:auto;min-height:100vh;overflow:visible}.hme-header{height:auto;min-height:86px}.hme-brand>strong{font-size:1rem}.hme-brand>small,.hme-brand>i{display:none}.hme-shell{display:block;height:auto}.hme-tabs{padding:10px}.hme-tabs button{height:54px}.hme-tabs button.is-active::after{display:none}.hme-main{display:block;padding:0 10px 12px}.hme-principles{height:100px}.hme-principles button{height:98px}.hme-principles button svg{width:30px;height:30px}.hme-stage{display:block}.hme-lesson-title{padding:18px}.hme-screen{overflow:visible;padding:8px 18px 22px}.hme-principle-feature{display:block}.hme-mind-figure{min-height:440px}.hme-mind-figure figcaption{right:0;width:165px}.hme-footer{display:grid;grid-template-columns:1fr 1fr}.hme-lesson-progress{grid-column:1/-1}.hme-footer button{grid-column:1/-1}}
 @media(min-width:821px) and (max-height:850px){.hme-header{height:82px}.hme-brand>span{width:52px;height:52px}.hme-brand>i{height:48px}.hme-shell{height:calc(100vh - 82px);height:calc(100dvh - 82px)}.hme-tabs{padding-top:10px;padding-bottom:10px}.hme-tabs button{height:56px}.hme-main{grid-template-rows:112px minmax(0,1fr);padding-bottom:12px}.hme-principles,.hme-principles button{height:112px}.hme-principles button svg{width:36px;height:36px}.hme-lesson-title{padding-top:10px;padding-bottom:8px}.hme-lesson-title>span{width:52px;height:52px}.hme-lesson-title h1{font-size:clamp(2rem,3vw,3rem)}}
 
-.hme-lens{display:grid;grid-template-rows:76px minmax(0,1fr);height:100%;min-height:0}
+.hme-lens{display:block}
 .hme-lens>header{display:grid;grid-template-columns:.8fr 1.2fr;align-items:center;gap:34px;padding:0 10px 10px;border-bottom:1px solid #60451d}
-.hme-lens>header>p{margin:0;color:#d6a34a;font:italic .95rem/1.4 Georgia,serif}
+.hme-lens>header>p{margin:0;color:#d6a34a;font:italic var(--ru-body)/1.45 Georgia,serif}
 .hme-lens>header>div{padding-left:30px;border-left:1px solid #8c6426}
 .hme-lens>header h2{margin:0 0 6px;color:#d4a247;font:500 1.3rem Cinzel,Georgia,serif;letter-spacing:.07em;text-transform:uppercase}
-.hme-lens>header span{display:block;max-width:720px;color:#c8bdac;font:.78rem/1.35 Inter,sans-serif}
-.hme-lens-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(3,minmax(0,1fr));gap:8px 12px;min-height:0;padding-top:8px}
-.hme-lens-grid article{display:grid;grid-template-columns:29% minmax(0,1fr);min-height:0;overflow:hidden;border:1px solid #8a6327;background:#050604;box-shadow:inset 0 0 0 3px #100d08}
-.hme-lens-grid article>img{width:100%;height:100%;min-height:0;object-fit:cover;border-right:1px solid #3e3018;filter:brightness(.83) contrast(1.08) saturate(.9)}
-.hme-lens-grid article>div{min-width:0;padding:7px 11px 6px}
+.hme-lens>header span{display:block;max-width:720px;color:#c8bdac;font:var(--ru-caption)/1.45 Inter,sans-serif}
+.hme-lens-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;align-content:start;padding:12px 0 4px}
+.hme-lens-grid article{display:grid;grid-template-columns:132px minmax(0,1fr);min-height:0;border:1px solid #8a6327;background:#050604;box-shadow:inset 0 0 0 3px #100d08}
+.hme-lens-grid article>img{width:100%;height:100%;min-height:132px;align-self:stretch;object-fit:cover;border-right:1px solid #3e3018;filter:brightness(.83) contrast(1.08) saturate(.9)}
+.hme-lens-grid article>div{min-width:0;padding:11px 14px 12px}
 .hme-lens-grid h3{margin:0 0 4px;color:#e2d7c5;font:500 .92rem/1.12 Cinzel,Georgia,serif;letter-spacing:.04em;text-transform:uppercase}
-.hme-lens-grid p{margin:0 0 3px;color:#c9bdab;font:400 clamp(.59rem,.66vw,.72rem)/1.28 Inter,sans-serif}
-.hme-lens-grid p strong{margin-right:4px;color:#d8a43e;font:700 .66rem Cinzel,Georgia,serif;letter-spacing:.04em;text-transform:uppercase}
+.hme-lens-grid p{margin:0 0 7px;color:#c9bdab;font:400 var(--ru-body-sm)/1.5 Inter,sans-serif}
+.hme-lens-grid p strong{margin-right:5px;color:#d8a43e;font:700 var(--ru-label) Cinzel,Georgia,serif;letter-spacing:.04em;text-transform:uppercase}
 .hme-stage-principle .hme-screen{padding-bottom:76px}
 .hme-stage-principle .hme-footer{position:relative;grid-template-columns:185px 240px minmax(0,1fr)}
 .hme-stage-principle .hme-footer>button{position:absolute;right:14px;top:-68px;width:min(390px,38%);height:54px;margin:0}
-@media(max-width:1180px){.hme-lens{grid-template-rows:auto 1fr}.hme-lens>header{grid-template-columns:1fr;gap:7px;padding-bottom:9px}.hme-lens>header>div{padding-left:0;border-left:0}.hme-lens-grid article{grid-template-columns:34% 1fr}.hme-lens-grid h3{font-size:.75rem}.hme-lens-grid p{font-size:var(--ru-label)}}
-@media(max-width:820px){.hme-lens{display:block}.hme-lens>header{display:block;padding:10px 0 18px}.hme-lens>header>div{margin-top:12px}.hme-lens-grid{grid-template-columns:1fr;grid-template-rows:none}.hme-lens-grid article{min-height:190px}.hme-lens-grid h3{font-size:1rem}.hme-lens-grid p{font-size:.78rem}.hme-stage-principle .hme-screen{padding-bottom:22px}.hme-stage-principle .hme-footer{grid-template-columns:1fr 1fr}.hme-stage-principle .hme-footer>button{position:static;width:auto;height:auto;margin:8px;grid-column:1/-1}}
+@media(max-width:1180px){.hme-lens>header{grid-template-columns:1fr;gap:7px;padding-bottom:9px}.hme-lens>header>div{padding-left:0;border-left:0}.hme-lens-grid article{grid-template-columns:104px minmax(0,1fr)}}
+@media(max-width:820px){.hme-lens{display:block}.hme-lens>header{display:block;padding:10px 0 18px}.hme-lens>header>div{margin-top:12px}.hme-lens-grid{grid-template-columns:1fr}.hme-lens-grid article{min-height:170px}.hme-lens-grid h3{font-size:var(--ru-body)}.hme-stage-principle .hme-screen{padding-bottom:22px}.hme-stage-principle .hme-footer{grid-template-columns:1fr 1fr}.hme-stage-principle .hme-footer>button{position:static;width:auto;height:auto;margin:8px;grid-column:1/-1}}
+
+/* The header's progress meter carries a fixed 270px track. Material's own
+   narrow-screen rule collapses it, but this sheet loads afterwards and a media
+   query adds no specificity, so the fixed track won the cascade and pushed the
+   header - and with it the whole document - past the viewport. Restated here,
+   last, where it holds: the meter flexes, the redundant word label goes, and
+   the header keeps a gap between brand and progress. */
+@media(max-width:820px){
+  .hme-header{gap:14px}
+  .hme-brand{min-width:0}
+  .hme-progress{flex:0 1 176px;grid-template-columns:minmax(44px,1fr) auto;gap:10px;margin-right:0;min-width:0}
+  .hme-progress>span{display:none}
+  .hme-progress i{display:block}
+  .hme-progress>strong{font-size:1.15rem}
+}

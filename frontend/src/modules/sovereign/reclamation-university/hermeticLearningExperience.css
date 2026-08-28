@@ -189,7 +189,7 @@
   padding: 16px clamp(18px, 2.7vw, 42px) 44px;
   background:
     linear-gradient(rgba(3, 3, 3, .72), rgba(3, 3, 3, .94)),
-    url("/reclamation-university/hermetic-hall.png") center top / 100% auto no-repeat;
+    url("/reclamation-university/hermetic-hall.webp") center top / 100% auto no-repeat;
 }
 
 .hcm-root .hcm-reader {
@@ -208,7 +208,7 @@
   border-bottom: 1px solid rgba(217, 162, 58, .22);
   background:
     linear-gradient(90deg, rgba(4, 4, 4, .96) 0%, rgba(4, 4, 4, .64) 58%, rgba(4, 4, 4, .9) 100%),
-    url("/reclamation-university/hermetic-hall.png") center 45% / cover;
+    url("/reclamation-university/hermetic-hall.webp") center 45% / cover;
 }
 
 .hcm-root .hcm-lesson-hero::before {

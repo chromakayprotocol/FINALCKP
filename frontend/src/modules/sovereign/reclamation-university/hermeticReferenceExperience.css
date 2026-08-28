@@ -1,5 +1,5 @@
 @import './recUniSystem.css';
-.hme-root{height:100vh;height:100dvh;min-height:0;overflow:hidden;background-color:#030403;background-image:url('/reclamation-university/mentalism-mind-diagram.png');background-repeat:no-repeat;background-position:68% 45%;background-size:58%;font-family:Georgia,'Times New Roman',serif}
+.hme-root{height:100vh;height:100dvh;min-height:0;overflow:hidden;background-color:#030403;background-image:url('/reclamation-university/mentalism-mind-diagram.webp');background-repeat:no-repeat;background-position:68% 45%;background-size:58%;font-family:Georgia,'Times New Roman',serif}
 .hme-root::before{content:"";position:fixed;inset:0;pointer-events:none;background:rgba(1,2,2,.89)}
 .hme-header,.hme-shell{position:relative;z-index:1}
 .hme-header{height:100px;padding:0 30px;border-color:#594019;background:#030403}

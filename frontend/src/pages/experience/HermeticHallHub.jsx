@@ -3,13 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import { loadUserFacultyProgress } from '../../lib/supabase/reclamationUniversity';
 import './hermeticHallHub.css';
 
-// Real production art, hosted on the project's R2 bucket -- see the URL the
-// user supplied directly. Do not swap this for generated/placeholder art.
-// The hall + lit columns are the entire selection surface -- no dial/wheel.
-// NOTE: the "-Online"/"-Online2" variants bake a wheel/dial graphic into the
-// art itself -- do not use them. Hermetic-Hall.png (no suffix) is correct.
+// Real production art, hosted on media.chromakeyprotocol.com (the R2 copies
+// under pub-*.r2.dev were stale/wrong) -- see the URL the user supplied
+// directly. Do not swap this for generated/placeholder art.
 const ASSETS = {
-  hall: 'https://pub-7db585eeeb464a9d9f749f0307532c22.r2.dev/images/shell/Hermetic-Hall.png',
+  hall: 'https://media.chromakeyprotocol.com/images/shell/Hermetic-Hall.png',
 };
 
 // Seven Hermetic principles, left-to-right, matching the column layout in

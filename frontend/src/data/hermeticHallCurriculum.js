@@ -15,7 +15,7 @@ export const HERMETIC_HALL_FACULTY = {
   subtitle: 'Seven principles. Seven paths. One system.',
   description: 'The new Reclamation University begins here.',
   accent: 'antique-gold',
-  artwork: '/reclamation-university/hermetic-hall-selector.png',
+  artwork: '/reclamation-university/hermetic-hall-selector.webp',
   artworkAlt: 'The seven illuminated chambers of the Hermetic Hall',
   modules: principles.map(([slug, title, subtitle], index) => ({
     id: `hermetic-principle-${index + 1}`,

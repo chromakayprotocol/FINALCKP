@@ -1,0 +1,63 @@
+{
+  "category": "kinetic-type",
+  "duration_s": 10,
+  "fps": 30,
+  "canvas": { "w": 1920, "h": 1080, "aspect": "16:9" },
+  "style": "Clean, confident, minimal tech/product intro. Dark charcoal ground, single bold sans-serif hero wordmark, restrained accent color used only for emphasis words and the final lockup underline. No noise, no texture — the motion of the type itself is the whole show.",
+  "palette": ["#0B0D12", "#F5F6F8", "#3B82F6"],
+  "font": "Inter",
+  "beats": [2.5, 6, 8.5],
+  "export": "mp4",
+
+  "asset_needs": [],
+
+  "block": "caption-kinetic-slam",
+  "customize": {
+    "note": "Reuse caption-kinetic-slam for the scene-1 wordmark slam and scene-4 lockup; hand-author scene 2/3 as a simple type-on + wipe using hyperframes-animation kinetic-type rules (no asset dependency)."
+  },
+
+  "content": {
+    "scenes": [
+      {
+        "id": "scene-1-slam",
+        "start": 0,
+        "end": 2.5,
+        "text": "EXAMPLE.COM",
+        "emphasis_words": ["EXAMPLE"],
+        "emotion": "confident, punchy",
+        "motion": "hard slam-in on the wordmark (scale 1.15→1.0 + slight overshoot), emphasis word flashes the accent color for one frame then settles to white",
+        "beats": [0.1, 2.5]
+      },
+      {
+        "id": "scene-2-context",
+        "start": 2.5,
+        "end": 6.0,
+        "text": "A domain reserved for illustrative examples.",
+        "emphasis_words": ["reserved", "examples"],
+        "emotion": "calm, declarative",
+        "motion": "line types on left-to-right with a soft mask wipe (pattern-interrupt from the slam); emphasis words underline-draw in accent color as they land",
+        "beats": [2.6, 6.0]
+      },
+      {
+        "id": "scene-3-cta",
+        "start": 6.0,
+        "end": 8.5,
+        "text": "More information →",
+        "emphasis_words": ["More information"],
+        "emotion": "inviting, forward motion",
+        "motion": "text slides up from baseline with a trailing arrow that draws in and nudges rightward on a loop-out, cueing exit",
+        "beats": [6.0, 8.5]
+      },
+      {
+        "id": "scene-4-lockup",
+        "start": 8.5,
+        "end": 10.0,
+        "text": "EXAMPLE.COM",
+        "emphasis_words": ["EXAMPLE.COM"],
+        "emotion": "settled, final",
+        "motion": "wordmark reassembles at reduced scale into a centered lockup, accent-color underline draws left-to-right beneath it and holds to black",
+        "beats": [8.5, 9.8]
+      }
+    ]
+  }
+}

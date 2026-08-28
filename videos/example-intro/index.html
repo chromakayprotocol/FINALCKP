@@ -1,0 +1,318 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <title>example-intro</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800;900&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        width: 1920px;
+        height: 1080px;
+        margin: 0;
+        overflow: hidden;
+        background: #0b0d12;
+      }
+      body {
+        font-family: "Inter", system-ui, -apple-system, sans-serif;
+      }
+
+      #root {
+        position: relative;
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+        background: var(--bg);
+        --bg: #0b0d12;
+        --ink: #f5f6f8;
+        --accent: #3b82f6;
+        color: var(--ink);
+      }
+
+      .clip {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+      }
+
+      .scene-content {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        width: 100%;
+        height: 100%;
+        padding: 120px 160px;
+        box-sizing: border-box;
+      }
+
+      /* ---------- scene 1: slam wordmark ---------- */
+      #wordmark-1 {
+        font-weight: 800;
+        font-size: 180px;
+        letter-spacing: 0.01em;
+        line-height: 1;
+        white-space: nowrap;
+        opacity: 0;
+      }
+      #word-example-1 {
+        color: var(--accent);
+      }
+      #tld-1 {
+        color: var(--ink);
+      }
+
+      /* ---------- scene 2: type-on + mask wipe ---------- */
+      #mask-wrap-2 {
+        overflow: hidden;
+        clip-path: inset(0 100% 0 0);
+        max-width: 1600px;
+      }
+      #line-2 {
+        font-weight: 500;
+        font-size: 64px;
+        line-height: 1.3;
+        white-space: nowrap;
+      }
+      .em-word {
+        position: relative;
+        color: var(--ink);
+        display: inline-block;
+      }
+      .em-underline {
+        position: absolute;
+        left: 0;
+        bottom: -8px;
+        width: 100%;
+        height: 5px;
+        background: var(--accent);
+        transform: scaleX(0);
+        transform-origin: left center;
+      }
+
+      /* ---------- scene 3: cta ---------- */
+      #cta-3 {
+        display: flex;
+        align-items: center;
+        gap: 28px;
+        opacity: 0;
+      }
+      #cta-text-3 {
+        font-weight: 600;
+        font-size: 76px;
+        white-space: nowrap;
+      }
+      #cta-arrow-3 {
+        display: block;
+      }
+      #arrow-path-3 {
+        stroke-dasharray: 140;
+        stroke-dashoffset: 140;
+      }
+
+      /* ---------- scene 4: lockup ---------- */
+      #lockup-wrap-4 {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+      #wordmark-4 {
+        font-weight: 800;
+        font-size: 100px;
+        letter-spacing: 0.01em;
+        white-space: nowrap;
+      }
+      #word-example-4 {
+        color: var(--ink);
+        opacity: 0;
+      }
+      #tld-4 {
+        color: var(--ink);
+        opacity: 0;
+      }
+      #underline-4 {
+        width: 360px;
+        height: 6px;
+        background: var(--accent);
+        margin-top: 22px;
+        transform: scaleX(0);
+        transform-origin: center;
+      }
+    </style>
+  </head>
+  <body>
+    <div
+      id="root"
+      data-composition-id="example-intro"
+      data-start="0"
+      data-duration="10"
+      data-fps="30"
+      data-width="1920"
+      data-height="1080"
+    >
+      <!-- scene 1: slam-in wordmark (0 - 2.5s) — reuses caption-kinetic-slam's
+           scale/opacity "slam" entrance motif (back.out overshoot ease) -->
+      <div id="scene-1" class="clip" data-start="0" data-duration="2.5" data-track-index="1">
+        <div class="scene-content">
+          <div id="wordmark-1">
+            <span id="word-example-1">EXAMPLE</span><span id="tld-1">.COM</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- scene 2: type-on / mask wipe context line (2.5 - 6.0s) -->
+      <div id="scene-2" class="clip" data-start="2.5" data-duration="3.5" data-track-index="1">
+        <div class="scene-content" style="align-items: center; justify-content: center">
+          <div id="mask-wrap-2">
+            <p id="line-2">
+              A domain
+              <span class="em-word" id="word-reserved"
+                >reserved<span class="em-underline" id="underline-reserved"></span
+              ></span>
+              for illustrative
+              <span class="em-word" id="word-examples"
+                >examples<span class="em-underline" id="underline-examples"></span
+              ></span>.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- scene 3: cta slide-up + drawn arrow (6.0 - 8.5s) -->
+      <div id="scene-3" class="clip" data-start="6.0" data-duration="2.5" data-track-index="1">
+        <div class="scene-content">
+          <div id="cta-3">
+            <span id="cta-text-3">More information</span>
+            <svg id="cta-arrow-3" width="90" height="44" viewBox="0 0 90 44" fill="none">
+              <path
+                id="arrow-path-3"
+                d="M4 22 H76 M54 4 L78 22 L54 40"
+                stroke="#3B82F6"
+                stroke-width="7"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- scene 4: reassembled lockup, reuses the same slam/converge motif
+           as scene 1 at reduced scale (8.5 - 10.0s) -->
+      <div id="scene-4" class="clip" data-start="8.5" data-duration="1.5" data-track-index="1">
+        <div class="scene-content">
+          <div id="lockup-wrap-4">
+            <div id="wordmark-4">
+              <span id="word-example-4">EXAMPLE</span><span id="tld-4">.COM</span>
+            </div>
+            <div id="underline-4"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      window.__timelines = window.__timelines || {};
+      var tl = gsap.timeline({ paused: true });
+
+      /* ===================== scene 1 : slam-in (0 - 2.5s) ===================== */
+      // hard slam: overshoot scale-down landing, per motion-vocabulary "slam" primitive
+      tl.fromTo(
+        "#wordmark-1",
+        { autoAlpha: 0, scale: 1.15, y: -40 },
+        { autoAlpha: 1, scale: 1, y: 0, duration: 0.5, ease: "back.out(2.4)" },
+        0.1,
+      );
+      // emphasis word "EXAMPLE": flashes accent for one frame then settles white
+      tl.set("#word-example-1", { color: "#3B82F6" }, 0.1);
+      tl.to("#word-example-1", { color: "#F5F6F8", duration: 0.18, ease: "power2.out" }, 0.63);
+      // tiny settle shake on landing to sell the slam weight
+      tl.to(
+        "#wordmark-1",
+        { keyframes: [{ x: -4 }, { x: 3 }, { x: 0 }], duration: 0.18, ease: "none" },
+        0.6,
+      );
+
+      /* ================ scene 2 : type-on + mask wipe (2.5 - 6.0s) ============= */
+      var s2 = 2.5;
+      tl.fromTo(
+        "#mask-wrap-2",
+        { clipPath: "inset(0 100% 0 0)" },
+        { clipPath: "inset(0 0% 0 0)", duration: 3.0, ease: "power1.inOut" },
+        s2,
+      );
+      // underline-draw on emphasis words as the wipe passes over them
+      tl.fromTo(
+        "#underline-reserved",
+        { scaleX: 0 },
+        { scaleX: 1, duration: 0.35, ease: "power2.out" },
+        s2 + 0.85,
+      );
+      tl.fromTo(
+        "#underline-examples",
+        { scaleX: 0 },
+        { scaleX: 1, duration: 0.35, ease: "power2.out" },
+        s2 + 2.75,
+      );
+
+      /* ===================== scene 3 : cta (6.0 - 8.5s) ========================= */
+      var s3 = 6.0;
+      tl.fromTo(
+        "#cta-3",
+        { autoAlpha: 0, y: 60 },
+        { autoAlpha: 1, y: 0, duration: 0.6, ease: "power3.out" },
+        s3,
+      );
+      tl.fromTo(
+        "#arrow-path-3",
+        { strokeDashoffset: 140 },
+        { strokeDashoffset: 0, duration: 0.5, ease: "power2.out" },
+        s3 + 0.45,
+      );
+      // finite nudge-right loop-out, cueing the exit
+      tl.to(
+        "#cta-arrow-3",
+        { x: 14, duration: 0.35, ease: "sine.inOut", yoyo: true, repeat: 3 },
+        s3 + 1.05,
+      );
+
+      /* =================== scene 4 : lockup reassembly (8.5 - 10.0s) =========== */
+      var s4 = 8.5;
+      tl.fromTo(
+        "#word-example-4",
+        { autoAlpha: 0, x: -50, scale: 1.3 },
+        { autoAlpha: 1, x: 0, scale: 1, duration: 0.45, ease: "back.out(1.8)" },
+        s4,
+      );
+      tl.fromTo(
+        "#tld-4",
+        { autoAlpha: 0, x: 50, scale: 1.3 },
+        { autoAlpha: 1, x: 0, scale: 1, duration: 0.45, ease: "back.out(1.8)" },
+        s4,
+      );
+      tl.fromTo(
+        "#underline-4",
+        { scaleX: 0 },
+        { scaleX: 1, duration: 0.4, ease: "power2.out" },
+        s4 + 0.5,
+      );
+      // holds on the near-black ground to the end of the composition
+
+      tl.seek(0);
+      window.__timelines["example-intro"] = tl;
+    </script>
+  </body>
+</html>

@@ -2,6 +2,7 @@
 import { Component, useRef, useMemo } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { Center, useGLTF } from '@react-three/drei';
+import { Color } from 'three';
 
 const REACTOR_FALLBACK = '/media/visualizer/audio-reactive-healthy-frequency-sun.svg';
 const REACTOR_MODEL = '/media/visualizer/texturized-new.optimized.glb';
@@ -26,7 +27,7 @@ class ReactorErrorBoundary extends Component {
 }
 
 
-function EmblemMesh({ frequencyData, audioLevel }) {
+function EmblemMesh({ frequencyData, audioLevel, tint }) {
   const groupRef = useRef();
   const materialRefs = useRef([]);
   const { scene } = useGLTF(REACTOR_MODEL);
@@ -34,6 +35,7 @@ function EmblemMesh({ frequencyData, audioLevel }) {
     const clone = scene.clone(true);
     let meshCount = 0;
     const materials = [];
+    const tintColor = tint ? new Color(tint) : null;
 
     materialRefs.current = [];
     clone.traverse((child) => {
@@ -47,6 +49,10 @@ function EmblemMesh({ frequencyData, audioLevel }) {
         clonedMaterial.transparent = true;
         clonedMaterial.alphaTest = 0.08;
         clonedMaterial.depthWrite = false;
+        if (tintColor) {
+          if (clonedMaterial.color) clonedMaterial.color.lerp(tintColor, 0.55);
+          if (clonedMaterial.emissive) clonedMaterial.emissive.lerp(tintColor, 0.4);
+        }
         clonedMaterial.needsUpdate = true;
         materials.push(clonedMaterial);
         return clonedMaterial;
@@ -60,7 +66,7 @@ function EmblemMesh({ frequencyData, audioLevel }) {
     if (!meshCount) throw new Error('The reactor GLB does not contain a mesh.');
     materialRefs.current = materials;
     return clone;
-  }, [scene]);
+  }, [scene, tint]);
 
   useFrame((_, delta) => {
     const data = frequencyData || [];
@@ -103,7 +109,7 @@ function EmblemMesh({ frequencyData, audioLevel }) {
   );
 }
 
-function ReactiveSceneLights({ frequencyData, audioLevel }) {
+function ReactiveSceneLights({ frequencyData, audioLevel, ambientColor, keyColor, fillColor }) {
   const ambientRef = useRef();
   const keyRef = useRef();
   const fillRef = useRef();
@@ -134,21 +140,27 @@ function ReactiveSceneLights({ frequencyData, audioLevel }) {
 
   return (
     <>
-      <ambientLight ref={ambientRef} intensity={1.05} />
-      <pointLight ref={keyRef} position={[2, 2, 3]} intensity={1} color="#fff7ed" />
-      <pointLight ref={fillRef} position={[-2, -1, 2]} intensity={.4} color="#ffd7b5" />
+      <ambientLight ref={ambientRef} intensity={1.05} color={ambientColor || '#fff7ed'} />
+      <pointLight ref={keyRef} position={[2, 2, 3]} intensity={1} color={keyColor || '#fff7ed'} />
+      <pointLight ref={fillRef} position={[-2, -1, 2]} intensity={.4} color={fillColor || '#ffd7b5'} />
     </>
   );
 }
 
-export default function EmblemReactorCore({ frequencyData, audioLevel }) {
+export default function EmblemReactorCore({ frequencyData, audioLevel, tint, ambientColor, keyColor, fillColor }) {
   return (
     <ReactorErrorBoundary
       fallback={<img src={REACTOR_FALLBACK} alt="Musiq Matrix Reclamation frequency reactor" />}
     >
       <Canvas camera={{ position: [0, 0, 2.7], fov: 45 }} gl={{ alpha: true, antialias: true }} style={{ position: 'absolute', inset: 0, zIndex: 2 }}>
-        <ReactiveSceneLights frequencyData={frequencyData} audioLevel={audioLevel} />
-        <EmblemMesh frequencyData={frequencyData} audioLevel={audioLevel} />
+        <ReactiveSceneLights
+          frequencyData={frequencyData}
+          audioLevel={audioLevel}
+          ambientColor={ambientColor}
+          keyColor={keyColor}
+          fillColor={fillColor}
+        />
+        <EmblemMesh frequencyData={frequencyData} audioLevel={audioLevel} tint={tint} />
       </Canvas>
     </ReactorErrorBoundary>
   );

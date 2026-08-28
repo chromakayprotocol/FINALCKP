@@ -304,7 +304,14 @@ export default function ActTwoVisualizerCore({
             </div>
             {isPlaying ? (
               <Suspense fallback={<img src={REACTOR} alt="Musiq Matrix Reflection Chamber frequency reactor" />}>
-                <EmblemReactorCore frequencyData={frequencyData} audioLevel={audioLevel} />
+                <EmblemReactorCore
+                  frequencyData={frequencyData}
+                  audioLevel={audioLevel}
+                  tint="#3fa9dc"
+                  ambientColor="#d2f0fa"
+                  keyColor="#1f6fa8"
+                  fillColor="#b4e6f5"
+                />
               </Suspense>
             ) : (
               <img src={REACTOR} alt="Musiq Matrix Reflection Chamber frequency reactor" />

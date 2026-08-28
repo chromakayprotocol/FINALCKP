@@ -92,12 +92,12 @@ const LABELS = new Set([
 ]);
 
 const LENS_TOPICS = [
-  ["Artificial Intelligence", "artificial-intelligence.png"],
-  ["Social Media", "social-media.png"],
-  ["Digital Identity", "digital-identity.png"],
-  ["Creator Economy", "creator-economy.png"],
-  ["Information Overload", "information-overload.png"],
-  ["Mental Health", "mental-health.png"],
+  ["Artificial Intelligence", "artificial-intelligence.webp"],
+  ["Social Media", "social-media.webp"],
+  ["Digital Identity", "digital-identity.webp"],
+  ["Creator Economy", "creator-economy.webp"],
+  ["Information Overload", "information-overload.webp"],
+  ["Mental Health", "mental-health.webp"],
 ];
 
 function PrincipleStrip({ activePrinciple }) {
@@ -115,7 +115,7 @@ function MentalismPrincipleScreen({ section }) {
       <aside><Brain size={28}/><em>Mind precedes manifestation. Reclaim the patterns through which you engage with the world.</em></aside>
     </div>
     <figure className="hme-mind-figure">
-      <img src="/reclamation-university/mentalism-mind-diagram.png" alt="A gilded Hermetic diagram of the mind shaping thought, belief, reality, and manifestation"/>
+      <img src="/reclamation-university/mentalism-mind-diagram.webp" alt="A gilded Hermetic diagram of the mind shaping thought, belief, reality, and manifestation"/>
       <figcaption>
         <div><Sparkles/><span><strong>Thought</strong><small>The seed of all.</small></span></div>
         <div><Brain/><span><strong>Belief</strong><small>Thought repeated becomes belief.</small></span></div>

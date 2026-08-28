@@ -3,8 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { loadUserFacultyProgress } from '../../lib/supabase/reclamationUniversity';
 import './hermeticHallHub.css';
 
-// Real production art, hosted on the project's R2 bucket -- see the URLs the
-// user supplied directly. Do not swap these for generated/placeholder art.
+// Real production art, hosted on the project's R2 bucket. Do not swap these
+// for generated or placeholder art.
 const ASSETS = {
   hallIdle: 'https://pub-7db585eeeb464a9d9f749f0307532c22.r2.dev/images/shell/Hermetic-Hall.png',
   hallOnline: 'https://pub-7db585eeeb464a9d9f749f0307532c22.r2.dev/images/shell/Hermetic-Hall-Online.png',

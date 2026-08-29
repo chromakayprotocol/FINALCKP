@@ -350,26 +350,35 @@ export default function HermeticHallHub() {
         <span><b>{progressLoaded ? mended.size : '…'}</b> / 7 pillars restored</span>
       </header>
 
-      {/* The Hermetic Wheel -- a persistent HUD dial, docked middle-left.
-          Its seven wedges are the one true way to pick a principle; only
-          live once the Seeker has cleared the briefing and reached the hub. */}
+      {/* The Hermetic Wheel -- a persistent HUD dial mounted flush against
+          the left edge, flat side vertical, arc bulging right toward the
+          stage (I at top through VII at bottom, IV at the widest point).
+          radial-dial.png is authored as a horizontal fan (flat side down);
+          .hh-wheel-rotator turns that whole unit -- art and hit-areas
+          together -- 90 degrees clockwise so the wedge angle math below
+          never has to know about the screen orientation, only its own
+          local, unrotated one. Its seven wedges are the one true way to
+          pick a principle; only live once the Seeker has cleared the
+          briefing and reached the hub. */}
       <div className={`hh-wheel${phase === 'hub' ? ' is-live' : ' is-dormant'}`}>
-        <img className="hh-wheel-art" src={ASSETS.wheel} alt="The Hermetic Wheel" />
-        <div className="hh-wheel-dial">
-          {PRINCIPLES.map((p, i) => (
-            <button
-              key={p.key}
-              type="button"
-              className={`hh-wedge${mended.has(p.key) ? ' is-mended' : ''}${selected?.key === p.key ? ' is-selected' : ''}`}
-              style={{ transform: `translateX(-50%) rotate(${WEDGE_ANGLES[i]}deg)`, '--wedge-color': p.color }}
-              onClick={() => handleSelectWedge(p)}
-              disabled={phase !== 'hub'}
-              aria-label={`Principle ${p.n}: ${p.name}`}
-              aria-pressed={selected?.key === p.key}
-            >
-              <span className="hh-wedge-glow" />
-            </button>
-          ))}
+        <div className="hh-wheel-rotator">
+          <img className="hh-wheel-art" src={ASSETS.wheel} alt="The Hermetic Wheel" />
+          <div className="hh-wheel-dial">
+            {PRINCIPLES.map((p, i) => (
+              <button
+                key={p.key}
+                type="button"
+                className={`hh-wedge${mended.has(p.key) ? ' is-mended' : ''}${selected?.key === p.key ? ' is-selected' : ''}`}
+                style={{ transform: `translateX(-50%) rotate(${WEDGE_ANGLES[i]}deg)`, '--wedge-color': p.color }}
+                onClick={() => handleSelectWedge(p)}
+                disabled={phase !== 'hub'}
+                aria-label={`Principle ${p.n}: ${p.name}`}
+                aria-pressed={selected?.key === p.key}
+              >
+                <span className="hh-wedge-glow" />
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 

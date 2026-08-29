@@ -50,12 +50,22 @@
 }
 
 /* -------------------------------------------------------- HERMETIC WHEEL - */
+/* radial-dial.png is a horizontal fan (flat edge along the bottom, arc on
+   top, aspect ratio 1449:720). .hh-wheel is sized to that shape's footprint
+   *after* a 90 degree rotation -- narrow (the original height) and tall
+   (the original width) -- and docked flush against the left edge. Inside
+   it, .hh-wheel-rotator holds the actual unrotated art at its natural
+   aspect ratio, centered and spun 90 degrees clockwise, so the flat edge
+   ends up vertical against the screen edge and the arc bulges right. */
 .hh-wheel {
+  --wheel-w: clamp(340px, 55vh, 620px);
+  --wheel-h: calc(var(--wheel-w) * 720 / 1449);
   position: fixed;
   top: 50%;
-  left: clamp(-40px, -3vw, -10px);
-  transform: translateY(-42%);
-  width: clamp(280px, 30vw, 520px);
+  left: 0;
+  width: var(--wheel-h);
+  height: var(--wheel-w);
+  transform: translateY(-50%);
   z-index: 4;
   transition: opacity 0.5s ease, filter 0.5s ease;
 }
@@ -68,10 +78,18 @@
   filter: none;
   animation: hh-wheel-breathe 6s ease-in-out infinite;
 }
+.hh-wheel-rotator {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: var(--wheel-w);
+  height: var(--wheel-h);
+  transform: translate(-50%, -50%) rotate(90deg);
+}
 .hh-wheel-art {
   display: block;
   width: 100%;
-  height: auto;
+  height: 100%;
   filter: drop-shadow(0 20px 40px rgba(0, 0, 0, 0.65));
   pointer-events: none;
   user-select: none;
@@ -447,10 +465,7 @@
 /* ----------------------------------------------------------- RESPONSIVE - */
 @media (max-width: 900px) {
   .hh-wheel {
-    top: 8px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: min(58vw, 320px);
+    --wheel-w: min(70vh, 45vw, 260px);
   }
   .hh-stage {
     top: auto;

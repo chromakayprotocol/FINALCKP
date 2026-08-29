@@ -32,12 +32,15 @@ function ModuleProbe() {
 
 // Fires the video's onError handler directly (rather than clicking the
 // "Skip" button, which only renders once the initiation video has already
-// been seen once before) so this doesn't depend on localStorage state. Then
-// clicks the terminal frame, which instantly completes the typing animation
-// (the same "click to skip typing" affordance a real Seeker has) instead of
+// been seen once before) so this doesn't depend on localStorage state. A
+// real error no longer auto-advances -- it shows a manual "Continue"
+// prompt, which this then clicks, same as a real Seeker would. Then clicks
+// the terminal frame, which instantly completes the typing animation (the
+// same "click to skip typing" affordance a real Seeker has) instead of
 // waiting out the real-time character-by-character reveal.
 async function skipToHub() {
   fireEvent.error(document.querySelector('video'));
+  fireEvent.click(await screen.findByText('Continue to Mission Briefing'));
   const channelLabel = await screen.findByText('SOVEREIGN_NET // SECURE_CHANNEL');
   fireEvent.click(channelLabel);
   fireEvent.click(await screen.findByText('Accept the Assignment'));
@@ -106,6 +109,31 @@ describe('HermeticHallHub', () => {
     expect(screen.getByText('AWAITING RESTORATION')).toBeInTheDocument();
   });
 
+  test('a video error never silently skips to the briefing -- it waits for a manual continue', async () => {
+    loadUserFacultyProgress.mockResolvedValue({ data: [], error: null });
+    renderHub();
+
+    fireEvent.error(document.querySelector('video'));
+
+    expect(await screen.findByText('Playback failed to load.')).toBeInTheDocument();
+    expect(screen.queryByText('SOVEREIGN_NET // SECURE_CHANNEL')).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByText('Continue to Mission Briefing'));
+    expect(await screen.findByText('SOVEREIGN_NET // SECURE_CHANNEL')).toBeInTheDocument();
+  });
+
+  test('buffering mid-playback shows a non-blocking indicator instead of leaving the video', async () => {
+    loadUserFacultyProgress.mockResolvedValue({ data: [], error: null });
+    renderHub();
+    const video = document.querySelector('video');
+
+    fireEvent.playing(video);
+    fireEvent.waiting(video);
+
+    expect(await screen.findByText('Buffering…')).toBeInTheDocument();
+    expect(screen.queryByText('SOVEREIGN_NET // SECURE_CHANNEL')).not.toBeInTheDocument();
+  });
+
   test('wedges are inert until the briefing is accepted', async () => {
     loadUserFacultyProgress.mockResolvedValue({ data: [], error: null });
     renderHub();
@@ -114,6 +142,7 @@ describe('HermeticHallHub', () => {
     const wedge = await screen.findByLabelText('Principle I: Mentalism');
     expect(wedge).toBeDisabled();
 
+    fireEvent.click(await screen.findByText('Continue to Mission Briefing'));
     fireEvent.click(await screen.findByText('SOVEREIGN_NET // SECURE_CHANNEL'));
     fireEvent.click(await screen.findByText('Accept the Assignment'));
     expect(screen.getByLabelText('Principle I: Mentalism')).toBeEnabled();

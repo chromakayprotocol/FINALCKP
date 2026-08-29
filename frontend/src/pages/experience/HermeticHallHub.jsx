@@ -1,26 +1,28 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { loadUserFacultyProgress } from '../../lib/supabase/reclamationUniversity';
+import { HERMETIC_HALL_FACULTY } from '../../data/hermeticHallCurriculum';
 import './hermeticHallHub.css';
 
-// Real production art, hosted on the project's R2 bucket. Do not swap these
-// for generated or placeholder art.
+// Real production art, shipped locally so it's optimized (WebP) and doesn't
+// depend on a third-party CDN. Do not swap these for placeholder art.
 const ASSETS = {
-  hallIdle: 'https://pub-7db585eeeb464a9d9f749f0307532c22.r2.dev/images/shell/Hermetic-Hall.png',
-  hallOnline: 'https://pub-7db585eeeb464a9d9f749f0307532c22.r2.dev/images/shell/Hermetic-Hall-Online.png',
-  hallOnline2: 'https://pub-7db585eeeb464a9d9f749f0307532c22.r2.dev/images/shell/Hernetic-Hall-Online2.png',
-  initiationVideo: 'https://media.chromakeyprotocol.com/video/hermetic_hall_initiation.mp4',
-  hallMusic: 'https://pub-7db585eeeb464a9d9f749f0307532c22.r2.dev/shared/audio/Chroma%20Key%20Protocol%20(Without%20Lead%20Vocal).mp3',
+  hall: '/reclamation-university/Hermetic-Hall.webp',
+  wheel: '/reclamation-university/radial-dial.webp',
+  initiationVideo: 'https://media.chromakeyprotocol.com/Hermetic-Hall-Mission.mp4',
+  hallMusic:
+    'https://pub-7db585eeeb464a9d9f749f0307532c22.r2.dev/shared/audio/Chroma%20Key%20Protocol%20(Without%20Lead%20Vocal).mp3',
 };
 
 const HALL_MUSIC_VOLUME = 0.22;
 
-// Seven Hermetic principles, left-to-right, matching the column layout in
-// the hall art (COLUMN_X below). moduleId matches the "hermetic-principle-N"
-// ids the module experience components already save progress against (see
-// e.g. CauseEffectModuleExperience's saveUserProgress call) -- this is how a
-// pillar's real completion state is read. `color` is each column's glow
-// color and is independent of moduleId's (unrelated) numbering.
+// Seven Hermetic principles, left-to-right, matching the wedge layout in
+// radial-dial.png (COLUMN_X-style ordering is now driven by wedge angle,
+// see WEDGE_ANGLES below). moduleId matches the "hermetic-principle-N" ids
+// the module experience components already save progress against (see e.g.
+// CauseEffectModuleExperience's saveUserProgress call) -- this is how a
+// pillar's real completion state is read. `color` is each wedge's glow
+// color, matching the art, and is independent of moduleId's numbering.
 const PRINCIPLES = [
   { n: 'I', key: 'mentalism', name: 'Mentalism', moduleId: 'hermetic-principle-1', color: '#ef3b3b' },
   { n: 'II', key: 'correspondence', name: 'Correspondence', moduleId: 'hermetic-principle-2', color: '#e8720c' },
@@ -32,6 +34,17 @@ const PRINCIPLES = [
 ];
 const PRINCIPLE_MODULE_IDS = PRINCIPLES.map((p) => p.moduleId);
 
+// Wedge hit-areas are triangles (see .hh-wedge's clip-path) pivoting at the
+// wheel's bottom center (radial-dial.png is a flat-bottomed semicircle),
+// each spanning an equal 1/7th slice of the 180 degree arc, ordered left
+// (I) to right (VII) to match the art.
+const WEDGE_SPAN_DEG = 180 / PRINCIPLES.length;
+const WEDGE_ANGLES = PRINCIPLES.map((_, i) => -90 + (i + 0.5) * WEDGE_SPAN_DEG);
+
+const SUBTITLE_BY_KEY = Object.fromEntries(
+  HERMETIC_HALL_FACULTY.modules.map((m) => [m.slug, m.subtitle])
+);
+
 // The briefing types out as an incoming transmission -- a mission directive,
 // not a scripted cutscene.
 const DIRECTIVE_LINES = [
@@ -41,59 +54,63 @@ const DIRECTIVE_LINES = [
   '',
   'CODE WARNING LEVEL: CRITICAL',
   '',
-  'Life and Time have done a number on the bones of Hermetic Hall.',
+  "Life and Time have compromised the bones of Hermetic Hall. Once unbreakable, her foundational architecture now bears seven failing support columns, each connected to one of the ancient Hermetic Principles.",
   '',
-  'Once formidable. Once ordered. Once unbreakable.',
+  'Your objective, Seeker: restore the foundation.',
   '',
-  "Now, the Hall's foundational architecture has been compromised. Its walls still stand, but beneath them, seven ancient support columns bear the evidence of decay. Each column carries one of the Seven Hermetic Principles -- the foundational code upon which the Hall was built.",
+  'THE SEVEN COLUMNS',
   '',
-  'The structure is waiting for someone to remember how it was built.',
+  '▸ MENTALISM — Architecture of Mind',
+  '▸ CORRESPONDENCE — Architecture of Pattern',
+  '▸ VIBRATION — Architecture of Movement',
+  '▸ POLARITY — Architecture of Opposition',
+  '▸ RHYTHM — Architecture of Cycles',
+  '▸ CAUSE & EFFECT — Architecture of Consequence',
+  '▸ GENDER — Architecture of Creation',
   '',
-  'That someone is you.',
+  'RESTORATION OBJECTIVES',
   '',
-  'THE SEVEN FOUNDATIONAL COLUMNS',
+  '▸ MASTER each principle through its corresponding module.',
+  '▸ INVESTIGATE how its code moves through life and the collective.',
+  '▸ DISCOVER where it operates within your own experience.',
+  '▸ APPLY its power through deliberate, actionable practice.',
+  '▸ RESTORE EACH COLUMN through demonstrated understanding and integration.',
+  "▸ RETRIEVE ITS CHROMA KEY — the restoration of each column unlocks and recovers a corresponding Chroma Key, restoring another fragment of Hermetic Hall's foundational DNA.",
   '',
-  'I -- MENTALISM // The Architecture of Mind',
-  'II -- CORRESPONDENCE // The Architecture of Pattern',
-  'III -- VIBRATION // The Architecture of Movement',
-  'IV -- POLARITY // The Architecture of Opposition',
-  'V -- RHYTHM // The Architecture of Cycles',
-  'VI -- CAUSE & EFFECT // The Architecture of Consequence',
-  'VII -- GENDER // The Architecture of Creation',
+  'To restore a column is to retrieve a Chroma Key. To retrieve all seven is to recover the complete foundational code.',
   '',
-  'YOUR MISSION',
+  'Seven columns. Seven principles. Seven modules. Seven Chroma Keys. One mission.',
   '',
-  'DECODE THE FOUNDATION -- Enter each module and uncover the principle encoded within its column.',
-  'MASTER THE PRINCIPLE -- Move beyond memorization. Understand the mechanism beneath the teaching.',
-  'TRACE THE CODE -- Investigate the principle as it moves through life, systems, relationships, culture, and the collective.',
-  'TURN THE LENS INWARD -- Discover where the same principle has been operating within your own patterns, choices, experiences, and reality.',
-  'ACTIVATE THE KNOWLEDGE -- Transform understanding into deliberate, actionable practice.',
-  'RECLAIM YOUR AGENCY -- Learn to work with the principle consciously rather than remain subject to its unconscious operation.',
-  'RESTORE THE COLUMN -- With each principle mastered and applied, repair another piece of Hermetic Hall\'s foundational architecture.',
-  'REBUILD THE WHOLE -- Restore all seven columns and return the Hall to structural integrity.',
+  'Restore the Hall. Reclaim the code. Become the architect.',
   '',
-  'This is not a journey through ancient knowledge.',
-  '',
-  'It is an excavation of the operating system beneath your own existence.',
-  '',
-  'The principles have always been there.',
-  '',
-  'The mission is to learn how to see them, understand them, work with them, and ultimately wield them.',
-  '',
-  'Seven columns. Seven principles. Seven restorations.',
-  '',
-  'The Hall has survived the damage.',
-  '',
-  'Now it needs an architect.',
-  '',
-  'SEEKER -- THE FOUNDATION AWAITS YOUR RECLAMATION.',
-  '',
-  'CHROMA KEY PROTOCOL // MISSION ACTIVE',
+  'SEEKER — BEGIN.',
 ];
 
-// Approximate column x-positions (percent of hall image width), left to
-// right, matching the seven broken columns in Hermetic-Hall.png.
-const COLUMN_X = [9, 22, 35, 50, 65, 78, 91];
+// Synthesizes a short mechanical key-click with no audio asset required --
+// a tiny decaying noise burst through a bandpass filter, retriggered per
+// character so overlapping bursts read as keyboard clatter.
+function playKeyClick(ctx) {
+  if (!ctx) return;
+  const now = ctx.currentTime;
+  const durationSeconds = 0.02;
+  const bufferSize = Math.max(1, Math.floor(ctx.sampleRate * durationSeconds));
+  const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+  const data = buffer.getChannelData(0);
+  for (let i = 0; i < bufferSize; i += 1) {
+    data[i] = (Math.random() * 2 - 1) * (1 - i / bufferSize);
+  }
+  const noise = ctx.createBufferSource();
+  noise.buffer = buffer;
+  const bandpass = ctx.createBiquadFilter();
+  bandpass.type = 'bandpass';
+  bandpass.frequency.value = 2200 + Math.random() * 900;
+  bandpass.Q.value = 1.1;
+  const gain = ctx.createGain();
+  gain.gain.value = 0.16;
+  noise.connect(bandpass).connect(gain).connect(ctx.destination);
+  noise.start(now);
+  noise.stop(now + durationSeconds);
+}
 
 const INITIATION_SEEN_KEY = 'hh_initiation_video_seen';
 
@@ -118,6 +135,7 @@ export default function HermeticHallHub() {
   });
   const videoRef = useRef(null);
   const musicRef = useRef(null);
+  const terminalBodyRef = useRef(null);
 
   // A pillar is only "restored" once its module is actually completed --
   // reads real progress from rec_uni_user_progress, the same table the
@@ -208,28 +226,71 @@ export default function HermeticHallHub() {
   const directiveText = useMemo(() => DIRECTIVE_LINES.join('\n'), []);
   const [typedLength, setTypedLength] = useState(0);
   const [typingDone, setTypingDone] = useState(false);
+  const typingAudioCtxRef = useRef(null);
 
-  // Types the directive out character-by-character like a live transmission.
+  // Lazily creates (or resumes) the AudioContext used for the typing-click
+  // sound. Deferred until the briefing actually starts typing so it lands
+  // as close as possible to the user gesture that opened this phase --
+  // browsers can still block it, in which case the click just stays silent.
+  const ensureTypingAudioCtx = useCallback(() => {
+    if (!typingAudioCtxRef.current) {
+      try {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        typingAudioCtxRef.current = AudioCtx ? new AudioCtx() : null;
+      } catch {
+        typingAudioCtxRef.current = null;
+      }
+    }
+    if (typingAudioCtxRef.current?.state === 'suspended') {
+      typingAudioCtxRef.current.resume().catch(() => {});
+    }
+    return typingAudioCtxRef.current;
+  }, []);
+
+  useEffect(() => () => {
+    typingAudioCtxRef.current?.close().catch(() => {});
+  }, []);
+
+  // Types the directive out character-by-character like a live transmission,
+  // with a synthesized key-click on every non-space character.
+  const typingIntervalRef = useRef(null);
   useEffect(() => {
     if (phase !== 'briefing') return undefined;
     setTypedLength(0);
     setTypingDone(false);
     let i = 0;
-    const interval = setInterval(() => {
+    typingIntervalRef.current = setInterval(() => {
       i += 1;
       setTypedLength(i);
+      const justRevealed = directiveText[i - 1];
+      if (justRevealed && !/\s/.test(justRevealed)) {
+        playKeyClick(ensureTypingAudioCtx());
+      }
       if (i >= directiveText.length) {
-        clearInterval(interval);
+        clearInterval(typingIntervalRef.current);
         setTypingDone(true);
       }
     }, 14);
-    return () => clearInterval(interval);
-  }, [phase, directiveText]);
+    return () => clearInterval(typingIntervalRef.current);
+  }, [phase, directiveText, ensureTypingAudioCtx]);
 
+  // Clicking to skip jumps straight to the full text -- also stop the
+  // interval driving it, or it would keep silently ticking (and clicking)
+  // in the background for the rest of its natural duration.
   const skipTyping = useCallback(() => {
+    clearInterval(typingIntervalRef.current);
     setTypedLength(directiveText.length);
     setTypingDone(true);
   }, [directiveText]);
+
+  // The directive is longer than the 16:9 box can show at once -- keep the
+  // actively-typing line (and its cursor) scrolled into view as it grows,
+  // rather than leaving it hidden below the fold until typing finishes.
+  useEffect(() => {
+    const el = terminalBodyRef.current;
+    if (!el) return;
+    el.scrollTop = el.scrollHeight;
+  }, [typedLength]);
 
   // Hall background music, quiet and looping, only while inside the hub --
   // entering the hub is always the result of a button click, so play()
@@ -248,121 +309,147 @@ export default function HermeticHallHub() {
     };
   }, [phase]);
 
-  const handleSelectWedge = useCallback((principle) => {
-    setSelected(principle);
-  }, []);
+  const handleSelectWedge = useCallback(
+    (principle) => {
+      if (phase !== 'hub') return;
+      setSelected(principle);
+    },
+    [phase]
+  );
 
   const enterSelectedModule = useCallback(() => {
     if (!selected) return;
     navigate(`/experiencemode/sovereign/reclamation-university/hermetic-hall/${selected.key}`);
   }, [navigate, selected]);
 
-  const backgroundSrc = useMemo(() => {
-    if (phase !== 'hub') return ASSETS.hallIdle;
-    return selected ? ASSETS.hallOnline2 : ASSETS.hallOnline;
-  }, [phase, selected]);
-
   return (
     <div className="hh-scene">
-      <img className="hh-bg" src={backgroundSrc} alt="Hermetic Hall" />
+      <img className="hh-bg" src={ASSETS.hall} alt="Hermetic Hall" />
+      <div className="hh-bg-veil" aria-hidden="true" />
       <audio ref={musicRef} src={ASSETS.hallMusic} loop preload="auto" />
 
-      {phase === 'hub' && (
-        <>
-          <div className="hh-columns" aria-hidden="true">
-            {PRINCIPLES.map((p, i) => (
-              <button
-                key={p.key}
-                type="button"
-                className={`hh-column-hotspot${mended.has(p.key) ? ' is-mended' : ''}`}
-                style={{ left: `${COLUMN_X[i]}%`, '--pillar-color': p.color }}
-                onClick={() => handleSelectWedge(p)}
-                aria-label={`Pillar of ${p.name}`}
-              >
-                <span className="hh-column-glow" />
-              </button>
-            ))}
-          </div>
+      <header className="hh-topbar">
+        <span>Reclamation University &middot; Hermetic Hall</span>
+        <span><b>{progressLoaded ? mended.size : '…'}</b> / 7 pillars restored</span>
+      </header>
 
-          <header className="hh-topbar">
-            <span>Reclamation University &middot; Hermetic Hall</span>
-            <span><b>{progressLoaded ? mended.size : '…'}</b> / 7 pillars restored</span>
-          </header>
-
-          <button
-            type="button"
-            className={`hh-enter-tab${selected ? ' is-ready' : ''}`}
-            disabled={!selected}
-            onClick={enterSelectedModule}
-          >
-            {selected ? `Enter ${selected.name}` : 'Select a Pillar'}
-          </button>
-        </>
-      )}
-
-      {phase !== 'hub' && (
-        <div className="hh-overlay">
-          {phase === 'video' && (
-            <div className="hh-init-frame">
-              <video
-                ref={videoRef}
-                autoPlay
-                playsInline
-                preload="auto"
-                onPlaying={handleVideoPlaying}
-                onEnded={advanceToBriefing}
-                onError={advanceToBriefing}
-              >
-                <source src={ASSETS.initiationVideo} type="video/mp4" />
-              </video>
-              {!videoReady && (
-                <div className="hh-video-loading">
-                  <span className="hh-video-loading-label">ESTABLISHING UPLINK&hellip;</span>
-                  <span className="hh-video-loading-bar" />
-                </div>
-              )}
-              <span className="hh-frame-corner tl" />
-              <span className="hh-frame-corner tr" />
-              <span className="hh-frame-corner bl" />
-              <span className="hh-frame-corner br" />
-              {hasSeenVideo && (
-                <button type="button" className="hh-rune-btn hh-skip" onClick={advanceToBriefing}>
-                  Skip
-                </button>
-              )}
-            </div>
-          )}
-
-          {phase === 'briefing' && (
-            <div className="hh-terminal-frame" onClick={!typingDone ? skipTyping : undefined}>
-              <div className="hh-terminal-bar">
-                <span className="hh-terminal-dot" />
-                <span className="hh-terminal-dot" />
-                <span className="hh-terminal-dot" />
-                <span className="hh-terminal-bar-label">SOVEREIGN_NET // SECURE_CHANNEL</span>
-              </div>
-              <pre className="hh-terminal-body">
-                {directiveText.slice(0, typedLength)}
-                <span className="hh-terminal-cursor" aria-hidden="true" />
-              </pre>
-              <div className={`hh-terminal-cta${typingDone ? ' is-ready' : ''}`}>
-                <button
-                  type="button"
-                  className="hh-rune-btn"
-                  disabled={!typingDone}
-                  onClick={beginRestoration}
-                >
-                  Acknowledge &amp; Begin Restoration
-                </button>
-              </div>
-              <span className="hh-frame-corner tl" />
-              <span className="hh-frame-corner tr" />
-              <span className="hh-frame-corner bl" />
-              <span className="hh-frame-corner br" />
-            </div>
-          )}
+      {/* The Hermetic Wheel -- a persistent HUD dial, docked middle-left.
+          Its seven wedges are the one true way to pick a principle; only
+          live once the Seeker has cleared the briefing and reached the hub. */}
+      <div className={`hh-wheel${phase === 'hub' ? ' is-live' : ' is-dormant'}`}>
+        <img className="hh-wheel-art" src={ASSETS.wheel} alt="The Hermetic Wheel" />
+        <div className="hh-wheel-dial">
+          {PRINCIPLES.map((p, i) => (
+            <button
+              key={p.key}
+              type="button"
+              className={`hh-wedge${mended.has(p.key) ? ' is-mended' : ''}${selected?.key === p.key ? ' is-selected' : ''}`}
+              style={{ transform: `translateX(-50%) rotate(${WEDGE_ANGLES[i]}deg)`, '--wedge-color': p.color }}
+              onClick={() => handleSelectWedge(p)}
+              disabled={phase !== 'hub'}
+              aria-label={`Principle ${p.n}: ${p.name}`}
+              aria-pressed={selected?.key === p.key}
+            >
+              <span className="hh-wedge-glow" />
+            </button>
+          ))}
         </div>
-      )}
+      </div>
+
+      {/* The 16:9 stage -- one box, three functions: initiation video, then
+          the mission directive terminal, then the interactive environment
+          readout for whichever principle is selected on the wheel. */}
+      <div className="hh-stage">
+        {phase === 'video' && (
+          <div className="hh-stage-frame hh-init-frame">
+            <video
+              ref={videoRef}
+              autoPlay
+              playsInline
+              preload="auto"
+              onPlaying={handleVideoPlaying}
+              onEnded={advanceToBriefing}
+              onError={advanceToBriefing}
+            >
+              <source src={ASSETS.initiationVideo} type="video/mp4" />
+            </video>
+            {!videoReady && (
+              <div className="hh-video-loading">
+                <span className="hh-video-loading-label">ESTABLISHING UPLINK&hellip;</span>
+                <span className="hh-video-loading-bar" />
+              </div>
+            )}
+            <span className="hh-frame-corner tl" />
+            <span className="hh-frame-corner tr" />
+            <span className="hh-frame-corner bl" />
+            <span className="hh-frame-corner br" />
+            {hasSeenVideo && (
+              <button type="button" className="hh-rune-btn hh-skip" onClick={advanceToBriefing}>
+                Skip
+              </button>
+            )}
+          </div>
+        )}
+
+        {phase === 'briefing' && (
+          <div
+            className="hh-stage-frame hh-terminal-frame"
+            onClick={!typingDone ? skipTyping : undefined}
+          >
+            <div className="hh-terminal-bar">
+              <span className="hh-terminal-dot" />
+              <span className="hh-terminal-dot" />
+              <span className="hh-terminal-dot" />
+              <span className="hh-terminal-bar-label">SOVEREIGN_NET // SECURE_CHANNEL</span>
+            </div>
+            <pre className="hh-terminal-body" ref={terminalBodyRef}>
+              {directiveText.slice(0, typedLength)}
+              <span className="hh-terminal-cursor" aria-hidden="true" />
+            </pre>
+            <div className={`hh-terminal-cta${typingDone ? ' is-ready' : ''}`}>
+              <button
+                type="button"
+                className="hh-rune-btn"
+                disabled={!typingDone}
+                onClick={beginRestoration}
+              >
+                Accept the Assignment
+              </button>
+            </div>
+            <span className="hh-frame-corner tl" />
+            <span className="hh-frame-corner tr" />
+            <span className="hh-frame-corner bl" />
+            <span className="hh-frame-corner br" />
+          </div>
+        )}
+
+        {phase === 'hub' && (
+          <div className="hh-stage-frame hh-env-frame">
+            {selected ? (
+              <div className="hh-env-card" style={{ '--wedge-color': selected.color }}>
+                <span className="hh-env-eyebrow">Principle {selected.n}</span>
+                <h2 className="hh-env-title">{selected.name}</h2>
+                <p className="hh-env-subtitle">{SUBTITLE_BY_KEY[selected.key]}</p>
+                <div className={`hh-env-status${mended.has(selected.key) ? ' is-restored' : ''}`}>
+                  {mended.has(selected.key) ? 'COLUMN RESTORED' : 'AWAITING RESTORATION'}
+                </div>
+                <button type="button" className="hh-rune-btn hh-env-enter" onClick={enterSelectedModule}>
+                  Enter Module &rarr;
+                </button>
+              </div>
+            ) : (
+              <div className="hh-env-idle">
+                <span className="hh-env-idle-label">HERMETIC HALL // LIVE UPLINK</span>
+                <p>Select a column from the Hermetic Wheel to begin restoration.</p>
+              </div>
+            )}
+            <span className="hh-frame-corner tl" />
+            <span className="hh-frame-corner tr" />
+            <span className="hh-frame-corner bl" />
+            <span className="hh-frame-corner br" />
+          </div>
+        )}
+      </div>
     </div>
   );
 }

@@ -30,9 +30,17 @@ function ModuleProbe() {
   return <div data-testid="module-probe">Entered module: {moduleSlug}</div>;
 }
 
+// Fires the video's onError handler directly (rather than clicking the
+// "Skip" button, which only renders once the initiation video has already
+// been seen once before) so this doesn't depend on localStorage state. Then
+// clicks the terminal frame, which instantly completes the typing animation
+// (the same "click to skip typing" affordance a real Seeker has) instead of
+// waiting out the real-time character-by-character reveal.
 async function skipToHub() {
-  fireEvent.click(screen.getByText('Skip'));
-  fireEvent.click(await screen.findByText('Begin Restoration'));
+  fireEvent.error(document.querySelector('video'));
+  const channelLabel = await screen.findByText('SOVEREIGN_NET // SECURE_CHANNEL');
+  fireEvent.click(channelLabel);
+  fireEvent.click(await screen.findByText('Accept the Assignment'));
 }
 
 beforeEach(() => {
@@ -51,7 +59,7 @@ describe('HermeticHallHub', () => {
     expect(screen.getByText(/pillars restored/)).toBeInTheDocument();
   });
 
-  test('marks a pillar restored only when its module is actually completed', async () => {
+  test('marks a wedge restored only when its module is actually completed', async () => {
     loadUserFacultyProgress.mockResolvedValue({
       data: [
         { module_id: 'hermetic-principle-3', status: 'completed' },
@@ -66,34 +74,48 @@ describe('HermeticHallHub', () => {
       expect(screen.getByText('1')).toBeInTheDocument();
     });
 
-    const vibrationColumn = screen.getByLabelText('Pillar of Vibration');
-    expect(vibrationColumn.className).toContain('is-mended');
+    const vibrationWedge = screen.getByLabelText('Principle III: Vibration');
+    expect(vibrationWedge.className).toContain('is-mended');
 
-    const rhythmColumn = screen.getByLabelText('Pillar of Rhythm');
-    expect(rhythmColumn.className).not.toContain('is-mended');
+    const rhythmWedge = screen.getByLabelText('Principle VI: Rhythm');
+    expect(rhythmWedge.className).not.toContain('is-mended');
   });
 
-  test('selecting a wedge and clicking Enter navigates into that module, using the real curriculum slug', async () => {
+  test('selecting a wedge and entering navigates into that module, using the real curriculum slug', async () => {
     loadUserFacultyProgress.mockResolvedValue({ data: [], error: null });
     renderHub();
     await skipToHub();
 
-    fireEvent.click(screen.getByLabelText('The Principle of Cause & Effect'));
-    fireEvent.click(screen.getByText('Enter Cause & Effect'));
+    fireEvent.click(screen.getByLabelText('Principle V: Cause & Effect'));
+    fireEvent.click(screen.getByText('Enter Module →'));
 
     expect(await screen.findByTestId('module-probe')).toHaveTextContent(
       'Entered module: cause-and-effect'
     );
   });
 
-  test('clicking a wedge alone does not mark its pillar as restored', async () => {
+  test('clicking a wedge alone does not mark it restored, and shows its status instead', async () => {
     loadUserFacultyProgress.mockResolvedValue({ data: [], error: null });
     renderHub();
     await skipToHub();
 
-    fireEvent.click(screen.getByLabelText('The Principle of Gender'));
+    fireEvent.click(screen.getByLabelText('Principle VII: Gender'));
 
-    const genderColumn = screen.getByLabelText('Pillar of Gender');
-    expect(genderColumn.className).not.toContain('is-mended');
+    const genderWedge = screen.getByLabelText('Principle VII: Gender');
+    expect(genderWedge.className).not.toContain('is-mended');
+    expect(screen.getByText('AWAITING RESTORATION')).toBeInTheDocument();
+  });
+
+  test('wedges are inert until the briefing is accepted', async () => {
+    loadUserFacultyProgress.mockResolvedValue({ data: [], error: null });
+    renderHub();
+
+    fireEvent.error(document.querySelector('video'));
+    const wedge = await screen.findByLabelText('Principle I: Mentalism');
+    expect(wedge).toBeDisabled();
+
+    fireEvent.click(await screen.findByText('SOVEREIGN_NET // SECURE_CHANNEL'));
+    fireEvent.click(await screen.findByText('Accept the Assignment'));
+    expect(screen.getByLabelText('Principle I: Mentalism')).toBeEnabled();
   });
 });

@@ -51,6 +51,21 @@ if (typeof window !== 'undefined') {
     };
   }
 
+  /* jsdom doesn't implement real media playback -- HTMLMediaElement.play()
+     resolves to undefined instead of a Promise, and pause()/load() are
+     similarly inert. Several components (initiation videos, background
+     hall music) call .play().catch(...), which throws "Cannot read
+     properties of undefined (reading 'catch')" the moment such a
+     component mounts in a test unless play() actually returns a promise.
+     These stubs are just enough surface for that real state-machine code
+     (autoplay-blocked fallback, phase-driven play/pause) to run -- not an
+     attempt to verify actual audio/video playback. */
+  if (typeof HTMLMediaElement !== 'undefined') {
+    HTMLMediaElement.prototype.play = () => Promise.resolve();
+    HTMLMediaElement.prototype.pause = () => {};
+    HTMLMediaElement.prototype.load = () => {};
+  }
+
   if (typeof HTMLCanvasElement !== 'undefined') {
     HTMLCanvasElement.prototype.getContext = () =>
       new Proxy(

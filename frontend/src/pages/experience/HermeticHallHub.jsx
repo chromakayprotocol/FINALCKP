@@ -114,9 +114,12 @@ function playKeyClick(ctx) {
 
 const INITIATION_SEEN_KEY = 'hh_initiation_video_seen';
 
-// Give up waiting on the (large, non-faststart) initiation video and move on
-// so the app never leaves a Seeker staring at a stalled black frame.
-const VIDEO_STALL_TIMEOUT_MS = 15000;
+// The hosted initiation video can take a while to start (or stall mid-
+// playback on a slow connection). Never auto-advance on a stall or a
+// transient error -- that reads as the app randomly skipping the video out
+// from under the Seeker. Only offer a manual way past it once it's clearly
+// stuck for a while, and only actually move on when the Seeker chooses to.
+const VIDEO_STUCK_HELP_MS = 12000;
 
 export default function HermeticHallHub() {
   const navigate = useNavigate();
@@ -207,21 +210,35 @@ export default function HermeticHallHub() {
   }, []);
   const beginRestoration = useCallback(() => setPhase('hub'), []);
 
-  // The hosted initiation video is a large, non-faststart file that can take
-  // a long time to buffer before playback actually starts. Show a loading
-  // state instead of a dead black frame, and if it still hasn't started
-  // within VIDEO_STALL_TIMEOUT_MS, give up and move on rather than leaving
-  // the Seeker stuck.
+  // videoReady: has playback started at least once (hides the initial
+  // loading state). videoBuffering: playback started but has paused to
+  // rebuffer -- shown as a small non-blocking indicator, never a reason to
+  // leave the video. videoFailed: the browser gave up on the source for
+  // real (bad URL, decode error, network failure after its own retries) --
+  // shown as an explicit "continue anyway" prompt, never an automatic skip.
+  // showStuckHelp: it's been a while and playback still hasn't started --
+  // same manual prompt, so a genuinely broken video never strands the
+  // Seeker with no way forward, but nothing here ever advances on its own.
   const [videoReady, setVideoReady] = useState(false);
+  const [videoBuffering, setVideoBuffering] = useState(false);
+  const [videoFailed, setVideoFailed] = useState(false);
+  const [showStuckHelp, setShowStuckHelp] = useState(false);
   useEffect(() => {
     if (phase !== 'video') return undefined;
     setVideoReady(false);
-    const timer = setTimeout(() => {
-      advanceToBriefing();
-    }, VIDEO_STALL_TIMEOUT_MS);
+    setVideoBuffering(false);
+    setVideoFailed(false);
+    setShowStuckHelp(false);
+    const timer = setTimeout(() => setShowStuckHelp(true), VIDEO_STUCK_HELP_MS);
     return () => clearTimeout(timer);
-  }, [phase, advanceToBriefing]);
-  const handleVideoPlaying = useCallback(() => setVideoReady(true), []);
+  }, [phase]);
+  const handleVideoPlaying = useCallback(() => {
+    setVideoReady(true);
+    setVideoBuffering(false);
+  }, []);
+  const handleVideoWaiting = useCallback(() => setVideoBuffering(true), []);
+  const handleVideoError = useCallback(() => setVideoFailed(true), []);
+  const videoStuckReason = videoFailed ? 'error' : !videoReady && showStuckHelp ? 'slow' : null;
 
   const directiveText = useMemo(() => DIRECTIVE_LINES.join('\n'), []);
   const [typedLength, setTypedLength] = useState(0);
@@ -368,22 +385,40 @@ export default function HermeticHallHub() {
               playsInline
               preload="auto"
               onPlaying={handleVideoPlaying}
+              onWaiting={handleVideoWaiting}
               onEnded={advanceToBriefing}
-              onError={advanceToBriefing}
+              onError={handleVideoError}
             >
               <source src={ASSETS.initiationVideo} type="video/mp4" />
             </video>
-            {!videoReady && (
+            {!videoReady && !videoStuckReason && (
               <div className="hh-video-loading">
                 <span className="hh-video-loading-label">ESTABLISHING UPLINK&hellip;</span>
                 <span className="hh-video-loading-bar" />
+              </div>
+            )}
+            {videoReady && videoBuffering && !videoStuckReason && (
+              <span className="hh-video-buffering" aria-live="polite">
+                Buffering&hellip;
+              </span>
+            )}
+            {videoStuckReason && (
+              <div className="hh-video-recover" aria-live="polite">
+                <p>
+                  {videoStuckReason === 'error'
+                    ? 'Playback failed to load.'
+                    : "Still buffering — this is taking longer than expected."}
+                </p>
+                <button type="button" className="hh-rune-btn" onClick={advanceToBriefing}>
+                  Continue to Mission Briefing
+                </button>
               </div>
             )}
             <span className="hh-frame-corner tl" />
             <span className="hh-frame-corner tr" />
             <span className="hh-frame-corner bl" />
             <span className="hh-frame-corner br" />
-            {hasSeenVideo && (
+            {hasSeenVideo && !videoStuckReason && (
               <button type="button" className="hh-rune-btn hh-skip" onClick={advanceToBriefing}>
                 Skip
               </button>

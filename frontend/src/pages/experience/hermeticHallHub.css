@@ -58,7 +58,7 @@
    aspect ratio, centered and spun 90 degrees clockwise, so the flat edge
    ends up vertical against the screen edge and the arc bulges right. */
 .hh-wheel {
-  --wheel-w: clamp(340px, 55vh, 620px);
+  --wheel-w: clamp(400px, 66vh, 760px);
   --wheel-h: calc(var(--wheel-w) * 720 / 1449);
   position: fixed;
   top: 50%;
@@ -149,7 +149,7 @@
   top: 50%;
   right: clamp(16px, 6vw, 96px);
   transform: translateY(-50%);
-  width: min(44vw, 760px);
+  width: min(50vw, 860px);
   z-index: 6;
 }
 .hh-stage-frame {

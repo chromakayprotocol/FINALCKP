@@ -27,20 +27,11 @@ export const hermeticHallImage = `${NEXUS_BASE}/Nexus_Hermetic_Hall.png`;
 // = Foundation's blue "Understand Yourself"; Fracture = Language's green
 // "Understand the Code"; Crucible = Sovereignty's red "Reclaim Your Power")
 // plus a new fourth, gold Reclamation Protocol for later synthesis/graduation
-// content. Only Reflection has a live faculty route today; the rest render
+// content. Fracture is the one seekers actually complete first (its 64%
+// Academic Mastery mirrors the Central Academic Axis's own 64% figure), so
+// it's the only Protocol with a live faculty route today; the rest render
 // as locked "Soon" states until that curriculum lands.
 export const universityProtocols = [
-  {
-    id: 'reflection',
-    title: 'The Reflection Protocol',
-    theme: 'reflection',
-    image: `${NEXUS_BASE}/Nexus_Reflection_Protocol.png`,
-    statLabel: 'Spiritual Mastery',
-    statValue: 23,
-    position: 'top-right',
-    available: true,
-    facultySlug: 'foundations',
-  },
   {
     id: 'fracture',
     title: 'The Fracture Protocol',
@@ -49,6 +40,17 @@ export const universityProtocols = [
     statLabel: 'Academic Mastery',
     statValue: 64,
     position: 'top-left',
+    available: true,
+    facultySlug: 'foundations',
+  },
+  {
+    id: 'reflection',
+    title: 'The Reflection Protocol',
+    theme: 'reflection',
+    image: `${NEXUS_BASE}/Nexus_Reflection_Protocol.png`,
+    statLabel: 'Spiritual Mastery',
+    statValue: 23,
+    position: 'top-right',
     available: false,
   },
   {

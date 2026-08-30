@@ -7,7 +7,13 @@ import './hermeticHallHub.css';
 // Real production art, shipped locally so it's optimized (WebP) and doesn't
 // depend on a third-party CDN. Do not swap these for placeholder art.
 const ASSETS = {
-  hall: '/reclamation-university/Hermetic-Hall.webp',
+  // hermetic-hall-bg.png is the blurred ambient archway shot -- the
+  // persistent full-scene backdrop behind the wheel and stage in every
+  // phase. hermetic-hall-environment.png is the sharp, unblurred "you're
+  // standing in the hall" shot -- the interactive environment revealed
+  // inside the stage viewport once the Seeker accepts the assignment.
+  hall: '/reclamation-university/hermetic-hall-bg.png',
+  environment: '/reclamation-university/hermetic-hall-environment.png',
   wheel: '/reclamation-university/radial-dial.webp',
   initiationVideo: 'https://media.chromakeyprotocol.com/Hermetic-Hall-Mission.mp4',
   hallMusic:
@@ -287,7 +293,7 @@ export default function HermeticHallHub() {
         clearInterval(typingIntervalRef.current);
         setTypingDone(true);
       }
-    }, 14);
+    }, 28);
     return () => clearInterval(typingIntervalRef.current);
   }, [phase, directiveText, ensureTypingAudioCtx]);
 
@@ -469,6 +475,8 @@ export default function HermeticHallHub() {
 
         {phase === 'hub' && (
           <div className="hh-stage-frame hh-env-frame">
+            <img className="hh-env-bg" src={ASSETS.environment} alt="Hermetic Hall interactive environment" />
+            <div className="hh-env-veil" aria-hidden="true" />
             {selected ? (
               <div className="hh-env-card" style={{ '--wedge-color': selected.color }}>
                 <span className="hh-env-eyebrow">Principle {selected.n}</span>

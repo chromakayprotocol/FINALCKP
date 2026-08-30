@@ -366,20 +366,47 @@
 
 /* --------------------------------------------------- ENVIRONMENT STATE - */
 .hh-env-frame {
+  position: relative;
   align-items: center;
   justify-content: center;
   padding: clamp(20px, 4vh, 40px);
   text-align: center;
+  overflow: hidden;
+  background: #000;
+}
+.hh-env-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  /* Reveal the environment in the same beat the wheel comes online --
+     no separate blackout step before it appears. */
+  animation: hh-env-reveal 0.6s ease both;
+}
+.hh-env-veil {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
   background:
-    radial-gradient(ellipse 90% 120% at 50% 110%, rgba(201, 162, 39, 0.16), transparent 65%),
-    linear-gradient(180deg, #0c0a06, #000);
+    radial-gradient(ellipse 90% 120% at 50% 110%, rgba(201, 162, 39, 0.14), transparent 65%),
+    linear-gradient(180deg, rgba(6, 5, 10, 0.55) 0%, rgba(6, 5, 10, 0.15) 35%, rgba(6, 5, 10, 0.75) 100%);
+  pointer-events: none;
+}
+@keyframes hh-env-reveal {
+  from { opacity: 0; filter: brightness(1.6); }
+  to { opacity: 1; filter: brightness(1); }
 }
 .hh-env-idle {
+  position: relative;
+  z-index: 2;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 14px;
-  color: #a88f5e;
+  color: #f3d488;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.9);
 }
 .hh-env-idle-label {
   font-family: 'JetBrains Mono', ui-monospace, monospace;
@@ -395,11 +422,17 @@
   line-height: 1.6;
 }
 .hh-env-card {
+  position: relative;
+  z-index: 2;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 8px;
+  padding: 20px 28px;
   color: #f3d488;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.9);
+  background: rgba(6, 5, 10, 0.55);
+  border: 1px solid rgba(201, 162, 39, 0.3);
 }
 .hh-env-eyebrow {
   font-family: 'JetBrains Mono', ui-monospace, monospace;

@@ -61,6 +61,10 @@ export default function UniversityNexus() {
 
   const goToHermeticHall = () => navigate(HERMETIC_HALL_ROUTE);
   const scrollToDomains = () => domainsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  const goToDomain = (domain) => {
+    if (!domain.available || !domain.facultySlug) return;
+    navigate(`/experiencemode/sovereign/reclamation-university/${domain.facultySlug}`);
+  };
 
   const handleNavClick = (item) => {
     if (item.available === false) return;
@@ -182,7 +186,7 @@ export default function UniversityNexus() {
           </section>
 
           <section className="un-curriculum" aria-label="Curriculum domains">
-            <DomainCard domain={universityDomains[0]} align="left" />
+            <DomainCard domain={universityDomains[0]} align="left" onEnter={goToDomain} />
 
             <div className="un-hermetic-hall" style={{ '--card-image': `url(${hermeticHallImage})` }}>
               <span className="un-eyebrow">The</span>
@@ -310,7 +314,7 @@ function StatRow({ label, value }) {
   );
 }
 
-function DomainCard({ domain, align }) {
+function DomainCard({ domain, align, onEnter }) {
   const [expanded, setExpanded] = useState(false);
   return (
     <article
@@ -332,7 +336,12 @@ function DomainCard({ domain, align }) {
         ))}
       </ul>
 
-      <button type="button" className="un-btn un-domain-card__cta" disabled={!domain.available}>
+      <button
+        type="button"
+        className="un-btn un-domain-card__cta"
+        disabled={!domain.available}
+        onClick={() => onEnter?.(domain)}
+      >
         {domain.available ? (
           <>Enter Domain <ArrowRight size={14} aria-hidden="true" /></>
         ) : (

@@ -38,7 +38,8 @@ export const universityDomains = [
     theme: 'foundation',
     image: withCacheBust(`${R2_SHELL_BASE}/Foundation_Pathway.png`),
     modules: ['Consciousness', 'Identity', 'Perception', 'Belief Systems', 'Mental Architecture'],
-    available: false,
+    available: true,
+    facultySlug: 'foundations',
   },
   {
     id: 'language',

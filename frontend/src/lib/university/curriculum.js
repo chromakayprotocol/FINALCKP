@@ -7,7 +7,7 @@
  *
  * The seven Hermetic principles are the one subsystem with a real,
  * Supabase-backed progress table today (`rec_uni_user_progress`, keyed by
- * these `slug`s — see HermeticHallViewport.jsx). The three Domains and the
+ * these `slug`s — see HermeticHallViewport.jsx). The four Protocols and the
  * bottom-dock subsystems (Light Codes, Field Exercises, Case Studies,
  * Protocol Labs, Examinations, Graduation) don't have dedicated tables or
  * routes yet, so they render as previews/"soon" states until that schema
@@ -15,53 +15,78 @@
  * artifacts, user_activity) lands.
  */
 
-// R2-hosted pathway art, supplied directly — do not swap these for
-// generated/placeholder art (same bucket/convention as HermeticHallHub.jsx).
-const R2_SHELL_BASE = 'https://pub-7db585eeeb464a9d9f749f0307532c22.r2.dev/images/shell';
+// Locally hosted Nexus art (frontend/public/reclamation-university) — the
+// radial dashboard shell, not R2-hosted, since these ship with the app bundle.
+const NEXUS_BASE = '/reclamation-university';
 
-// Cache-busts these four pathway images specifically: the source files at
-// these URLs get replaced in place (same filename, new artwork) rather than
-// renamed, so without this the R2 edge cache and viewers' browsers can keep
-// serving a stale cached copy indefinitely. Bump this whenever the artwork
-// at these URLs is updated.
-const PATHWAY_ART_VERSION = '20260827';
-const withCacheBust = (url) => `${url}?v=${PATHWAY_ART_VERSION}`;
+export const nexusBackgroundImage = `${NEXUS_BASE}/Nexus_Background.png`;
+export const hermeticHallImage = `${NEXUS_BASE}/Nexus_Hermetic_Hall.png`;
 
-export const hermeticHallImage = withCacheBust(`${R2_SHELL_BASE}/Reclamation_Hall_Pathway.png`);
-
-export const universityDomains = [
+// The four Protocols replace the old three-Domain model on the Nexus screen.
+// Each maps onto one of the original Domains' theme colors/routes (Reflection
+// = Foundation's blue "Understand Yourself"; Fracture = Language's green
+// "Understand the Code"; Crucible = Sovereignty's red "Reclaim Your Power")
+// plus a new fourth, gold Reclamation Protocol for later synthesis/graduation
+// content. Only Reflection has a live faculty route today; the rest render
+// as locked "Soon" states until that curriculum lands.
+export const universityProtocols = [
   {
-    id: 'foundation',
-    number: 'I',
-    title: 'Foundation',
-    subtitle: 'Understand Yourself',
-    theme: 'foundation',
-    image: withCacheBust(`${R2_SHELL_BASE}/Foundation_Pathway.png`),
-    modules: ['Consciousness', 'Identity', 'Perception', 'Belief Systems', 'Mental Architecture'],
+    id: 'reflection',
+    title: 'The Reflection Protocol',
+    theme: 'reflection',
+    image: `${NEXUS_BASE}/Nexus_Reflection_Protocol.png`,
+    statLabel: 'Spiritual Mastery',
+    statValue: 23,
+    position: 'top-right',
     available: true,
     facultySlug: 'foundations',
   },
   {
-    id: 'language',
-    number: 'II',
-    title: 'Language',
-    subtitle: 'Understand the Code',
-    theme: 'language',
-    image: withCacheBust(`${R2_SHELL_BASE}/Language_Pathway.png`),
-    modules: ['Language', 'Narrative', 'Symbols', 'Thought Forms', 'Programming', 'Media & Conditioning'],
+    id: 'fracture',
+    title: 'The Fracture Protocol',
+    theme: 'fracture',
+    image: `${NEXUS_BASE}/Nexus_Fracture_Protocol.png`,
+    statLabel: 'Academic Mastery',
+    statValue: 64,
+    position: 'top-left',
     available: false,
   },
   {
-    id: 'sovereignty',
-    number: 'III',
-    title: 'Sovereignty',
-    subtitle: 'Reclaim Your Power',
-    theme: 'sovereignty',
-    image: withCacheBust(`${R2_SHELL_BASE}/Sovereign_Pathway.png`),
-    modules: ['Agency', 'Boundaries', 'Decision Making', 'Power', 'Reclamation', 'Integration', 'Applied Protocols'],
+    id: 'crucible',
+    title: 'The Crucible Protocol',
+    theme: 'crucible',
+    image: `${NEXUS_BASE}/Nexus_Crucible_Protocol.png`,
+    statLabel: 'Knowledge',
+    statValue: 32,
+    position: 'bottom-left',
+    available: false,
+  },
+  {
+    id: 'reclamation',
+    title: 'The Reclamation Protocol',
+    theme: 'reclamation',
+    image: `${NEXUS_BASE}/Nexus_Reclamation_Protocol.png`,
+    statLabel: 'Alignment',
+    statValue: 27,
+    position: 'bottom-right',
     available: false,
   },
 ];
+
+// Central Academic Axis (the Hermetic Hall medallion) display stats.
+export const centralAxisStats = {
+  completePercent: 64,
+  sovereignSoulsEnrolled: 1287,
+};
+
+// Bottom dock meters — placeholder display values until their backing
+// subsystems (arsenal/celestial tables) exist; Knowledge Index mirrors the
+// same "no dedicated table yet" caveat as defaultSeekerProgress below.
+export const nexusDockStats = {
+  knowledgeIndex: 72,
+  arsenalAttunement: 51,
+  celestialAlignment: 68,
+};
 
 // Mirrors the slugs/order already used by HermeticHallViewport + rec_uni_user_progress.module_id.
 export const hermeticPrinciples = [
@@ -72,25 +97,6 @@ export const hermeticPrinciples = [
   { number: 'V', slug: 'rhythm', name: 'Rhythm', keywords: 'Flow. Tide. Return.' },
   { number: 'VI', slug: 'cause-and-effect', name: 'Cause & Effect', keywords: 'Action. Consequence. Law.' },
   { number: 'VII', slug: 'gender', name: 'Gender', keywords: 'Masculine. Feminine. Creation.' },
-];
-
-export const dockItems = [
-  { id: 'light-codes', label: 'Light Codes', description: 'Activations', icon: 'Zap', available: false },
-  { id: 'field-exercises', label: 'Field Exercises', description: 'Practice', icon: 'Target', available: false },
-  { id: 'case-studies', label: 'Case Studies', description: 'Real World', icon: 'ScrollText', available: false },
-  { id: 'protocol-labs', label: 'Protocol Labs', description: 'Apply', icon: 'FlaskConical', available: false },
-  { id: 'examinations', label: 'Examinations', description: 'Test', icon: 'ClipboardCheck', available: false },
-  { id: 'graduation', label: 'Graduation', description: 'Ascend', icon: 'GraduationCap', available: false },
-];
-
-export const universityNavigation = [
-  { id: 'nexus', label: 'Nexus', description: 'University Home', icon: 'Compass' },
-  { id: 'domains', label: 'The Domains', description: 'Your Curriculum', icon: 'LayoutGrid' },
-  { id: 'hermetic-hall', label: 'Hermetic Hall', description: '7 Principles', icon: 'Landmark' },
-  { id: 'archive', label: 'Archive', description: 'Library & Records', icon: 'BookOpen', available: false },
-  { id: 'journal', label: 'Journal', description: 'Reflections', icon: 'BookMarked', available: false },
-  { id: 'artifacts', label: 'Artifacts', description: 'Sealed Knowledge', icon: 'Gem', available: false },
-  { id: 'protocol', label: 'Protocol', description: 'Tools & Resources', icon: 'Wrench', available: false },
 ];
 
 // Placeholder seeker-wide stats: these subsystems (modules/lessons/artifacts/
@@ -109,30 +115,3 @@ export const defaultSeekerProgress = {
   daysActive: 19,
 };
 
-export const defaultActiveArtifact = {
-  id: 'polarity-key',
-  name: 'Polarity Key',
-  level: 2,
-  description: 'Reveals the forces of opposition and balance.',
-  type: 'key',
-};
-
-export const defaultRecentActivity = [
-  { id: 'a1', type: 'lesson', title: 'Completed Lesson 2', subtitle: 'Principle IV: Polarity', timestamp: '2h ago' },
-  { id: 'a2', type: 'artifact', title: 'Sealed New Artifact', subtitle: 'Polarity Key', timestamp: '5h ago' },
-  { id: 'a3', type: 'journal', title: 'Journal Entry Added', subtitle: 'Reflection on Balance', timestamp: '1d ago' },
-];
-
-export const universityQuotes = [
-  { text: 'The more you know the code, the more you reclaim the realm.', attribution: 'MM' },
-  { text: 'Seven principles. Seven paths. One system.', attribution: 'MM' },
-  { text: 'Sovereignty begins where self-knowledge ends.', attribution: 'MM' },
-];
-
-export function getUniversityQuote(seed = 0) {
-  return universityQuotes[seed % universityQuotes.length];
-}
-
-export function getUniversityTime(date = new Date()) {
-  return date.toLocaleTimeString('en-US', { hour12: false });
-}

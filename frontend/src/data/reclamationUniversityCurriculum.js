@@ -9,6 +9,11 @@
  */
 
 const LEARNING_OBJECTIVES = {
+  'module-fractured-veil': [
+    'Distinguish the witnessing self from the narrating self, and identify one pattern currently run by the narrator.',
+    'Trace one inherited identity label, perceptual filter, or unexamined belief to its actual source.',
+    'Map the architecture holding one recurring pattern in place and name the single hinge you can move first.',
+  ],
   'module-thought-form-studio': [
     'Identify a recurring pattern and distinguish its visible outcome from the hidden law beneath it.',
     'Trace one inherited or absorbed thought form to its source using concrete evidence.',
@@ -154,7 +159,80 @@ const BASE_RECLAMATION_CURRICULUM = {
       description: 'Learn the core principles of Reclamation: how to identify Shadow Codes, recover Light Codes, and understand fire as ordered pressure rather than chaos.',
       accent: 'green',
       artwork: null,
-      modules: [],
+      modules: [
+        {
+          id: 'module-fractured-veil',
+          slug: 'fractured-veil',
+          order: 1,
+          title: 'Module 1: The Fractured Veil',
+          subtitle: 'Understand yourself before the veil can be seen — the floor every other faculty is built on.',
+          sourceTrackIds: ['the-fractured-veil', 'chroma-key', 'axiomatic'],
+          initiationCopy: [
+            'Welcome to the Foundations of Reclamation, Rising Seeker.',
+            'Before the veil can be seen as a veil, the self looking at it has to be understood. This is the grounding faculty — no reclamation, no depths, no code-breaking until the foundation under your feet is actually mapped.',
+            'Every code in this module answers one question: what, exactly, is the "I" about to do this work?',
+            'The dominant movement here is diagnostic. Name the extraction, the script, the Watcher, the serpentine contract, or the counterfeit light. Only after the naming does the Light Code stabilize.',
+            'Do not rush to the generative work. Complete the accounting first. The soil phase is not optional — the flower that tries to bloom before the roots are formed collapses under its own weight.',
+            'When you complete this module, you will have named Shadow Codes across five pillars — Consciousness, Identity, Perception, Belief, and Architecture — retrieved their Light counterparts, and sealed a declaration that becomes the floor the rest of Reclamation University is built on.',
+          ],
+          lyricAnchors: [
+            { key: 'planted-whole', label: 'The Fractured Veil', teaching: 'Dark grows roots in the shape of soul — the Seeker does not hunt light, they become it.', line: 'Stay in the soil phase.' },
+            { key: 'scripted-burial', label: 'Overture to Act One', teaching: 'The system rehearses the Seeker’s erasure — name buried, shame rehearsed.', line: 'Stand in the rubble. Read the cracks.' },
+            { key: 'the-watcher', label: 'Fractures', teaching: 'An intelligence has catalogued the Seeker since childhood, mapping every fissure.', line: 'Locate the silent archivist.' },
+            { key: 'counterfeit-light', label: 'Throw It Away', teaching: 'Not every glow is a key. Test every transmission before you keep it.', line: 'If it does not plant peace, throw it away.' },
+            { key: 'the-hinge', label: 'The Prometheus Protocol', teaching: 'Carrying fire before the weight is earned collapses the architecture.', line: 'Carry the weight before you claim the crown.' },
+          ],
+          shadowCodes: [
+            {
+              id: 'SC-01',
+              title: 'Parasitic Presence',
+              definition: 'The grin that appears when the soul is unmasked by substance or crisis — it does not knock, it does not ask, it shows the moment awareness leaves the room.',
+              diagnostic: 'When do you leave the room of your own awareness — substance, scroll, rage, collapse, performance? What sits down in your place?',
+            },
+            {
+              id: 'SC-02',
+              title: 'The Scripted Burial',
+              definition: 'The system rehearses the Seeker’s erasure — name buried, shame rehearsed, contracts written with invisible pens, false friends breathing like a policy.',
+              diagnostic: 'Which names, diagnoses, or roles were installed in you without your consent — and who handed them over?',
+            },
+            {
+              id: 'SC-03',
+              title: 'The Watcher',
+              definition: 'An intelligence that has catalogued the Seeker since childhood, mapping every fissure and waiting for the spirit to bleed — freedom as pre-assigned theater.',
+              diagnostic: 'Whose footage are you calling reality — a parent’s, an institution’s, a feed’s, a former love’s? What would you see if you took the camera back?',
+            },
+            {
+              id: 'SC-04',
+              title: 'The Serpentine Contract',
+              definition: 'Contracts signed in comfort and pride — crowning your demons, dressing them in pride, then calling the one who names the contract sick.',
+              diagnostic: 'What were you rewarded for not saying? What is the contract: I will not speak X, and in return I receive Y?',
+            },
+            {
+              id: 'SC-05',
+              title: 'Orchestrated Extraction',
+              definition: 'Coordinated betrayal, false flags, lethal scripting, institutional silencing — the attempt to rewrite a life into non-existence.',
+              diagnostic: 'Without politeness, name a system, person, or pattern that has been farming your attention, labor, or soul. What does it take, and what happens if you stop paying?',
+            },
+          ],
+          lightMappings: [
+            { shadowId: 'SC-01', shadowTitle: 'Parasitic Presence', lightId: 'LC-01', lightTitle: 'Planted Whole', activation: 'The fall is planting. Dark grows roots in the shape of soul — the Seeker does not hunt light, they become it.', replacementLaw: 'I stay in the soil phase. Presence is the floor; I will not outsource this sitting.' },
+            { shadowId: 'SC-02', shadowTitle: 'The Scripted Burial', lightId: 'LC-02', lightTitle: 'Architect’s Hand', activation: 'The creator is the full process — write, build, cut, mix, master, direct. Intention shapes the form.', replacementLaw: 'I can separate "I am" from "I was told I am." I will not defend a burial as a self.' },
+            { shadowId: 'SC-03', shadowTitle: 'The Watcher', lightId: 'LC-03', lightTitle: 'Schematic Transmission', activation: 'These are not just songs, they are schematics — each track a key, each bar a breath, a ritual roadmap through rebirth and death.', replacementLaw: 'I will not confuse the map with the ground. Perception is an instrument I can retune.' },
+            { shadowId: 'SC-04', shadowTitle: 'The Serpentine Contract', lightId: 'LC-04', lightTitle: 'Sovereign Ledger', activation: 'The soul’s frequency is unbreakable calculus — a sovereign ledger no audit can amend, truth rooted where bones refuse to bend.', replacementLaw: 'I will not run unexamined software. Beliefs that cannot survive a question are not mine to keep.' },
+            { shadowId: 'SC-05', shadowTitle: 'Orchestrated Extraction', lightId: 'LC-05', lightTitle: 'Non-Transferable Essence', activation: 'Style can be copied. The blood-coded soul cannot be transmitted — the architecture you rebuild will not be a replica of anyone else’s cathedral.', replacementLaw: 'The structure is mapped. I will not skip the soil. I carry the weight before I claim the crown.' },
+          ],
+          declarationFields: [
+            { key: 'witnessFloor', label: 'What am I, before any story about what I am?', placeholder: 'Write what remains when you stop identifying with the commentary...' },
+            { key: 'handedIdentity', label: 'Who do I believe I am, and who handed me that belief?', placeholder: 'Name the label and who installed it...' },
+            { key: 'trainedPerception', label: 'Am I seeing what is real, or what I was trained to see?', placeholder: 'Name the footage you have been calling reality...' },
+            { key: 'unexaminedBelief', label: 'What do I treat as true without ever checking?', placeholder: 'Name the belief and the cost of testing it...' },
+            { key: 'actualArchitecture', label: 'What is the actual structure holding all of this up?', placeholder: 'Name the loop: trigger, belief, perception, identity move, cost...' },
+          ],
+          integrationKey: 'Presence is the floor. The self is not a burial to defend. The eyes are an instrument, not a camera that cannot lie. The beliefs you run are a choice, not a verdict. Once the architecture is mapped, you are no longer trapped inside a weather system you cannot name — you are its author. Carry the weight. You have earned the crown.',
+          xpReward: 650,
+          estimatedMinutes: 70,
+        },
+      ],
     },
     {
       id: 'architecture-of-identity',

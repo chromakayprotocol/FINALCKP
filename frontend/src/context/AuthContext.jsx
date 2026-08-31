@@ -7,10 +7,9 @@ let supabaseClientPromise;
 
 const getAuthClient = async () => {
   if (!supabaseClientPromise) {
-    supabaseClientPromise = Promise.all([
-      import('../services/supabase/client'),
-      import('../services/apiClient'),
-    ]).then(([{ getSupabaseClient }]) => getSupabaseClient());
+    supabaseClientPromise = import('../services/supabase/client').then(({ getSupabaseClient }) =>
+      getSupabaseClient(),
+    );
   }
 
   return supabaseClientPromise;

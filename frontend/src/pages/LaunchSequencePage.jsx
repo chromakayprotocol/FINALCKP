@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { actEntryRoute } from "../lib/actRoutes";
 import "./LaunchSequencePage.css";
 
 const VIDEO_URL =
@@ -17,7 +18,7 @@ export default function LaunchSequencePage() {
     if (!vid) return;
 
     const handleEnded = () => {
-      navigate(`/protocol/${actNumber || 1}`);
+      navigate(actEntryRoute(Number.parseInt(actNumber, 10) || 1));
     };
 
     vid.addEventListener("ended", handleEnded);

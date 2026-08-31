@@ -3,9 +3,9 @@
 Guidance for Claude Code in this repo.
 
 ## What this is
-Chroma Key Protocol — React/Vite frontend + FastAPI backend, Supabase (auth+Postgres), Cloudflare (R2 storage, Pages hosting, R2 Worker). App is structured as Acts I–IV: journaling, guided audio, "Protocol" chat, visualizer, "Reclamation University" ("Sovereign Mode").
+Chroma Key Protocol — React/Vite frontend, Supabase (auth+Postgres), Cloudflare (R2 storage, Pages hosting, R2 Worker, `vma-worker`). App is structured as Acts I–IV: journaling, guided audio, visualizer, "Reclamation University" ("Sovereign Mode").
 
-> **Migration note**: a "Sovereign OS" migration is in progress (Phase 1 of the guide as of this writing) whose target architecture removes the FastAPI backend entirely in favor of a frontend-owned Sovereign Runtime + Supabase + Cloudflare Workers. See `docs/ARCHITECTURE.md` for both the current and target architectures. Until that migration actually lands, everything below in this file describes the real, active system — treat it as accurate.
+> **Migration note**: the FastAPI backend (`backend/`) has been removed entirely — the project is now frontend-owned (Sovereign Runtime) + Supabase + Cloudflare Workers, ahead of where the "Sovereign OS" migration guide's own phased sequencing (`docs/ARCHITECTURE.md`) had scheduled that removal. Several features that used to call the backend directly (checkout/license paywall, the `/protocol` AI chat page, the spin-wheel rewards page, onboarding's server-side progress write) were deleted or stripped down along with it and currently have no replacement — see `docs/ARCHITECTURE.md`'s Phase 20 entry for exactly what broke. Everything below describes the real, active system post-removal.
 
 ## Commands
 
@@ -17,32 +17,31 @@ Chroma Key Protocol — React/Vite frontend + FastAPI backend, Supabase (auth+Po
 - Root `package.json` mirrors these as `npm run bootstrap|start|build|test`
 - No lint script wired up (eslint installed but unconfigured)
 
-**Backend** (`backend/`):
-- `pip install -r requirements.txt` then `python run.py` (uvicorn server:app, :5000 default, reload=True)
-- `pytest tests/` (pytest not pinned in requirements.txt — install separately if missing)
-
 **Lyrics alignment** (`scripts/`): standalone Python 3.11/WhisperX pipeline, own venv (`py -3.11 -m venv .venv-lyrics`), see `scripts/lyrics-alignment/README.md`. Writes only reviewed SQL to `outputs/lyrics-alignment/`, never touches Supabase directly.
 
 **Deploy**: `.github/workflows/deploy.yml` builds frontend → Cloudflare Pages (`chromakeyprotocol`) on push to `main`. No CI test/lint gate.
 
 ## Architecture gotchas
 
-- **Backend = `backend/server.py` only.** Single ~1300-line file: all models/auth/routes under `api_router` (prefix `/api`). `backend/app/main.py` is just `from server import app`. `backend/app/routes/`, `backend/app/services/` are dead prototype code — **never add routes there**. `backend/db_client.py` gives the shared async Supabase client (`init_db`/`get_db`).
-- **Frontend auth is Supabase-first, not backend-issued** (despite `API_CONTRACT.md` describing backend sessions). `AuthContext.jsx` talks to Supabase Auth directly, `ProtectedRoute` gates on that state. Backend auth endpoints validate the Supabase access token instead of issuing their own session.
-- **Two migration systems** — check which owns a table before adding one: `supabase/migrations/` (current) vs `backend/migrations/` (backend-applied SQL, separate mechanism). `supabase/migrations_legacy_finalckp/` is archived, don't extend.
+- **There is no backend.** `backend/` (FastAPI/Python) was deleted. All server-side logic is either Supabase (Postgres + RLS + Auth) directly from the frontend, or a Cloudflare Worker (`frontend/vma-worker`, `frontend/r2-worker`). Do not add a new backend service without discussing it first — the whole point of the removal was to stop maintaining one.
+- **Frontend auth is Supabase-only.** `AuthContext.jsx` talks to Supabase Auth directly (sign in/up/OAuth/session, plus `user_metadata` for `current_act`/`completed_acts`/`level`); `ProtectedRoute` gates on that state. `API_CONTRACT.md` describes the old backend-session contract — it's obsolete, kept only as history.
+- **One migration system**: `supabase/migrations/`. `backend/migrations/` no longer exists (it went with `backend/`). `supabase/migrations_legacy_finalckp/` is archived, don't extend.
+- **No payments/licensing, AI protocol chat, or spin-wheel today.** `PaywallModal.jsx`, `ProtocolChat.jsx`, and `SpinWheel.jsx` were deleted with the backend they called (`/payments/*`, `/license/*`, `/protocol/chat`, `/spins/*`) and have no replacement yet — see `docs/ARCHITECTURE.md`'s Phase 20 entry before rebuilding any of them, so the replacement lands on Supabase/Workers rather than a new bespoke server.
+- **Act entry routing**: the old generic `/act/:actNumber` and `/protocol/:actNumber` routes (backend-driven `ActPage.jsx`/`ActProtocol.jsx`) are gone. Each Act's real entry point is now `actEntryRoute(actNumber)` in `frontend/src/lib/actRoutes.js` — use that helper rather than hardcoding `/act/N` again.
 - Routing (`App.jsx`) is one big lazy-loaded react-router-dom v7 table; many paths are `<Navigate>` redirects from old names — check before assuming a path is live.
 - Design system is dual-layer: shadcn HSL vars (`bg-primary`, ...) in `src/index.css` + brand tokens (`bg-brand-*`) in `tailwind.config.js`. Don't mix legacy `chroma-*` classes with `brand-*`. Tailwind config edits need a dev server restart.
 
 ## Key dirs (frontend)
 - `src/acts/` — per-act code; `src/modules/sovereign/`, `src/modules/ImmersiveProtocol/` — Sovereign Mode
+- `src/sovereign/` — the Sovereign Runtime (reducer/actions/event bus/persistence) that Reclamation University's Hermetic Hall modules already run on
 - `src/lib/supabase/` — one file per Supabase domain (tracks, journal, archetypes, elemental codex, matrxAlchemizr, sonic artifacts, Reclamation University)
-- `src/services/supabase/client.js` (Supabase singleton) vs `src/services/apiClient.js` (axios → FastAPI)
+- `src/services/supabase/client.js` — the Supabase singleton (the only backend client the app has)
+- `src/lib/actRoutes.js` — canonical entry route per Act (see above)
 - `src/context/audioprovider.jsx`, `src/lib/audio/useAudioAnalyzer.js` — audio state feeding visualizer
-- `frontend/r2-worker/` — separate Cloudflare Worker, own node_modules
+- `frontend/r2-worker/`, `frontend/vma-worker/` — separate Cloudflare Workers, own node_modules
 
 ## Env vars
-- Backend `.env`: `SUPABASE_URL`, `SUPABASE_KEY` (service role), `SUPABASE_ANON_KEY`, `JWT_SECRET`, `ADMIN_BOOTSTRAP_SECRET`, `R2_*` (server-only)
-- Frontend `.env`: `VITE_APP_SUPABASE_URL`/`VITE_SUPABASE_URL`, `VITE_APP_SUPABASE_ANON_KEY`/`VITE_SUPABASE_PUBLISHABLE_KEY` (both accepted), `VITE_APP_BACKEND_URL`, `VITE_APP_GOOGLE_CLIENT_ID`, `VITE_APP_R2_PUBLIC_BASE_URL`
+- Frontend `.env`: `VITE_APP_SUPABASE_URL`/`VITE_SUPABASE_URL`, `VITE_APP_SUPABASE_ANON_KEY`/`VITE_SUPABASE_PUBLISHABLE_KEY` (both accepted), `VITE_APP_GOOGLE_CLIENT_ID`, `VITE_APP_R2_PUBLIC_BASE_URL`, `VITE_APP_VMA_WORKER_URL`
 - `frontend/scripts/restore-env.mjs` runs before dev/start — can rewrite `.env`
 
-Details/contracts beyond this: `API_CONTRACT.md` (auth API), `auth_testing.md` (manual auth playbook) — read only when working on those areas.
+Details/contracts beyond this: `auth_testing.md` (manual auth playbook, still accurate — it already covers Supabase-only auth). `API_CONTRACT.md` documents the removed backend's API and is kept only as historical reference, not a live contract.

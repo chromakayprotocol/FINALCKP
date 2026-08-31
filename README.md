@@ -3,16 +3,16 @@
 
 A full-stack web application built around the **Chroma Key Protocol** — a structured, role-based system designed to manage user access, identity, and interaction flows within a branded, high-contrast UI environment.
 
-> **Migration note**: this repo is migrating toward a "Sovereign OS" architecture that removes the Python/FastAPI backend entirely in favor of a frontend-owned runtime + Supabase + Cloudflare Workers. See `docs/ARCHITECTURE.md` for the current vs. target architecture. Everything below still describes the currently-active system.
+> **Migration note**: the Python/FastAPI backend this repo used to run has been removed entirely — see `docs/ARCHITECTURE.md`'s Phase 20 entry. The app is now frontend-owned (Sovereign Runtime) + Supabase + Cloudflare Workers. Several features that called the old backend directly (checkout/licensing, the Protocol AI chat, the spin-wheel page) currently have no replacement.
 
 ---
 
 ## 🧠 Overview
 
-This project is a **React + Python full-stack application** with:
+This project is a **React frontend** with:
 
 * A **custom-designed frontend** (React + Tailwind)
-* A **lightweight backend API** (Python)
+* Supabase for auth, Postgres, and RLS-scoped persistence
 * A developing **design system (tokens + Tailwind integration)**
 * A structured product direction defined via internal PRD and UX docs
 
@@ -29,9 +29,7 @@ This project is a **React + Python full-stack application** with:
 
 ### Backend
 
-* FastAPI
-* Uvicorn
-* Supabase-backed DB client (`backend/db_client.py`)
+* None — Supabase (auth + Postgres) plus Cloudflare Workers (`frontend/r2-worker`, `frontend/vma-worker`) for anything server-side
 
 ### Design System
 
@@ -54,11 +52,6 @@ This project is a **React + Python full-stack application** with:
     App.js
     index.js
 
-/backend
-  server.py
-  run.py
-  db_client.py
-
 /memory
   PRD.md
 
@@ -69,17 +62,6 @@ design_guidelines.json
 ---
 
 ## 🚀 Running the App
-
-### 1. Start Backend
-
-```bash
-cd backend
-python run.py
-```
-
----
-
-### 2. Start Frontend
 
 ```bash
 cd frontend
@@ -99,7 +81,6 @@ Login → Authentication → Dashboard / SeekerPage
 
 * User submits credentials
 * Supabase Auth creates the frontend session
-* Backend protected endpoints validate the Supabase bearer token
 * Frontend redirects on success
 * User-specific page loads
 
@@ -157,7 +138,7 @@ tailwind.config.js → extend.colors.brand
 This project is currently:
 
 * ✅ Structurally sound
-* ⚠️ Partially integrated (frontend ↔ backend)
+* ⚠️ Several features (checkout/licensing, Protocol chat, spin-wheel) lost their backend and have no replacement yet
 * ⚠️ Design system mid-transition
 * ❌ Not production-ready
 
@@ -165,11 +146,10 @@ This project is currently:
 
 ## 🛠 Next Priorities
 
-1. Complete auth flow (frontend ↔ backend)
+1. Rebuild checkout/licensing, Protocol chat, and the spin-wheel page on Supabase/Workers (see `docs/ARCHITECTURE.md` Phase 20)
 2. Standardize UI components using tokens
 3. Remove legacy `chroma-*` styles
-4. Expand backend route validation inside `backend/server.py`
-5. Add minimal testing
+4. Add minimal testing
 
 ---
 

@@ -1,22 +1,16 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
+import { actEntryRoute } from "../../lib/actRoutes";
 
 const sidebarNav = [
   { id: "home", label: "Dashboard", icon: "\u229E", path: "/dashboard" },
-  {
-    id: "protocol",
-    label: "Protocol Engine",
-    icon: "\u25C8",
-    path: "/protocol",
-  },
   {
     id: "listen",
     label: "Immersion Protocol",
     icon: "\u266B",
     path: "/listen",
   },
-  { id: "wheel", label: "The Wheel", icon: "\u25CE", path: "/wheel" },
 ];
 
 const acts = [
@@ -28,7 +22,7 @@ const acts = [
     glyph: "\u2295",
     cls: "sa-i",
     colorVar: "--g3",
-    path: "/act/1",
+    path: actEntryRoute(1),
   },
   {
     num: "II",
@@ -38,7 +32,7 @@ const acts = [
     glyph: "\u224B",
     cls: "sa-ii",
     colorVar: "--b3",
-    path: "/act/2",
+    path: actEntryRoute(2),
   },
   {
     num: "III",
@@ -48,7 +42,7 @@ const acts = [
     glyph: "\u25B3",
     cls: "sa-iii",
     colorVar: "--r3",
-    path: "/act/3",
+    path: actEntryRoute(3),
     locked: true,
   },
   {
@@ -108,11 +102,11 @@ const AppShell = ({ children }) => {
 
   const nextStep = useMemo(() => {
     if (user?.is_admin) {
-      return { label: "Continue Your Path", path: `/act/${currentAct}` };
+      return { label: "Continue Your Path", path: actEntryRoute(currentAct) };
     }
 
     if (currentAct === 3 && !act3Unlocked) {
-      return { label: "Unlock Act III", path: "/dashboard?showUnlock=true" };
+      return { label: "Unlock Act III", path: "/acts" };
     }
 
     if (currentAct >= 4 && completedActs >= 4) {
@@ -121,7 +115,7 @@ const AppShell = ({ children }) => {
 
     return {
       label: `Resume Act ${["I", "II", "III", "IV"][Math.max(0, Math.min(currentAct - 1, 3))]}`,
-      path: `/act/${currentAct}`,
+      path: actEntryRoute(currentAct),
     };
   }, [user?.is_admin, currentAct, completedActs, act3Unlocked]);
 
@@ -132,11 +126,11 @@ const AppShell = ({ children }) => {
 
   const handleActClick = (act) => {
     if (act.num === "IV" && !user?.is_admin) {
-      navigate("/dashboard?showUnlock=true");
+      navigate("/acts");
       return;
     }
     if (act.num === "III" && !act3Unlocked && !user?.is_admin) {
-      navigate("/dashboard?showUnlock=true");
+      navigate("/acts");
       return;
     }
     if (act.path) {

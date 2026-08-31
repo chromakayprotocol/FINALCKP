@@ -16,11 +16,6 @@ vi.mock('../services/supabase/client', () => ({
   getSupabaseClient: vi.fn(),
 }));
 
-vi.mock('../services/apiClient', () => ({
-  configureApiClient: vi.fn(),
-  default: {},
-}));
-
 /* AuthContext.jsx memoizes getAuthClient()'s promise at module scope
    (`let supabaseClientPromise`), outside React entirely, so it only ever
    calls getSupabaseClient() once for the whole lifetime of this test

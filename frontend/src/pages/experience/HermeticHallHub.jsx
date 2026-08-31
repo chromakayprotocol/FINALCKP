@@ -8,7 +8,7 @@ import './hermeticHallHub.css';
 // depend on a third-party CDN. Do not swap these for placeholder art.
 const ASSETS = {
   hall: '/reclamation-university/Hermetic-Hall.webp',
-  wheel: '/reclamation-university/radial-dial.webp',
+  wheel: '/reclamation-university/Hermetic Hall/radial-dial.webp',
   initiationVideo: 'https://media.chromakeyprotocol.com/Hermetic-Hall-Mission.mp4',
   hallMusic:
     'https://pub-7db585eeeb464a9d9f749f0307532c22.r2.dev/shared/audio/Chroma%20Key%20Protocol%20(Without%20Lead%20Vocal).mp3',

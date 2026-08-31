@@ -10,9 +10,8 @@ import { useSovereign } from '../../sovereign/runtime';
  * decorative: if the Worker isn't configured or the call fails, this
  * says so rather than fabricating a reply.
  *
- * Auth mirrors src/services/apiClient.js's exact pattern for reaching
- * the FastAPI backend: pull the live Supabase access token per-request,
- * send it as a bearer token. No token stored, no separate session.
+ * Auth: pull the live Supabase access token per-request, send it as a
+ * bearer token. No token stored, no separate session.
  */
 
 const VMA_WORKER_URL = (import.meta.env.VITE_APP_VMA_WORKER_URL || '').replace(/\/+$/, '');

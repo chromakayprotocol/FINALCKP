@@ -2055,3 +2055,72 @@ were classified as follows:
 Nothing was deleted in this pass. FastAPI removal is Phase 20 of the
 migration guide and depends on every phase before it actually replacing its
 responsibilities first.
+
+## Phase 20: FastAPI removal (executed ahead of schedule)
+
+Phase 1.1 above deliberately deferred this until every phase before it had
+replaced the backend's responsibilities. That precondition was **not**
+met — the four-Act pathway (payments/licensing, the Protocol AI chat, the
+spin-wheel rewards page, onboarding's server-side progress write) was never
+migrated onto Supabase/Workers, and the Sovereign Runtime migration itself
+only ever reached Hermetic Hall (`SOVEREIGN_STATE_MAP.md`'s Phase 8), not
+the four-Act pathway. This phase was executed anyway, on explicit
+instruction, accepting the resulting feature breakage rather than waiting
+for replacements to exist first.
+
+**Deleted:**
+- `backend/` in its entirety (FastAPI app, `db_client.py`, `requirements.txt`,
+  `backend/migrations/`, `backend/tests/`, and an orphaned, never-mounted
+  Express `backend/api/certificates.js` that lived alongside it).
+- `frontend/src/services/apiClient.js` (the axios client configured against
+  the backend).
+- `frontend/src/pages/ActPage.jsx` and `ActProtocol.jsx` +
+  `frontend/src/data/actDefinitions.js` — the legacy `/act/:actNumber` and
+  `/protocol/:actNumber` routes and their data. `ActPage.jsx` was already
+  superseded by `ActNavigation.jsx`'s real per-Act destinations for Acts
+  1–3; `ActProtocol.jsx`/`actDefinitions.js` were dead code (unrouted)
+  before this pass except for Act 4's `/protocol/4` link, repointed to the
+  existing `/act/4` (`LockedAct.jsx`) instead.
+- `frontend/src/pages/SpinWheel.jsx`, `ProtocolChat.jsx`,
+  `frontend/src/components/layout/PaywallModal.jsx`,
+  `frontend/src/lib/accessFlags.js` — whole features whose only purpose was
+  calling the backend (`/spins/*`, `/tracks`, `/protocol/chat`,
+  `/payments/*`, `/license/*`). These now have **no replacement**: the
+  wheel, the Protocol AI chat, and checkout/license unlock are gone from
+  the live app until something rebuilds them on Supabase/Workers.
+
+**Edited** (backend call removed, rest of the feature kept working):
+`Onboarding.jsx` (dropped the best-effort `PUT /progress` call, which was
+already swallowing its own errors, and the now-dead "Spin The Wheel" entry
+option), `GuidedListen.jsx` (dropped the `/tracks` count fetch — cards just
+don't show a track count anymore), `LaunchModule.jsx` (dropped
+Stripe-checkout-return payment polling), `AuthContext.jsx` (dropped the
+side-effecting `import('../services/apiClient')` used only to configure
+axios), `AuthContext.test.js` (dropped the now-pointless apiClient mock),
+`VMAChat.jsx` (comment only — it was never actually backend-dependent,
+just described its auth pattern by analogy to apiClient.js).
+
+**Follow-on navigation fixes**: introduced
+`frontend/src/lib/actRoutes.js` (`actEntryRoute(actNumber)`) as the one
+place that maps an Act number to its real entry route, since the generic
+`/act/:actNumber` catch-all is gone. Repointed every caller that built that
+path manually: `AppShell.jsx` (sidebar Act list, "Continue Your Path"/
+"Resume Act" CTA, and the Act III/IV locked-state redirect, which used to
+open `PaywallModal` via `/dashboard?showUnlock=true` and now just goes to
+`/acts` since there's nothing left to unlock with), `Activation.jsx`, and
+`LaunchSequencePage.jsx`. `ActNavigation.jsx` already had the right
+per-Act destinations for Acts 1–3 (this is where `actEntryRoute()`'s
+mapping comes from) and only needed Act 4's link fixed.
+
+**Verification**: `npx vitest run` — same 6 pre-existing unrelated failures
+(`hermeticJourneyTabs.test.js`, `hermeticLearningExperience.test.js`), 0
+introduced. `npx esbuild --bundle` on `App.jsx`'s full import graph
+resolves clean (7.1MB, no missing modules) — confirms no route in the app
+still imports a deleted file.
+
+**Not done in this pass**: rebuilding any of the deleted features on
+Supabase/Workers. `PaywallModal`/checkout, `ProtocolChat`, `SpinWheel`, and
+onboarding's progress persistence are real gaps now, not deferred
+work-in-progress — treat rebuilding any of them as new feature work against
+the target architecture (Supabase + Workers), not as restoring what was
+here before.

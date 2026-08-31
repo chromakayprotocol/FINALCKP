@@ -1,17 +1,31 @@
 /**
- * The 11-step curriculum lifecycle (Phase 4 of the Sovereign OS migration).
+ * The 11-step Hermetic Hall curriculum lifecycle (Phase 4 of the Sovereign
+ * OS migration).
  *
- * Every Reclamation University module walks the same 11 steps. The critical
- * rule from the migration guide: **"Next" is not "complete."** Each step
- * defines its own completion criteria below, evaluated against real runtime
- * state (module state, reflections, concepts, synthesis, artifact) — not
- * just whether the user navigated past it. Progression this way represents
- * engagement rather than navigation.
+ * Every Hermetic Hall module (the seven Hermetic principles) walks the same
+ * 11 steps below. This is that track's own step *shape* — "teach a
+ * principle": intro -> principle -> key concepts -> why it matters ->
+ * domains -> reclamation -> 2026 lens -> reflection -> protocol -> artifact
+ * -> summary. It is not a generic, app-wide lifecycle: the four-Act pathway
+ * (Fractured Veil, Reflection Chamber, Reclamation, Crucible Code) is a
+ * structurally separate track that was never migrated onto this shape and
+ * should not be forced onto it — see
+ * `sovereign/reflectionChamber/reflectionChamberSteps.js` for that track's
+ * own, differently-shaped step list.
  *
- * This still isn't wired into any existing component — see
- * docs/SOVEREIGN_STATE_MAP.md for the three incompatible section/scene
- * models currently live in Reclamation University that this is meant to
- * eventually replace.
+ * `evaluateModuleSteps`/`isStepComplete`/`isModuleComplete` below take the
+ * step list (and the promptId that step list uses for its one
+ * reflection-gate step) as parameters, defaulting to this Hermetic Hall
+ * shape so none of the six existing Hermetic Hall call sites need to
+ * change — but any other track can pass its own step list through the same
+ * evaluator rather than duplicating the walk-and-lock logic.
+ *
+ * The critical rule from the migration guide, true for any step list this
+ * evaluator runs: **"Next" is not "complete."** Each step defines its own
+ * completion criteria, evaluated against real runtime state (module state,
+ * reflections, concepts, synthesis, artifact) — not just whether the user
+ * navigated past it. Progression this way represents engagement rather
+ * than navigation.
  */
 
 import {
@@ -140,11 +154,18 @@ export const SOVEREIGN_STEPS = [
   },
 ];
 
-/** @returns {StepCompletionContext} */
-function buildStepContext(state, module) {
+/**
+ * @param {string} reflectionPromptId which promptId this step list's
+ *   reflection-gate step reads — each step list defines its own (Hermetic
+ *   Hall's is SOVEREIGN_STEP_IDS.REFLECTION; the Reflection Chamber's is
+ *   its own REFLECT step id), since a module can only ever be evaluated
+ *   against one step list at a time.
+ * @returns {StepCompletionContext}
+ */
+function buildStepContext(state, module, reflectionPromptId) {
   return {
     module,
-    reflectionEntry: selectReflectionEntry(state, module.moduleId, SOVEREIGN_STEP_IDS.REFLECTION),
+    reflectionEntry: selectReflectionEntry(state, module.moduleId, reflectionPromptId),
     concepts: selectConcepts(state),
     synthesis: selectSynthesis(state),
     artifact: selectArtifact(state),
@@ -156,12 +177,22 @@ function buildStepContext(state, module) {
  * anything past the first incomplete step — you can be *on* the first
  * unfinished step, but you can't skip ahead of it.
  *
+ * @param {Array} steps defaults to the Hermetic Hall 11-step lifecycle;
+ *   pass a track's own step list (e.g. REFLECTION_CHAMBER_STEPS) to
+ *   evaluate that track instead.
+ * @param {string} reflectionPromptId defaults to Hermetic Hall's REFLECTION
+ *   step id; pass the matching id for whatever `steps` list you pass.
  * @returns {Array<{id: string, order: number, label: string, status: string}>}
  */
-export function evaluateModuleSteps(state, moduleId) {
+export function evaluateModuleSteps(
+  state,
+  moduleId,
+  steps = SOVEREIGN_STEPS,
+  reflectionPromptId = SOVEREIGN_STEP_IDS.REFLECTION,
+) {
   const module = state.curriculum.modules[moduleId];
   if (!module) {
-    return SOVEREIGN_STEPS.map((step) => ({
+    return steps.map((step) => ({
       id: step.id,
       order: step.order,
       label: step.label,
@@ -169,10 +200,10 @@ export function evaluateModuleSteps(state, moduleId) {
     }));
   }
 
-  const ctx = buildStepContext(state, module);
+  const ctx = buildStepContext(state, module, reflectionPromptId);
   let reachable = true;
 
-  return SOVEREIGN_STEPS.map((step) => {
+  return steps.map((step) => {
     if (!reachable) {
       return { id: step.id, order: step.order, label: step.label, status: SOVEREIGN_STEP_STATUSES.LOCKED };
     }
@@ -189,15 +220,26 @@ export function evaluateModuleSteps(state, moduleId) {
   });
 }
 
-export function isStepComplete(state, moduleId, stepId) {
-  const step = SOVEREIGN_STEPS.find((candidate) => candidate.id === stepId);
+export function isStepComplete(
+  state,
+  moduleId,
+  stepId,
+  steps = SOVEREIGN_STEPS,
+  reflectionPromptId = SOVEREIGN_STEP_IDS.REFLECTION,
+) {
+  const step = steps.find((candidate) => candidate.id === stepId);
   const module = state.curriculum.modules[moduleId];
   if (!step || !module) return false;
-  return step.isComplete(buildStepContext(state, module));
+  return step.isComplete(buildStepContext(state, module, reflectionPromptId));
 }
 
-export function isModuleComplete(state, moduleId) {
-  return evaluateModuleSteps(state, moduleId).every(
+export function isModuleComplete(
+  state,
+  moduleId,
+  steps = SOVEREIGN_STEPS,
+  reflectionPromptId = SOVEREIGN_STEP_IDS.REFLECTION,
+) {
+  return evaluateModuleSteps(state, moduleId, steps, reflectionPromptId).every(
     (step) => step.status === SOVEREIGN_STEP_STATUSES.COMPLETE,
   );
 }

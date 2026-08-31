@@ -1,8 +1,6 @@
-import { useCallback, useEffect, useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useCallback, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import axios from "axios";
-import { useAuth } from "../context/AuthContext";
 import "./LaunchModule.css";
 
 import act1Orb from "../public/emblems/act_one_emblem.svg";
@@ -183,34 +181,9 @@ const LaunchPillar = ({ pillar, onLaunch, index }) => {
 /* LaunchModule main export */
 
 const LaunchModule = () => {
-  const { checkAuth } = useAuth();
   const navigate = useNavigate();
-  const [searchParams, setSearchParams] = useSearchParams();
   const [warping, setWarping] = useState(false);
   const [warpDest, setWarpDest] = useState(null);
-
-  const pollPaymentStatus = useCallback(
-    async (sessionId, attempts = 0) => {
-      if (attempts >= 5) return;
-      try {
-        const res = await axios.get(`/payments/status/${sessionId}`);
-        if (res.data.payment_status === "paid") await checkAuth();
-        else if (res.data.status !== "expired")
-          setTimeout(() => pollPaymentStatus(sessionId, attempts + 1), 2000);
-      } catch {
-        /* Payment polling is best-effort */
-      }
-    },
-    [checkAuth],
-  );
-
-  useEffect(() => {
-    const sid = searchParams.get("session_id");
-    if (sid) {
-      pollPaymentStatus(sid);
-      setSearchParams({}, { replace: true });
-    }
-  }, [searchParams, pollPaymentStatus, setSearchParams]);
 
   const handleLaunch = useCallback((actNum) => {
     setWarpDest(actNum);

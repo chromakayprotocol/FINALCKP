@@ -1,10 +1,6 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useParams, useNavigate } from 'react-router-dom';
-import axios from 'axios';
 import ReclamationCodex from '../acts/Reclamation/ReclamationCodex';
-
-const API_URL = import.meta.env.VITE_APP_BACKEND_URL;
 
 const actMeta = [
   { num: 1, roman: 'I', element: 'Earth', title: 'The Fractured Veil', color: 'var(--g3)', hex: '#5ab038', dim: 'var(--gdim)', bg: 'var(--gsurf)', surfGrad: 'linear-gradient(180deg,var(--gsurf),#070c05)', borderGrad: 'linear-gradient(90deg,var(--g3),var(--g4))', desc: 'Awareness. Recognition. Naming what was hidden beneath the surface.' },
@@ -35,19 +31,6 @@ const ShareButtons = ({ track, act }) => {
 const ImmersionLanding = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [trackCounts, setTrackCounts] = useState({});
-
-  const fetchTrackCounts = useCallback(() => {
-    axios.get('/tracks').then(res => {
-      const counts = {};
-      (res.data.tracks || []).filter(t => t.type === 'track').forEach(t => {
-        counts[t.act] = (counts[t.act] || 0) + 1;
-      });
-      setTrackCounts(counts);
-    }).catch(() => {});
-  }, []);
-
-  useEffect(() => { fetchTrackCounts(); }, [fetchTrackCounts]);
 
   const isLocked = (act) => {
     if (user?.is_admin) return false;
@@ -71,7 +54,6 @@ const ImmersionLanding = () => {
       <div data-testid="immersion-cards" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 6, maxWidth: 1100, margin: '0 auto' }}>
         {actMeta.map(act => {
           const locked = isLocked(act);
-          const count = trackCounts[act.num] || 0;
           return (
             <div key={act.num} data-testid={`immersion-card-${act.num}`} onClick={() => !locked && navigate(`/listen/${act.num}`)} style={{ position: 'relative', overflow: 'hidden', cursor: locked ? 'not-allowed' : 'pointer', background: act.surfGrad, border: '1px solid var(--border)', padding: '24px 18px', opacity: locked ? 0.4 : 1, transition: 'all 0.25s', minHeight: 260, display: 'flex', flexDirection: 'column' }}>
               <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, background: act.borderGrad }} />
@@ -79,7 +61,7 @@ const ImmersionLanding = () => {
               <div style={{ fontSize: 36, color: act.color, marginBottom: 12, lineHeight: 1, filter: `drop-shadow(0 0 12px ${act.hex}44)` }}>{act.num === 1 ? '\u2295' : act.num === 2 ? '\u224B' : act.num === 3 ? '\u25B3' : '\u2726'}</div>
               <div style={{ fontFamily: "'Oxanium',serif", fontSize: 14, fontWeight: 600, color: act.color, letterSpacing: '0.06em', marginBottom: 8 }}>{act.title}</div>
               <div style={{ fontFamily: "'Oxanium',serif", fontStyle: 'italic', fontSize: 11, color: 'var(--muted)', lineHeight: 1.6, marginBottom: 16, flex: 1 }}>{act.desc}</div>
-              <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 8, color: 'var(--muted)', letterSpacing: '0.15em', marginBottom: 10 }}>{locked ? '' : `${count} tracks · Immersive experience`}</div>
+              <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 8, color: 'var(--muted)', letterSpacing: '0.15em', marginBottom: 10 }}>{locked ? '' : 'Immersive experience'}</div>
               <button data-testid={`immersion-enter-${act.num}`} style={{ width: '100%', fontFamily: "'JetBrains Mono',monospace", fontSize: 8, letterSpacing: '0.3em', textTransform: 'uppercase', padding: '8px 0', border: `1px solid ${locked ? 'var(--border)' : act.color}`, background: 'transparent', cursor: locked ? 'not-allowed' : 'pointer', color: locked ? 'var(--muted)' : act.color, transition: 'all 0.2s' }}>{locked ? (act.num === 4 ? 'Coming Soon' : 'Locked') : 'Enter Immersion \u2192'}</button>
               {locked && <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'rgba(6,6,4,0.55)', backdropFilter: 'blur(3px)' }}><span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 8, letterSpacing: '0.3em', textTransform: 'uppercase', color: act.color }}>{act.num === 4 ? 'Coming Soon' : 'Unlock to Access'}</span></div>}
             </div>

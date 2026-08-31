@@ -15,13 +15,17 @@
  * modeled as its own Sovereign module, namespaced the same way Hermetic Hall
  * namespaces its principles (`hermetic-hall/vibration`, etc.) — see
  * REFLECTION_CHAMBER_PILLAR_IDS below and moduleId(). Mirror Clarity is the
- * average of those five modules' synthesisReadiness (Phase 4/13's existing
- * 11-step lifecycle), bucketed into the five environmental states the guide
- * names (FRACTURED -> CLEAR). Nothing here decides how those states render —
- * that is the Chamber environment component's job.
+ * average of those five modules' synthesisReadiness, evaluated against the
+ * Reflection Chamber's *own* step lifecycle (reflectionChamberSteps.js) —
+ * not Hermetic Hall's 11-step one, which is a different track's step shape
+ * (see that file's header for why they must stay separate) — bucketed into
+ * the five environmental states the guide names (FRACTURED -> CLEAR).
+ * Nothing here decides how those states render — that is the Chamber
+ * environment component's job.
  */
 
 import { moduleSynthesisReadiness } from '../synthesis/sovereignSynthesis';
+import { REFLECTION_CHAMBER_STEPS, REFLECTION_CHAMBER_STEP_IDS } from './reflectionChamberSteps';
 
 export const REFLECTION_CHAMBER_MODULE_PREFIX = 'reflection-chamber/';
 
@@ -74,7 +78,13 @@ export function clarityStateFor(score) {
 export function mirrorClarity(state, pillarIds = REFLECTION_CHAMBER_PILLAR_IDS) {
   const perPillar = pillarIds.map((pillarId) => {
     const moduleId = reflectionChamberModuleId(pillarId);
-    return { pillarId, moduleId, readiness: moduleSynthesisReadiness(state, moduleId) };
+    const readiness = moduleSynthesisReadiness(
+      state,
+      moduleId,
+      REFLECTION_CHAMBER_STEPS,
+      REFLECTION_CHAMBER_STEP_IDS.REFLECT,
+    );
+    return { pillarId, moduleId, readiness };
   });
 
   const score = perPillar.length

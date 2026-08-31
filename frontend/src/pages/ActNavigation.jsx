@@ -68,7 +68,7 @@ const acts = [
     color: '#ffc857',
     rgb: '255, 200, 87',
     emblem: '/emblem/act_four_module_emblem.png',
-    route: '/protocol/4',
+    route: '/act/4',
     status: 'Sealed',
     signal: '04',
   },

@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
 
 const emotionalStates = [
   { id: 'lost', icon: '\u25CC', label: 'Lost', sub: "Something doesn't fit anymore" },
@@ -31,16 +30,12 @@ const Onboarding = () => {
   const [selectedState, setSelectedState] = useState(null);
   const navigate = useNavigate();
 
-  const handleStateSelect = async (stateId) => {
+  const handleStateSelect = (stateId) => {
     setSelectedState(stateId);
-    try {
-      await axios.put('/progress', { emotional_state: stateId });
-    } catch (e) { /* ignore */ }
     setPhase(3);
   };
 
   const enterProtocol = () => navigate('/dashboard');
-  const enterWheel = () => navigate('/wheel');
 
   return (
     <div style={{
@@ -143,11 +138,11 @@ const Onboarding = () => {
             {lyrics[selectedState]}
           </div>
 
-          {/* Two Entry Options */}
+          {/* Entry */}
           <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 8, letterSpacing: '0.4em', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: 16 }}>
-            Choose Your Entry
+            Begin
           </div>
-          <div style={{ display: 'flex', gap: 16, width: '100%' }}>
+          <div style={{ display: 'flex', width: '100%' }}>
             <button
               data-testid="enter-protocol-btn"
               onClick={enterProtocol}
@@ -161,21 +156,6 @@ const Onboarding = () => {
               </div>
               <div style={{ fontFamily: "'Oxanium',serif", fontStyle: 'italic', fontSize: 12, color: 'var(--muted)', lineHeight: 1.5 }}>
                 Start from Act I and follow the structured path through all acts.
-              </div>
-            </button>
-            <button
-              data-testid="enter-wheel-btn"
-              onClick={enterWheel}
-              style={{
-                flex: 1, padding: '20px 24px', border: '1px solid var(--gold)', background: 'transparent',
-                cursor: 'pointer', transition: 'all 0.3s', textAlign: 'center'
-              }}
-            >
-              <div style={{ fontFamily: "'Oxanium',serif", fontSize: 14, fontWeight: 600, color: 'var(--gold)', marginBottom: 8, letterSpacing: '0.1em' }}>
-                Spin The Wheel
-              </div>
-              <div style={{ fontFamily: "'Oxanium',serif", fontStyle: 'italic', fontSize: 12, color: 'var(--muted)', lineHeight: 1.5 }}>
-                Let fate decide. 30 selections — 22 album tracks + 8 bonus transmissions.
               </div>
             </button>
           </div>

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef } from "react";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
+import { actEntryRoute } from "../lib/actRoutes";
 import "./Activation.css";
 
 const LAUNCH_VIDEO_SRC =
@@ -35,7 +36,7 @@ export default function Activation() {
     if (completedRef.current) return;
     completedRef.current = true;
     clearFallbackTimer();
-    navigate(`/act/${act}`, { replace: true });
+    navigate(actEntryRoute(act), { replace: true });
   }, [act, clearFallbackTimer, navigate]);
 
   const scheduleFallbackRedirect = useCallback(

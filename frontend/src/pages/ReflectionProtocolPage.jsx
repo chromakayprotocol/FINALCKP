@@ -18,6 +18,7 @@ import {
   CADENCE,
   CLOSING,
 } from '../data/reflectionChamberModuleData';
+import ReflectionChamberEnvironment from './experience/ReflectionChamberEnvironment';
 import './ReflectionProtocolPage.css';
 
 const NEXUS_PATH = '/experiencemode/sovereign/reclamation-university/nexus';
@@ -82,6 +83,14 @@ export default function ReflectionProtocolPage() {
           </div>
         </div>
       </section>
+
+      <ReflectionChamberEnvironment
+        activePillarId={activePillarId}
+        onSelectPillar={(pillarId) => {
+          setActivePillarId(pillarId);
+          setExpandedCode(null);
+        }}
+      />
 
       <nav className="rpp-pillars-nav" aria-label="Five pillars">
         {PILLARS.map((pillar) => (

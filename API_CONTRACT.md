@@ -1,8 +1,8 @@
-# API Contract (Canonical Backend)
+# API Contract (Canonical Backend) — OBSOLETE
+
+> **This backend no longer exists.** `backend/` (the FastAPI server this document describes) was deleted — see `docs/ARCHITECTURE.md`'s Phase 20 entry. Kept as historical reference only; do not use these endpoints or build against this contract.
 
 This document defines the auth API contract for the canonical FastAPI server (`backend/server.py`).
-
-> **Migration note**: this contract describes the currently-active FastAPI backend. The Sovereign OS migration's target architecture (see `docs/ARCHITECTURE.md`) removes FastAPI entirely; this document stays authoritative for these endpoints until that migration actually replaces them.
 
 ## Base URL
 

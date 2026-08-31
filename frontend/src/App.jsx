@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useState } from 'react';
+import { lazy, Suspense, useEffect } from 'react';
 import {
   BrowserRouter,
   Routes,
@@ -19,13 +19,9 @@ const ActNavigation = lazy(() => import('./pages/ActNavigation'));
 const ActOneEntry = lazy(() => import('./pages/ActOneEntry'));
 const LaunchModule = lazy(() => import('./pages/LaunchModule'));
 const Reclamation_User_Journey = lazy(() => import('./pages/Reclamation_User_Journey'));
-const ActPage = lazy(() => import('./pages/ActPage'));
 const LockedAct = lazy(() => import('./pages/LockedAct'));
-const SpinWheel = lazy(() => import('./pages/SpinWheel'));
 const Onboarding = lazy(() => import('./pages/Onboarding'));
-const ProtocolChat = lazy(() => import('./pages/ProtocolChat'));
 const GuidedListen = lazy(() => import('./pages/GuidedListen'));
-const ActProtocol = lazy(() => import('./pages/ActProtocol'));
 const LaunchSequencePage = lazy(() => import('./pages/LaunchSequencePage'));
 const Activation = lazy(() => import('./pages/Activation'));
 const ChromaKeyProtocolPremium = lazy(() => import('./pages/ChromaKeyProtocolPremium'));
@@ -42,9 +38,7 @@ const SovereignOSLive = lazy(() => import('./pages/experience/SovereignOSLive'))
 const HermeticHallHub = lazy(() => import('./pages/experience/HermeticHallHub'));
 
 import AppShell from './components/layout/AppShell';
-import PaywallModal from './components/layout/PaywallModal';
 import VMAChatWidget from './components/sovereign-os/VMAChatWidget';
-import { UNLOCK_ALL_ACCESS } from './lib/accessFlags';
 import { getAuthRedirectPath } from './lib/authRedirects';
 
 const AuthRouteLoading = () => (
@@ -85,14 +79,13 @@ const ProtectedRoute = ({ children, withShell = true }) => {
 };
 
 const AppShellWrapper = ({ children }) => {
-  const [showPaywall, setShowPaywall] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
 
   useEffect(() => {
-    if (searchParams.get('showUnlock') === 'true' && !UNLOCK_ALL_ACCESS) {
-      setShowPaywall(true);
-      setSearchParams({}, { replace: true });
-    } else if (searchParams.get('showUnlock') === 'true') {
+    // The paywall this used to trigger (?showUnlock=true) was removed along
+    // with the FastAPI-backed checkout/license flow it opened. Still strip
+    // the param so it doesn't linger in the URL.
+    if (searchParams.get('showUnlock') === 'true') {
       setSearchParams({}, { replace: true });
     }
   }, [searchParams, setSearchParams]);
@@ -100,11 +93,6 @@ const AppShellWrapper = ({ children }) => {
   return (
     <AppShell>
       {children}
-
-      <PaywallModal
-        isOpen={showPaywall}
-        onClose={() => setShowPaywall(false)}
-      />
       <VMAChatWidget />
     </AppShell>
   );
@@ -363,15 +351,6 @@ function AppRoutes() {
       {/* AUDIO */}
 
       <Route
-        path="/wheel"
-        element={
-          <ProtectedRoute>
-            <SpinWheel />
-          </ProtectedRoute>
-        }
-      />
-
-      <Route
         path="/listen"
         element={
           <ProtectedRoute>
@@ -401,17 +380,6 @@ function AppRoutes() {
         element={<Navigate to="/experiencemode/sovereign/module/archetype" replace />}
       />
 
-      {/* PROTOCOL */}
-
-      <Route
-        path="/protocol"
-        element={
-          <ProtectedRoute>
-            <ProtocolChat />
-          </ProtectedRoute>
-        }
-      />
-
       {/* ACT III MAINFRAME */}
 
       <Route
@@ -423,42 +391,11 @@ function AppRoutes() {
         }
       />
 
-      {/* GENERIC ACT PROTOCOLS */}
-
-      <Route
-        path="/protocol/:actNumber"
-        element={
-          <ProtectedRoute>
-            <ActProtocol />
-          </ProtectedRoute>
-        }
-      />
-
-      {/* CODEX */}
-
-      <Route
-        path="/codex"
-        element={
-          <ProtectedRoute>
-            <ActPage />
-          </ProtectedRoute>
-        }
-      />
-
       <Route
         path="/act/4"
         element={
           <ProtectedRoute>
             <LockedAct />
-          </ProtectedRoute>
-        }
-      />
-
-      <Route
-        path="/act/:actNumber"
-        element={
-          <ProtectedRoute>
-            <ActPage />
           </ProtectedRoute>
         }
       />

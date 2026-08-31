@@ -96,8 +96,8 @@ against — the fix here is to *reuse*, not *port*.
 |---|---|---|
 | `ReflectionEvent` / event pipeline | `SOVEREIGN_EVENT_TYPES` + the reducer + `mapActionToEvents.js`, dispatched through `SovereignEventBus` | `sovereign/events/eventTypes.js`, `sovereign/events/SovereignEventBus.js`, `sovereign/events/mapActionToEvents.js` |
 | Reflection Engine (action → consequence) | `sovereignReducer.js` — every dispatched action (`startModule`, `advanceStep`, `completeStep`, `selectConcept`, `executeProtocol`, `startReflection`/`updateReflection`/`commitReflection`, `generateArtifact`, `sealArtifact`) is the consequence step | `sovereign/runtime/sovereignReducer.js`, `sovereign/runtime/sovereignActions.js` |
-| Progression Engine / Act II state object | Per-module `SovereignModuleState` (`viewedSteps`, `completedSteps`, `selectedConcepts`, `status`) plus the 11-step lifecycle evaluator | `sovereign/runtime/sovereignState.js`, `sovereign/runtime/sovereignSteps.js` (`evaluateModuleSteps`) |
-| Protocol interface every implementation conforms to | The 11-step curriculum lifecycle (`SOVEREIGN_STEP_IDS`: intro → principle → key-concepts → why-it-matters → domains → reclamation → 2026-lens → reflection → protocol → artifact → summary), with `isComplete` evaluated against real state, not navigation | `sovereign/runtime/sovereignSteps.js` |
+| Progression Engine / Act II state object | Per-module `SovereignModuleState` (`viewedSteps`, `completedSteps`, `selectedConcepts`, `status`) plus the step-lifecycle evaluator, `evaluateModuleSteps(state, moduleId, steps, reflectionPromptId)` — genuinely reusable across tracks, since it now takes the step list as a parameter (see next row) | `sovereign/runtime/sovereignState.js`, `sovereign/runtime/sovereignSteps.js` (`evaluateModuleSteps`) |
+| Protocol interface every implementation conforms to | **Not** Hermetic Hall's 11-step lifecycle (`SOVEREIGN_STEP_IDS`) — that is one track's own step *shape* ("teach a principle"), not a generic contract; forcing the Reflection Chamber's pillars onto it was this document's own earlier mistake, corrected in §4. The real, reusable contract is the *evaluator* (`isComplete` checked against real state, walk-and-lock ordering), which now accepts any step list — each track defines its own | `sovereign/runtime/sovereignSteps.js` (evaluator), `sovereign/reflectionChamber/reflectionChamberSteps.js` (the Reflection Chamber's own step list) |
 | Key Fragment / Reflection Archive | The Concept Graph (`selectConcept`, `connectConcepts`, `mapConceptToDomain`) plus the structured reflection pipeline (`startReflection → updateReflection → extractConcepts → commitReflection`) | `sovereign/runtime/sovereignState.js` (`concepts`, `reflection`), `sovereign/runtime/sovereignActions.js` |
 | Reflection Core / convergence point | The Artifact Compiler (`generateArtifact`, `sealArtifact`, `compileFromSynthesis`), which reads the Synthesis Engine's derived state across every completed module | `sovereign/artifact/*`, `sovereign/synthesis/sovereignSynthesis.js` |
 | Measurement/event system | `sovereign_events` (append-only Supabase table) fed by the same event bus, already the intended eventual replacement for the `rec_uni_events`/PostHog split | `supabase/migrations/20260822051703_create_sovereign_runtime_schema.sql` |
@@ -107,12 +107,19 @@ against — the fix here is to *reuse*, not *port*.
 
 1. Reflection Chamber content isn't modeled as Sovereign modules at all yet
    (§4).
-2. Mirror Clarity — a derived environmental-progress score, distinct from
+2. The Reflection Chamber's own step lifecycle, distinct from Hermetic
+   Hall's 11-step one (§4). *(Landed in this branch — see
+   `sovereign/reflectionChamber/reflectionChamberSteps.js`, and the
+   generalization of `evaluateModuleSteps`/`isStepComplete`/
+   `isModuleComplete`/`moduleSynthesisReadiness` to accept any step list,
+   in `sovereign/runtime/sovereignSteps.js` and
+   `sovereign/synthesis/sovereignSynthesis.js`.)*
+3. Mirror Clarity — a derived environmental-progress score, distinct from
    any one module's `synthesisReadiness` (§5). *(Landed in this branch —
    see `sovereign/reflectionChamber/mirrorClarity.js`.)*
-3. The actual Chamber environment/visual layer that mirror clarity drives
+4. The actual Chamber environment/visual layer that mirror clarity drives
    (§6) — canvas/3D rendering, not state.
-4. A `*ModuleExperience.jsx` per pillar and the `ReclamationModulePage.jsx`
+5. A `*ModuleExperience.jsx` per pillar and the `ReclamationModulePage.jsx`
    wiring to reach them (§4).
 
 ## 4. Modeling the five pillars as Sovereign modules
@@ -139,28 +146,51 @@ Hall already namespaces its principles (`hermetic-hall/vibration`,
 in `SovereignOSDemo.jsx`. `mirrorClarity.js` (§5) already assumes this exact
 convention via `reflectionChamberModuleId()`.
 
-Mapping each pillar onto the existing 11-step lifecycle (no new steps
-needed — the lifecycle is already generic):
+**Correction from an earlier draft of this document**: that draft mapped
+each pillar onto Hermetic Hall's existing 11-step lifecycle
+(`SOVEREIGN_STEP_IDS`), reasoning that "the lifecycle is already generic."
+It isn't — `docs/ARCHITECTURE.md`'s own migration log is explicit that the
+Sovereign Runtime has only ever reached Hermetic Hall (*"no non-Hall
+faculties, no cross-Act navigation"*, still true as of Phase 15/19); the
+11-step shape (intro → principle → key-concepts → why-it-matters → domains
+→ reclamation → 2026-lens → ...) is that track's own *"teach a Hermetic
+principle"* shape. The four-Act pathway is a structurally separate track
+that has never been migrated onto it, and a Reflection Chamber pillar isn't
+teaching a principle — it's diagnosing a pattern and rewriting it. Forcing
+pillar content through steps like `06-reclamation` or `07-2026-lens` would
+mean inventing content that doesn't correspond to anything a pillar
+actually has.
 
-- `01-intro` / `02-principle`: `REFLECTION_META`, `ACT_LEVEL_PAIR`, and the
-  pillar's `summary`/`question`/`layer`.
-- `03-key-concepts`: each shadow/light **code** (`code.name`) becomes a
-  `selectConcept(conceptId, moduleId)` call when the Seeker opens/claims it
-  — this *is* the Key Fragment system (guide step 11); no separate
-  `FragmentManager` needed, the Concept Graph already is one.
-- `04-why-it-matters` / `05-domains` / `06-reclamation` / `07-2026-lens`:
-  the pillar's `teaching[]` array and `parallelTo` cross-reference to Act I.
-- `08-reflection`: the diagnostic prompts (`code.diagnostic`) drive
-  `startReflection` → `updateReflection` → `commitReflection`, exactly the
-  staged pipeline Phase 12 built — this replaces `ActProtocol.jsx`'s
-  abandoned free-text-to-FastAPI pattern.
-- `09-protocol`: the instructional practices (`pillar.practices[]`) map to
+The fix: `evaluateModuleSteps`/`isStepComplete`/`isModuleComplete`
+(`sovereign/runtime/sovereignSteps.js`) and `moduleSynthesisReadiness`
+(`sovereign/synthesis/sovereignSynthesis.js`) now all take the step list
+(and the promptId its reflection-gate step reads) as parameters, defaulting
+to Hermetic Hall's shape so its six existing call sites are untouched. The
+Reflection Chamber gets its own six-step list instead
+(`sovereign/reflectionChamber/reflectionChamberSteps.js`,
+`REFLECTION_CHAMBER_STEP_IDS`), shaped around what a pillar actually
+contains:
+
+- `01-enter`: viewed the pillar's intro (`question`/`layer`/`summary`).
+- `02-diagnose`: at least one shadow/light **code** (`code.name`) claimed
+  via `selectConcept(conceptId, moduleId)` while this module was active —
+  this *is* the Key Fragment system (guide step 11); no separate
+  `FragmentManager` needed, the Concept Graph already is one. (Not split
+  into "shadow claimed" vs "light claimed": that distinction lives in the
+  pillar's *content*, not in generic runtime state the evaluator can see.)
+- `03-reflect`: the diagnostic prompts (`code.diagnostic`) drive
+  `startReflection` → `updateReflection` → `commitReflection` against this
+  step's own promptId, exactly the staged pipeline Phase 12 built.
+- `04-instruct`: viewed the pillar's light-code instructional content
+  (`code.instructional`).
+- `05-practice`: the instructional practices (`pillar.practices[]`) map to
   `executeProtocol(practiceId, payload, moduleId)` — each practice *is* a
   Protocol execution in the runtime's existing vocabulary.
-- `10-artifact` / `11-summary`: the pillar's `mantra`/`seal` feed into the
-  cross-journey Living Artifact (shared across all Reclamation University
-  modules, not per-pillar — this is already how `ARTIFACT` works for every
-  other module).
+- `06-seal`: viewed the pillar's `mantra`/`seal`, gated on every step above
+  being genuinely complete. (The cross-journey Living Artifact — shared
+  across all Reclamation University modules, not per-pillar — stays a
+  separate, later concern: it isn't part of a single pillar's own
+  lifecycle the way Hermetic Hall's `10-artifact` step is.)
 
 Route/dispatch wiring (mirrors `ReclamationModulePage.jsx` exactly): either
 extend that page's `facultySlug` dispatch table with a `reflection-chamber`
@@ -178,7 +208,8 @@ than `ReclamationModulePage.jsx`'s "any module, any order" model.
 `frontend/src/sovereign/reflectionChamber/mirrorClarity.js` (+ test) is a
 pure derivation, following the exact pattern `moduleSynthesisReadiness()`
 and `buildDomainMatrix()` already established: no new mutable state, no
-reducer case, no table.
+reducer case, no table. It scores each pillar against the Reflection
+Chamber's own six-step lifecycle (§4), not Hermetic Hall's 11-step one.
 
 ```text
 mirrorClarity(state, pillarIds?) → {
@@ -246,8 +277,8 @@ Nexus → Reflection Protocol card
 
 Everything left of "Chamber environment component" already exists and is
 exercised by this branch's `mirrorClarity` tests against the real reducer.
-The next PR's job is: wire one pillar's real content into the 11-step
-lifecycle inside `ReflectionProtocolPage.jsx`, and build the smallest
+The next PR's job is: wire one pillar's real content into the Reflection
+Chamber's own six-step lifecycle (§4) inside `ReflectionProtocolPage.jsx`, and build the smallest
 possible environment component that reads `mirrorClarity()`. Resist doing
 this for all five pillars before that loop is proven end-to-end (including
 a real logout/login persistence check) — that is the one failure mode this

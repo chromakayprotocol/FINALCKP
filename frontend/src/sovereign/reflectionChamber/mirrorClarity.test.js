@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { sovereignReducer } from '../runtime/sovereignReducer';
 import { createInitialState } from '../runtime/sovereignState';
-import { startModule, advanceStep } from '../runtime/sovereignActions';
-import { SOVEREIGN_STEP_IDS } from '../runtime/sovereignSteps';
+import { startModule, advanceStep, selectConcept } from '../runtime/sovereignActions';
+import { REFLECTION_CHAMBER_STEP_IDS, REFLECTION_CHAMBER_STEPS } from './reflectionChamberSteps';
 import {
   mirrorClarity,
   clarityStateFor,
@@ -38,8 +38,8 @@ describe('mirrorClarity', () => {
   it('rises as pillar modules make real progress, and reports each pillar', () => {
     const moduleId = reflectionChamberModuleId('owned-interior');
     let state = sovereignReducer(createInitialState(), startModule(moduleId));
-    state = sovereignReducer(state, advanceStep(moduleId, SOVEREIGN_STEP_IDS.INTRO));
-    state = sovereignReducer(state, advanceStep(moduleId, SOVEREIGN_STEP_IDS.PRINCIPLE));
+    state = sovereignReducer(state, advanceStep(moduleId, REFLECTION_CHAMBER_STEP_IDS.ENTER));
+    state = sovereignReducer(state, selectConcept('the-displaced-war', moduleId));
 
     const result = mirrorClarity(state);
 
@@ -57,10 +57,19 @@ describe('mirrorClarity', () => {
   it('accepts a narrower pillar subset for scoped views', () => {
     const moduleId = reflectionChamberModuleId('owned-interior');
     let state = sovereignReducer(createInitialState(), startModule(moduleId));
-    state = sovereignReducer(state, advanceStep(moduleId, SOVEREIGN_STEP_IDS.INTRO));
+    state = sovereignReducer(state, advanceStep(moduleId, REFLECTION_CHAMBER_STEP_IDS.ENTER));
 
     const result = mirrorClarity(state, ['owned-interior']);
     expect(result.perPillar).toHaveLength(1);
     expect(result.score).toBe(result.perPillar[0].readiness);
+  });
+
+  it('scores against the Reflection Chamber step count, not Hermetic Hall\'s', () => {
+    const moduleId = reflectionChamberModuleId('owned-interior');
+    let state = sovereignReducer(createInitialState(), startModule(moduleId));
+    state = sovereignReducer(state, advanceStep(moduleId, REFLECTION_CHAMBER_STEP_IDS.ENTER));
+
+    const result = mirrorClarity(state, ['owned-interior']);
+    expect(result.perPillar[0].readiness).toBeCloseTo(1 / REFLECTION_CHAMBER_STEPS.length);
   });
 });

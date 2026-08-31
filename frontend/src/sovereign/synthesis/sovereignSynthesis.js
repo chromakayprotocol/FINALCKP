@@ -22,7 +22,12 @@
  * actually builds that state.
  */
 
-import { SOVEREIGN_STEPS, SOVEREIGN_STEP_STATUSES, evaluateModuleSteps } from '../runtime/sovereignSteps';
+import {
+  SOVEREIGN_STEPS,
+  SOVEREIGN_STEP_IDS,
+  SOVEREIGN_STEP_STATUSES,
+  evaluateModuleSteps,
+} from '../runtime/sovereignSteps';
 
 function selectCompletedModules(state) {
   return Object.values(state.curriculum.modules).filter((module) => module.status === 'completed');
@@ -34,8 +39,8 @@ function selectReflectionEntries(state) {
 
 /**
  * How much of a module's synthesizable data actually exists yet — the
- * fraction of the 11-step curriculum this module has genuinely completed,
- * via evaluateModuleSteps()'s real criteria (Phase 4) — not the
+ * fraction of its curriculum this module has genuinely completed, via
+ * evaluateModuleSteps()'s real criteria (Phase 4) — not the
  * completeStep()-tracked module.completedSteps array, which is a separate,
  * lower-level primitive evaluateModuleSteps doesn't itself read (nothing
  * in the real step-completion flow calls completeStep() today). Derived
@@ -44,12 +49,22 @@ function selectReflectionEntries(state) {
  * unused, since Phase 3) to avoid coupling the reducer to the
  * step-evaluation layer for a value nothing currently reads — that stored
  * field remains a documented gap, not silently repurposed.
+ *
+ * Defaults to Hermetic Hall's 11-step lifecycle, same as
+ * evaluateModuleSteps() itself — pass `stepList`/`reflectionPromptId` for
+ * a module on a different track (e.g. a Reflection Chamber pillar) so the
+ * fraction is computed against *that* track's own step shape instead.
  */
-export function moduleSynthesisReadiness(state, moduleId) {
+export function moduleSynthesisReadiness(
+  state,
+  moduleId,
+  stepList = SOVEREIGN_STEPS,
+  reflectionPromptId = SOVEREIGN_STEP_IDS.REFLECTION,
+) {
   if (!state.curriculum.modules[moduleId]) return 0;
-  const steps = evaluateModuleSteps(state, moduleId);
-  const completeCount = steps.filter((step) => step.status === SOVEREIGN_STEP_STATUSES.COMPLETE).length;
-  return completeCount / SOVEREIGN_STEPS.length;
+  const evaluatedSteps = evaluateModuleSteps(state, moduleId, stepList, reflectionPromptId);
+  const completeCount = evaluatedSteps.filter((step) => step.status === SOVEREIGN_STEP_STATUSES.COMPLETE).length;
+  return completeCount / stepList.length;
 }
 
 /**

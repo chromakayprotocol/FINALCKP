@@ -18,9 +18,9 @@
  * five-pillar module (see reflectionChamberModuleData.js + ReflectionProtocolPage).
  */
 
-// Locally hosted Nexus art (frontend/public/reclamation-university) — the
-// radial dashboard shell, not R2-hosted, since these ship with the app bundle.
-const NEXUS_BASE = '/reclamation-university';
+// Locally hosted Nexus art (frontend/public/reclamation-university/Nexus) —
+// the radial dashboard shell, not R2-hosted, since these ship with the app bundle.
+const NEXUS_BASE = '/reclamation-university/Nexus';
 
 export const nexusBackgroundImage = `${NEXUS_BASE}/Nexus_Background.png`;
 export const hermeticHallImage = `${NEXUS_BASE}/Nexus_Hermetic_Hall.png`;

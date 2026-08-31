@@ -1,0 +1,409 @@
+/* Reflection Protocol Page — Act II Water */
+
+.rpp {
+  --rpp-bg: #0a121c;
+  --rpp-surface: #121c28;
+  --rpp-border: rgba(80, 160, 224, 0.22);
+  --rpp-blue: #50a0e0;
+  --rpp-blue-dim: #2a6090;
+  --rpp-ivory: #e8eef4;
+  --rpp-muted: rgba(232, 238, 244, 0.62);
+  --rpp-shadow: rgba(180, 90, 90, 0.35);
+  --rpp-light: rgba(80, 200, 160, 0.35);
+
+  min-height: 100vh;
+  background: radial-gradient(ellipse at 50% 0%, #152030 0%, var(--rpp-bg) 55%);
+  color: var(--rpp-ivory);
+  font-family: "Space Grotesk", system-ui, sans-serif;
+  padding: 1.25rem 1.25rem 4rem;
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+.rpp-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 1.75rem;
+}
+
+.rpp-eyebrow {
+  font-size: 0.7rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--rpp-blue);
+}
+
+.rpp-title {
+  margin: 0.35rem 0 0.25rem;
+  font-size: clamp(1.5rem, 4vw, 2rem);
+  font-weight: 600;
+}
+
+.rpp-meta-line {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--rpp-muted);
+}
+
+.rpp-actions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.rpp-icon-btn,
+.rpp-back,
+.rpp-cta {
+  background: transparent;
+  border: 1px solid var(--rpp-border);
+  color: var(--rpp-ivory);
+  border-radius: 999px;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.rpp-icon-btn {
+  width: 2.25rem;
+  height: 2.25rem;
+  display: grid;
+  place-items: center;
+}
+
+.rpp-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.4rem 0.85rem;
+  font-size: 0.8rem;
+}
+
+.rpp-hero {
+  margin-bottom: 1.75rem;
+}
+
+.rpp-thesis {
+  font-size: 1.05rem;
+  line-height: 1.55;
+  margin: 0 0 0.75rem;
+}
+
+.rpp-hinge {
+  margin: 0 0 1.25rem;
+  color: var(--rpp-muted);
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.rpp-pair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+@media (max-width: 640px) {
+  .rpp-pair {
+    grid-template-columns: 1fr;
+  }
+}
+
+.rpp-pair-card {
+  background: var(--rpp-surface);
+  border: 1px solid var(--rpp-border);
+  border-radius: 12px;
+  padding: 1rem;
+}
+
+.rpp-pair-card--shadow {
+  border-color: var(--rpp-shadow);
+}
+
+.rpp-pair-card--light {
+  border-color: var(--rpp-light);
+}
+
+.rpp-pair-label {
+  display: block;
+  font-size: 0.65rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--rpp-muted);
+  margin-bottom: 0.35rem;
+}
+
+.rpp-pair-card strong {
+  display: block;
+  margin-bottom: 0.5rem;
+}
+
+.rpp-pair-card p {
+  margin: 0;
+  font-size: 0.88rem;
+  line-height: 1.45;
+  color: var(--rpp-muted);
+}
+
+.rpp-pillars-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: 1.25rem;
+}
+
+.rpp-pillar-tab {
+  flex: 1 1 auto;
+  min-width: 8rem;
+  text-align: left;
+  background: var(--rpp-surface);
+  border: 1px solid var(--rpp-border);
+  color: var(--rpp-ivory);
+  border-radius: 10px;
+  padding: 0.65rem 0.75rem;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.rpp-pillar-tab.is-active {
+  border-color: var(--rpp-blue);
+  box-shadow: 0 0 0 1px rgba(80, 160, 224, 0.35);
+}
+
+.rpp-pillar-num {
+  display: block;
+  font-size: 0.65rem;
+  letter-spacing: 0.12em;
+  color: var(--rpp-blue);
+  margin-bottom: 0.2rem;
+}
+
+.rpp-pillar-name {
+  font-size: 0.82rem;
+  font-weight: 500;
+}
+
+.rpp-pillar {
+  background: var(--rpp-surface);
+  border: 1px solid var(--rpp-border);
+  border-radius: 14px;
+  padding: 1.25rem 1.35rem 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.rpp-layer {
+  font-size: 0.7rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--rpp-blue);
+}
+
+.rpp-pillar-head h2 {
+  margin: 0.35rem 0 0.5rem;
+  font-size: 1.35rem;
+}
+
+.rpp-question {
+  font-style: italic;
+  color: var(--rpp-muted);
+  margin: 0 0 0.75rem;
+  line-height: 1.45;
+}
+
+.rpp-summary {
+  margin: 0 0 0.5rem;
+  line-height: 1.5;
+  font-size: 0.95rem;
+}
+
+.rpp-parallel {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--rpp-blue-dim);
+}
+
+.rpp-teaching,
+.rpp-practices {
+  margin-top: 1.25rem;
+}
+
+.rpp-teaching h3,
+.rpp-practices h3,
+.rpp-codes h3,
+.rpp-exit h3 {
+  font-size: 0.75rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--rpp-blue);
+  margin: 0 0 0.65rem;
+}
+
+.rpp-teaching ul,
+.rpp-practices ul,
+.rpp-exit ul {
+  margin: 0;
+  padding-left: 1.15rem;
+  display: grid;
+  gap: 0.45rem;
+}
+
+.rpp-teaching li,
+.rpp-exit li {
+  line-height: 1.45;
+  font-size: 0.92rem;
+}
+
+.rpp-practices li strong {
+  display: block;
+  margin-bottom: 0.2rem;
+}
+
+.rpp-practices li p {
+  margin: 0;
+  color: var(--rpp-muted);
+  font-size: 0.88rem;
+  line-height: 1.4;
+}
+
+.rpp-codes {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-top: 1.25rem;
+}
+
+@media (max-width: 720px) {
+  .rpp-codes {
+    grid-template-columns: 1fr;
+  }
+}
+
+.rpp-code {
+  border: 1px solid var(--rpp-border);
+  border-radius: 10px;
+  margin-bottom: 0.5rem;
+  overflow: hidden;
+}
+
+.rpp-code-head {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.7rem 0.85rem;
+  background: transparent;
+  border: none;
+  color: var(--rpp-ivory);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.88rem;
+  font-weight: 500;
+  text-align: left;
+}
+
+.rpp-code-body {
+  padding: 0 0.85rem 0.85rem;
+  font-size: 0.88rem;
+  line-height: 1.45;
+  color: var(--rpp-muted);
+}
+
+.rpp-track {
+  margin: 0 0 0.4rem;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--rpp-blue);
+}
+
+.rpp-prompt {
+  margin-top: 0.65rem;
+  padding: 0.65rem 0.75rem;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.25);
+}
+
+.rpp-prompt span {
+  display: block;
+  font-size: 0.65rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin-bottom: 0.3rem;
+}
+
+.rpp-prompt--diag span {
+  color: #e09090;
+}
+
+.rpp-prompt--inst span {
+  color: #7dceb0;
+}
+
+.rpp-prompt p {
+  margin: 0;
+  color: var(--rpp-ivory);
+  font-size: 0.86rem;
+}
+
+.rpp-seal-block {
+  margin-top: 1.35rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--rpp-border);
+}
+
+.rpp-mantra {
+  margin: 0 0 0.5rem;
+  font-style: italic;
+  color: var(--rpp-blue);
+  line-height: 1.45;
+}
+
+.rpp-seal {
+  margin: 0;
+  font-size: 0.85rem;
+  letter-spacing: 0.04em;
+  color: var(--rpp-muted);
+}
+
+.rpp-exit {
+  margin-bottom: 1.5rem;
+  padding: 1.1rem 1.2rem;
+  border: 1px solid var(--rpp-border);
+  border-radius: 12px;
+  background: var(--rpp-surface);
+}
+
+.rpp-cadence-note {
+  margin: 0.85rem 0 0;
+  font-size: 0.85rem;
+  color: var(--rpp-muted);
+  line-height: 1.45;
+}
+
+.rpp-closing {
+  text-align: center;
+  padding: 1.5rem 1rem 0;
+}
+
+.rpp-closing p {
+  margin: 0 0 0.75rem;
+  line-height: 1.55;
+  color: var(--rpp-muted);
+}
+
+.rpp-welcome {
+  color: var(--rpp-ivory) !important;
+  font-size: 1rem;
+}
+
+.rpp-cta {
+  margin-top: 0.75rem;
+  padding: 0.65rem 1.4rem;
+  background: rgba(80, 160, 224, 0.15);
+  border-color: var(--rpp-blue);
+  font-size: 0.9rem;
+}
+
+.rpp-cta:hover {
+  background: rgba(80, 160, 224, 0.28);
+}

@@ -13,6 +13,9 @@
  * routes yet, so they render as previews/"soon" states until that schema
  * (see spec: university_domains, university_modules, university_lessons,
  * artifacts, user_activity) lands.
+ *
+ * Exception: Reflection Protocol is live — Act II Water / Reflection Chamber
+ * five-pillar module (see reflectionChamberModuleData.js + ReflectionProtocolPage).
  */
 
 // Locally hosted Nexus art (frontend/public/reclamation-university) — the
@@ -27,10 +30,8 @@ export const hermeticHallImage = `${NEXUS_BASE}/Nexus_Hermetic_Hall.png`;
 // = Foundation's blue "Understand Yourself"; Fracture = Language's green
 // "Understand the Code"; Crucible = Sovereignty's red "Reclaim Your Power")
 // plus a new fourth, gold Reclamation Protocol for later synthesis/graduation
-// content. Fracture is the one seekers actually complete first (its 64%
-// Academic Mastery mirrors the Central Academic Axis's own 64% figure), so
-// it's the only Protocol with a live faculty route today; the rest render
-// as locked "Soon" states until that curriculum lands.
+// content. Fracture uses facultySlug → foundations. Reflection uses a dedicated
+// route to the Act II five-pillar Reflection Chamber module.
 export const universityProtocols = [
   {
     id: 'fracture',
@@ -51,7 +52,9 @@ export const universityProtocols = [
     statLabel: 'Spiritual Mastery',
     statValue: 23,
     position: 'top-right',
-    available: false,
+    available: true,
+    // Dedicated Act II Water module — five pillars of governed feeling.
+    route: '/experiencemode/sovereign/reclamation-university/reflection-protocol',
   },
   {
     id: 'crucible',
@@ -116,4 +119,3 @@ export const defaultSeekerProgress = {
   journalEntries: 47,
   daysActive: 19,
 };
-

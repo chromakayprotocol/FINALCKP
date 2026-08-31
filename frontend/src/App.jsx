@@ -36,6 +36,7 @@ const ActTwoVisualizerPage = lazy(() => import('./pages/experience/ActTwoVisuali
 const ReclamationUniversityNexusPage = lazy(() => import('./pages/ReclamationUniversityNexusPage'));
 const ReclamationFacultyRedirect = lazy(() => import('./pages/ReclamationFacultyRedirect'));
 const ReclamationModulePage = lazy(() => import('./pages/ReclamationModulePage'));
+const ReflectionProtocolPage = lazy(() => import('./pages/ReflectionProtocolPage'));
 const SovereignOSDemo = lazy(() => import('./pages/experience/SovereignOSDemo'));
 const SovereignOSLive = lazy(() => import('./pages/experience/SovereignOSLive'));
 const HermeticHallHub = lazy(() => import('./pages/experience/HermeticHallHub'));
@@ -297,6 +298,17 @@ function AppRoutes() {
         }
       />
 
+      {/* Act II Water — Reflection Protocol (five-pillar Reflection Chamber).
+          Literal route ahead of :facultySlug so Nexus logo navigates here. */}
+      <Route
+        path="/experiencemode/sovereign/reclamation-university/reflection-protocol"
+        element={
+          <ProtectedRoute withShell={false}>
+            <ReflectionProtocolPage />
+          </ProtectedRoute>
+        }
+      />
+
       <Route
         path="/experiencemode/sovereign/reclamation-university/:facultySlug"
         element={
@@ -484,7 +496,8 @@ function AppWithBackground() {
     path.includes("/protocol/2") ||
     path.includes("/act/2") ||
     path.includes("act_two") ||
-    path.includes("act-two")
+    path.includes("act-two") ||
+    path.includes("reflection-protocol")
   ) {
     act = "water";
   }
@@ -501,7 +514,10 @@ function AppWithBackground() {
     path.includes("/visualizer-core") ||
     path.includes("/sovereign")
   ) {
-    act = "fire";
+    // Keep water for reflection-protocol even when under reclamation-university path
+    if (!path.includes("reflection-protocol")) {
+      act = "fire";
+    }
   }
 
   if (

@@ -23,8 +23,16 @@ export default function UniversityNexus() {
 
   const goToHermeticHall = () => navigate(HERMETIC_HALL_ROUTE);
   const goToProtocol = (protocol) => {
-    if (!protocol.available || !protocol.facultySlug) return;
-    navigate(`/experiencemode/sovereign/reclamation-university/${protocol.facultySlug}`);
+    if (!protocol.available) return;
+    // Direct route (e.g. Reflection Protocol → dedicated Act II module page)
+    if (protocol.route) {
+      navigate(protocol.route);
+      return;
+    }
+    // Faculty slug path (e.g. Fracture Protocol → foundations faculty)
+    if (protocol.facultySlug) {
+      navigate(`/experiencemode/sovereign/reclamation-university/${protocol.facultySlug}`);
+    }
   };
   const handleLogout = () => logout?.();
 

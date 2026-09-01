@@ -19,14 +19,18 @@ import {
   CLOSING,
 } from '../data/reflectionChamberModuleData';
 import ReflectionChamberEnvironment from './experience/ReflectionChamberEnvironment';
+import PortalOneOwnedInterior from './experience/reflection-chamber/PortalOneOwnedInterior';
 import './ReflectionProtocolPage.css';
 
 const NEXUS_PATH = '/experiencemode/sovereign/reclamation-university/nexus';
+const INTERACTIVE_PILLAR_ID = 'owned-interior';
 
 export default function ReflectionProtocolPage() {
   const navigate = useNavigate();
   const [activePillarId, setActivePillarId] = useState(PILLARS[0]?.id ?? null);
   const [expandedCode, setExpandedCode] = useState(null);
+  const [launchedPillarId, setLaunchedPillarId] = useState(null);
+  const [completedPillarIds, setCompletedPillarIds] = useState([]);
 
   const activePillar = useMemo(
     () => PILLARS.find((p) => p.id === activePillarId) ?? PILLARS[0],
@@ -36,6 +40,32 @@ export default function ReflectionProtocolPage() {
   const toggleCode = (key) => {
     setExpandedCode((prev) => (prev === key ? null : key));
   };
+
+  const handleSelectPillar = (pillarId) => {
+    if (pillarId === INTERACTIVE_PILLAR_ID) {
+      setLaunchedPillarId(pillarId);
+      return;
+    }
+    setActivePillarId(pillarId);
+    setExpandedCode(null);
+  };
+
+  if (launchedPillarId === INTERACTIVE_PILLAR_ID) {
+    return (
+      <PortalOneOwnedInterior
+        completedPillarIds={completedPillarIds}
+        onReturnToChamber={(completed) => {
+          if (completed) {
+            setCompletedPillarIds((prev) =>
+              prev.includes(INTERACTIVE_PILLAR_ID) ? prev : [...prev, INTERACTIVE_PILLAR_ID]
+            );
+          }
+          setActivePillarId(INTERACTIVE_PILLAR_ID);
+          setLaunchedPillarId(null);
+        }}
+      />
+    );
+  }
 
   return (
     <div className="rpp">
@@ -86,10 +116,8 @@ export default function ReflectionProtocolPage() {
 
       <ReflectionChamberEnvironment
         activePillarId={activePillarId}
-        onSelectPillar={(pillarId) => {
-          setActivePillarId(pillarId);
-          setExpandedCode(null);
-        }}
+        onSelectPillar={handleSelectPillar}
+        pillarStatus={Object.fromEntries(completedPillarIds.map((id) => [id, 'complete']))}
       />
 
       <nav className="rpp-pillars-nav" aria-label="Five pillars">
@@ -98,10 +126,7 @@ export default function ReflectionProtocolPage() {
             key={pillar.id}
             type="button"
             className={`rpp-pillar-tab${activePillarId === pillar.id ? ' is-active' : ''}`}
-            onClick={() => {
-              setActivePillarId(pillar.id);
-              setExpandedCode(null);
-            }}
+            onClick={() => handleSelectPillar(pillar.id)}
           >
             <span className="rpp-pillar-num">{String(pillar.index).padStart(2, '0')}</span>
             <span className="rpp-pillar-name">{pillar.title}</span>

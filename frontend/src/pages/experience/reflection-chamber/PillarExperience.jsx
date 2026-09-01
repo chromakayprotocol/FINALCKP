@@ -1,5 +1,8 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useAuth } from '../../../context/AuthContext';
+import { useSovereign } from '../../../sovereign/runtime';
+import { REFLECTION_CHAMBER_STEP_IDS } from '../../../sovereign/reflectionChamber/reflectionChamberSteps';
+import { reflectionChamberModuleId } from '../../../sovereign/reflectionChamber/mirrorClarity';
 import { PILLARS } from '../../../data/reflectionChamberModuleData';
 import { usePillarExperience } from './state/usePillarExperience';
 import { STAGES, STAGE_ORDER, stageIndex, previousStage, PRACTICE_PHASES } from './utils/stageTransitions';
@@ -28,6 +31,25 @@ import PillarSeal from './components/PillarSeal';
 
 import './portalOneOwnedInterior.css';
 
+/** Concept-graph id for a shadow/light code: its own name, slugified. */
+function codeConceptId(code) {
+  return code.name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)/g, '');
+}
+
+/** Sovereign reflections store one response string per prompt, not four
+    separate fields — join the sort's four answers into one readable record. */
+function serializeReflection(reflection) {
+  return [
+    `What happened: ${reflection.whatHappened}`,
+    `What I felt: ${reflection.whatFelt.join(', ')}`,
+    `What I assumed: ${reflection.whatAssumed}`,
+    `What I actually know: ${reflection.whatKnow}`,
+  ].join('\n');
+}
+
 /**
  * PillarExperience — the shared engine behind every Reflection Chamber
  * portal's interactive lesson. It owns which stage the Seeker is on and
@@ -50,16 +72,49 @@ export default function PillarExperience({ config, onReturnToChamber, completedP
   const pillar = PILLARS.find((p) => p.id === config.pillarId);
   const { state, setStage, setPracticePhase, patch } = usePillarExperience(config.pillarId, user?.id);
 
+  // Real Sovereign Runtime progress, alongside (not instead of) the rich
+  // local UI state above: usePillarExperience owns every granular field
+  // this screen renders (sorter placements, digital-sequence log, etc — see
+  // its own header comment), while the dispatches below register this
+  // pillar's *curriculum* progress — module/step/concept/reflection/
+  // protocol state — against the shared runtime, which is what actually
+  // persists to Supabase (sovereign_module_state, sovereign_concepts,
+  // sovereign_reflections, sovereign_events) and what
+  // reflectionChamber/mirrorClarity.js reads to know this pillar is done.
+  const { curriculum, module: sovereignModule, concepts, reflection, synthesis } = useSovereign();
+  const moduleId = reflectionChamberModuleId(config.pillarId);
+
   const [conceptPhase, setConceptPhase] = useState('reveal');
   const [applicationPhase, setApplicationPhase] = useState('modern');
   const [reflectionPhase, setReflectionPhase] = useState('form');
   const [sealPhase, setSealPhase] = useState('record');
 
+  // Registers this pillar as the active Sovereign module so every dispatch
+  // below (selectConcept, reflection, executeProtocol, advanceStep) is
+  // attributed to it rather than left module-unscoped.
+  useEffect(() => {
+    curriculum.startModule(moduleId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [moduleId]);
+
+  // Marks Enter (01-enter) viewed once this module actually becomes active
+  // in the runtime — startModule() above dispatches but doesn't take effect
+  // until the next render, so sovereignModule is still null on that first
+  // pass.
+  useEffect(() => {
+    if (!sovereignModule || sovereignModule.moduleId !== moduleId) return;
+    sovereignModule.advanceStep(REFLECTION_CHAMBER_STEP_IDS.ENTER);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sovereignModule?.moduleId]);
+
   if (!pillar) return null;
+
+  const isActiveModule = sovereignModule?.moduleId === moduleId;
 
   const handleReturn = () => {
     patch({ completedAt: new Date().toISOString() });
-    onReturnToChamber?.(true);
+    if (isActiveModule) sovereignModule.advanceStep(REFLECTION_CHAMBER_STEP_IDS.SEAL);
+    onReturnToChamber?.();
   };
 
   const showNav = state.currentStage !== STAGES.INTRO && state.currentStage !== STAGES.SEAL;
@@ -122,7 +177,15 @@ export default function PillarExperience({ config, onReturnToChamber, completedP
             teachingLine={pillar.teaching[config.shadowTeachingIndex]}
             response={state.conceptResponse}
             onResponseChange={(v) => patch({ conceptResponse: v })}
-            onContinue={() => setStage(STAGES.APPLICATION)}
+            onContinue={() => {
+              // 02-diagnose: claiming the shadow code is this pillar's Key
+              // Fragment — the Concept Graph selection the runtime's
+              // DIAGNOSE step checks for.
+              if (isActiveModule) {
+                concepts.selectConcept(codeConceptId(pillar.shadow[config.shadowCodeIndex]));
+              }
+              setStage(STAGES.APPLICATION);
+            }}
           />
         );
       break;
@@ -167,9 +230,26 @@ export default function PillarExperience({ config, onReturnToChamber, completedP
         reflectionPhase === 'form' ? (
           <PersonalReflection
             value={state.reflection}
-            onChange={(v) => patch({ reflection: v })}
+            onChange={(v) => {
+              // 03-reflect: the runtime's staged reflection pipeline —
+              // startReflection is idempotent, so calling it on every
+              // keystroke just marks the prompt begun once; updateReflection
+              // records the live draft.
+              if (isActiveModule) {
+                reflection.startReflection(REFLECTION_CHAMBER_STEP_IDS.REFLECT);
+                reflection.updateReflection(REFLECTION_CHAMBER_STEP_IDS.REFLECT, serializeReflection(v));
+              }
+              patch({ reflection: v });
+            }}
             emotionOptions={config.reflectionEmotions}
-            onSubmit={() => setReflectionPhase('mirror')}
+            onSubmit={() => {
+              // The explicit Decision step — PersonalReflection only allows
+              // this once every field is filled, so this is the real commit.
+              if (isActiveModule) {
+                reflection.commitReflection(REFLECTION_CHAMBER_STEP_IDS.REFLECT, serializeReflection(state.reflection), []);
+              }
+              setReflectionPhase('mirror');
+            }}
           />
         ) : (
           <MirrorAnalysis reflection={state.reflection} onContinue={() => setStage(STAGES.INSTRUCT)} />
@@ -184,14 +264,38 @@ export default function PillarExperience({ config, onReturnToChamber, completedP
           teachingLine={pillar.teaching[config.instructTeachingIndex]}
           response={state.lightCodeResponse}
           onResponseChange={(v) => patch({ lightCodeResponse: v })}
-          onContinue={() => setStage(STAGES.PRACTICE)}
+          onContinue={() => {
+            // 04-instruct: viewed the light-code instructional content. Also
+            // claims the light code as a second Key Fragment (satisfies
+            // 02-diagnose too, if the shadow code claim above was skipped
+            // by navigating back and forward).
+            if (isActiveModule) {
+              concepts.selectConcept(codeConceptId(pillar.light[config.instructLightCodeIndex]));
+              sovereignModule.advanceStep(REFLECTION_CHAMBER_STEP_IDS.INSTRUCT);
+            }
+            setStage(STAGES.PRACTICE);
+          }}
         />
       );
       break;
 
     case STAGES.PRACTICE:
       if (state.practicePhase === PRACTICE_PHASES.OBSERVE) {
-        content = <PracticeExercise onComplete={() => setPracticePhase(PRACTICE_PHASES.LOG)} />;
+        content = (
+          <PracticeExercise
+            onComplete={() => {
+              // 05-practice: the one-minute observation *is* this pillar's
+              // authored practice (reflectionChamberModuleData.js
+              // PILLARS[0].practices[0]) — a real Protocol execution in the
+              // runtime's vocabulary, not a generic timer completion.
+              const practice = pillar.practices[0];
+              if (isActiveModule && practice) {
+                synthesis.executeProtocol(practice.id, { title: practice.title });
+              }
+              setPracticePhase(PRACTICE_PHASES.LOG);
+            }}
+          />
+        );
       } else if (state.practicePhase === PRACTICE_PHASES.LOG) {
         content = (
           <ObservationLog

@@ -45,6 +45,14 @@ export function useSovereign() {
     const activeModule = selectActiveModule(state);
 
     return {
+      // Raw state escape hatch: most reads should go through the domain
+      // slices below, but a page hosting several modules of one track (e.g.
+      // the Reflection Chamber checking whether a pillar other than the
+      // currently-active one is complete) needs the full tree to pass into
+      // track-specific pure derivations like evaluateModuleSteps()/
+      // isModuleComplete() or reflectionChamber/mirrorClarity.js, which take
+      // state directly rather than a per-module slice.
+      state,
       identity: { ...selectIdentity(state), setIdentity: actions.setIdentity },
       curriculum: { ...selectCurriculum(state), startModule: actions.startModule },
       module: activeModule && {

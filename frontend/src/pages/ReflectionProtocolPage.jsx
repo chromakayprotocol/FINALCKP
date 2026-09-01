@@ -10,6 +10,10 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, LayoutDashboard, ChevronDown, ChevronUp } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
+import { SovereignProvider, useSovereign, isModuleComplete } from '../sovereign/runtime';
+import { REFLECTION_CHAMBER_STEPS, REFLECTION_CHAMBER_STEP_IDS } from '../sovereign/reflectionChamber/reflectionChamberSteps';
+import { mirrorClarity } from '../sovereign/reflectionChamber/mirrorClarity';
 import {
   REFLECTION_META,
   ACT_LEVEL_PAIR,
@@ -25,16 +29,49 @@ import './ReflectionProtocolPage.css';
 const NEXUS_PATH = '/experiencemode/sovereign/reclamation-university/nexus';
 const INTERACTIVE_PILLAR_ID = 'owned-interior';
 
+/**
+ * Mounts the one shared Sovereign Runtime provider for the whole Reflection
+ * Chamber (Phase 15 pattern — see ReclamationModulePage.jsx), so a Seeker's
+ * progress survives navigating between the chamber hub and a launched
+ * pillar, and syncs to Supabase (sovereign_module_state, sovereign_concepts,
+ * sovereign_reflections, sovereign_events) via SovereignProvider's own
+ * autosave, exactly like every Hermetic Hall module already does.
+ */
 export default function ReflectionProtocolPage() {
+  const { user } = useAuth();
+  const namespace = user?.id || 'anonymous';
+  return (
+    <SovereignProvider namespace={namespace} userId={user?.id}>
+      <ReflectionProtocolPageContent />
+    </SovereignProvider>
+  );
+}
+
+function ReflectionProtocolPageContent() {
   const navigate = useNavigate();
+  const { state } = useSovereign();
   const [activePillarId, setActivePillarId] = useState(PILLARS[0]?.id ?? null);
   const [expandedCode, setExpandedCode] = useState(null);
   const [launchedPillarId, setLaunchedPillarId] = useState(null);
-  const [completedPillarIds, setCompletedPillarIds] = useState([]);
 
   const activePillar = useMemo(
     () => PILLARS.find((p) => p.id === activePillarId) ?? PILLARS[0],
     [activePillarId]
+  );
+
+  // Real, persisted progress — derived from the Sovereign Runtime state
+  // (mirrorClarity.js), not a page-level useState that resets on reload.
+  // Only Portal One has an interactive lesson today, so only its module can
+  // ever actually be complete, but this reads all five so the other four
+  // "light up" for free the moment they get their own PillarExperience
+  // config.
+  const clarity = useMemo(() => mirrorClarity(state), [state]);
+  const completedPillarIds = useMemo(
+    () =>
+      clarity.perPillar
+        .filter(({ moduleId }) => isModuleComplete(state, moduleId, REFLECTION_CHAMBER_STEPS, REFLECTION_CHAMBER_STEP_IDS.REFLECT))
+        .map(({ pillarId }) => pillarId),
+    [clarity, state]
   );
 
   const toggleCode = (key) => {
@@ -54,12 +91,7 @@ export default function ReflectionProtocolPage() {
     return (
       <PortalOneOwnedInterior
         completedPillarIds={completedPillarIds}
-        onReturnToChamber={(completed) => {
-          if (completed) {
-            setCompletedPillarIds((prev) =>
-              prev.includes(INTERACTIVE_PILLAR_ID) ? prev : [...prev, INTERACTIVE_PILLAR_ID]
-            );
-          }
+        onReturnToChamber={() => {
           setActivePillarId(INTERACTIVE_PILLAR_ID);
           setLaunchedPillarId(null);
         }}

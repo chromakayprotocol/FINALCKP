@@ -19,7 +19,10 @@
  */
 
 // Locally hosted Nexus art (frontend/public/reclamation-university/Nexus) —
-// the radial dashboard shell, not R2-hosted, since these ship with the app bundle.
+// the radial dashboard shell, not R2-hosted, since these ship with the app
+// bundle. A manual commit outside any Claude session ("commitgit", PR #63)
+// moved these into a Nexus/ subfolder without updating this base path,
+// 404ing every image below until this fix.
 const NEXUS_BASE = '/reclamation-university/Nexus';
 
 export const nexusBackgroundImage = `${NEXUS_BASE}/Nexus_Background.png`;

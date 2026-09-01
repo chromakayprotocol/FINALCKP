@@ -6,8 +6,14 @@ import './hermeticHallHub.css';
 
 // Real production art, shipped locally so it's optimized (WebP) and doesn't
 // depend on a third-party CDN. Do not swap these for placeholder art.
+// Paths point into the Hermetic Hall/ subfolder — a manual commit outside
+// any Claude session ("commitgit", PR #63) moved these assets there without
+// updating this file, 404ing both images until this fix. `hall` previously
+// pointed at a Hermetic-Hall.webp that no longer exists anywhere in the
+// repo (broken before that reorg too); hermetic-hall-environment.png is the
+// real hero art for this scene (the "Hermetic Hall" entrance archway).
 const ASSETS = {
-  hall: '/reclamation-university/Hermetic-Hall.webp',
+  hall: '/reclamation-university/Hermetic Hall/hermetic-hall-environment.png',
   wheel: '/reclamation-university/Hermetic Hall/radial-dial.webp',
   initiationVideo: 'https://media.chromakeyprotocol.com/Hermetic-Hall-Mission.mp4',
   hallMusic:

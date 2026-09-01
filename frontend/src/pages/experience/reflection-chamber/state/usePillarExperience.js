@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useReducer } from 'react';
 import { STAGES, PRACTICE_PHASES } from '../utils/stageTransitions';
 
-const STORAGE_PREFIX = 'ckp:reflection-chamber:owned-interior:';
+const STORAGE_PREFIX = 'ckp:reflection-chamber:';
 
-function storageKey(userId) {
-  return `${STORAGE_PREFIX}${userId || 'anonymous'}`;
+function storageKey(pillarId, userId) {
+  return `${STORAGE_PREFIX}${pillarId}:${userId || 'anonymous'}`;
 }
 
 function emptyState() {
@@ -28,11 +28,11 @@ function emptyState() {
   };
 }
 
-function loadInitialState(userId) {
+function loadInitialState([pillarId, userId]) {
   const base = emptyState();
   if (typeof window === 'undefined') return base;
   try {
-    const raw = window.localStorage.getItem(storageKey(userId));
+    const raw = window.localStorage.getItem(storageKey(pillarId, userId));
     if (!raw) return base;
     return { ...base, ...JSON.parse(raw) };
   } catch {
@@ -56,24 +56,24 @@ function reducer(state, action) {
 }
 
 /**
- * Owns Portal One's experience state (§23 of the component guide): local to
- * this pillar session, distinct from the static curriculum in
- * reflectionChamberModuleData.js. Persisted to localStorage only — no
- * server round trip, no shared runtime, matching how the rest of the
- * Reflection Chamber works today.
+ * Owns one pillar's experience state (§23 of the component guide): local
+ * to that pillar's session, distinct from the static curriculum in
+ * reflectionChamberModuleData.js. Persisted to localStorage, keyed by
+ * pillar + user, so every pillar in the Reflection Chamber gets its own
+ * independent save slot from the same shared hook — no shared runtime.
  */
-export function usePortalOneExperience(userId) {
-  const [state, dispatch] = useReducer(reducer, userId, loadInitialState);
+export function usePillarExperience(pillarId, userId) {
+  const [state, dispatch] = useReducer(reducer, [pillarId, userId], loadInitialState);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
     try {
-      window.localStorage.setItem(storageKey(userId), JSON.stringify(state));
+      window.localStorage.setItem(storageKey(pillarId, userId), JSON.stringify(state));
     } catch {
       // Storage unavailable (private mode / quota) — the session still
       // works in-memory, it just won't survive a reload.
     }
-  }, [state, userId]);
+  }, [state, pillarId, userId]);
 
   const setStage = useCallback((stage) => dispatch({ type: 'SET_STAGE', stage }), []);
   const setPracticePhase = useCallback((phase) => dispatch({ type: 'SET_PRACTICE_PHASE', phase }), []);

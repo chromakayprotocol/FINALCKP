@@ -3,14 +3,18 @@
 
 .rce-scene {
   position: relative;
-  width: 100%;
-  /* Matches Reflection_Chamber_Environment.png's real 2688x1536 dimensions. */
-  aspect-ratio: 2688 / 1536;
-  border-radius: 16px;
+  /* Full-bleed: break out of the page's centered, padded max-width column
+     so the chamber art spans the entire viewport edge to edge. */
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+  margin-right: calc(50% - 50vw);
+  /* Matches reflection_chamber_environment.webp's real 5504x3040 dimensions,
+     so object-fit: cover never crops the art and the % portal hotspots
+     below stay aligned to the archways at any viewport width. */
+  aspect-ratio: 5504 / 3040;
   overflow: hidden;
   margin-bottom: 1.75rem;
   background: #050810;
-  border: 1px solid rgba(80, 160, 224, 0.22);
 }
 
 .rce-bg {
@@ -30,11 +34,14 @@
 }
 
 .rce-heading {
+  /* Sits below the "Reclamation University" crest baked into the art's
+     top band (roughly the first ~27% of frame height) so the two titles
+     don't overlap. */
   position: absolute;
-  top: 0;
+  top: 27%;
   left: 0;
   right: 0;
-  padding: 1.1rem 1.25rem 0;
+  padding: 0 1.25rem;
   text-align: center;
   z-index: 2;
 }
@@ -72,12 +79,9 @@
 }
 
 .rce-portal {
+  /* left/top/width/height are set inline per portal, matched to that
+     archway's lit opening in the art. */
   position: absolute;
-  transform: translate(-50%, -50%) scale(var(--portal-scale, 1));
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.3rem;
   background: transparent;
   border: none;
   cursor: pointer;
@@ -86,39 +90,47 @@
   color: var(--portal-color);
 }
 
-.rce-portal-ring {
-  display: block;
-  width: 3.4rem;
-  height: 4.4rem;
-  border-radius: 50% / 40%;
-  border: 2px solid var(--portal-color);
-  box-shadow:
-    0 0 14px 2px color-mix(in srgb, var(--portal-color) 55%, transparent),
-    inset 0 0 18px color-mix(in srgb, var(--portal-color) 35%, transparent);
-  background: radial-gradient(ellipse at center, color-mix(in srgb, var(--portal-color) 30%, transparent) 0%, transparent 70%);
-  transition: box-shadow 0.25s ease, transform 0.25s ease;
+/* Interactive overlay traced over the archway's own lit opening — the art
+   already carries the portal glow, so this stays quiet by default and only
+   lights up on hover/focus/active/complete to signal it's clickable. */
+.rce-portal-frame {
+  position: absolute;
+  inset: 0;
+  border-radius: 50% 50% 10% 10% / 32% 32% 6% 6%;
+  border: 2px solid transparent;
+  background: transparent;
+  box-shadow: none;
+  transition: border-color 0.25s ease, background 0.25s ease, box-shadow 0.25s ease;
 }
 
-.rce-portal:hover .rce-portal-ring,
-.rce-portal:focus-visible .rce-portal-ring {
-  transform: scale(1.08);
+.rce-portal:hover .rce-portal-frame,
+.rce-portal:focus-visible .rce-portal-frame {
+  border-color: color-mix(in srgb, var(--portal-color) 75%, transparent);
+  background: color-mix(in srgb, var(--portal-color) 14%, transparent);
   box-shadow:
-    0 0 22px 4px color-mix(in srgb, var(--portal-color) 75%, transparent),
-    inset 0 0 24px color-mix(in srgb, var(--portal-color) 55%, transparent);
+    0 0 32px 6px color-mix(in srgb, var(--portal-color) 55%, transparent),
+    inset 0 0 26px color-mix(in srgb, var(--portal-color) 40%, transparent);
 }
 
-.rce-portal.is-active .rce-portal-ring {
+.rce-portal.is-active .rce-portal-frame {
+  border-color: var(--portal-color);
+  background: color-mix(in srgb, var(--portal-color) 18%, transparent);
   box-shadow:
-    0 0 28px 6px color-mix(in srgb, var(--portal-color) 90%, transparent),
-    inset 0 0 26px color-mix(in srgb, var(--portal-color) 65%, transparent);
+    0 0 40px 10px color-mix(in srgb, var(--portal-color) 75%, transparent),
+    inset 0 0 30px color-mix(in srgb, var(--portal-color) 55%, transparent);
 }
 
-.rce-portal.is-complete .rce-portal-ring {
+.rce-portal.is-complete .rce-portal-frame {
   border-style: solid;
   border-width: 3px;
+  border-color: color-mix(in srgb, var(--portal-color) 65%, transparent);
 }
 
 .rce-portal-num {
+  position: absolute;
+  top: -1.3rem;
+  left: 50%;
+  transform: translateX(-50%);
   font-size: 0.6rem;
   letter-spacing: 0.14em;
   text-shadow: 0 1px 6px rgba(0, 0, 0, 0.9);
@@ -126,36 +138,39 @@
 }
 
 .rce-portal-label {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-top: 0.45rem;
+  width: max-content;
+  max-width: 7.5rem;
   font-size: 0.68rem;
   font-weight: 500;
   letter-spacing: 0.02em;
   color: #e8eef4;
   text-shadow: 0 1px 6px rgba(0, 0, 0, 0.9);
-  white-space: nowrap;
-  max-width: 6.5rem;
   text-align: center;
   line-height: 1.2;
-  white-space: normal;
 }
 
-.rce-portal:focus-visible {
+.rce-portal:focus-visible .rce-portal-frame {
   outline: 2px solid var(--portal-color);
   outline-offset: 4px;
-  border-radius: 8px;
 }
 
 @media (max-width: 640px) {
-  .rce-scene {
-    aspect-ratio: 4 / 5;
+  /* No aspect-ratio override here (unlike the old boxed layout): the scene
+     keeps the art's native ratio at every width so object-fit: cover never
+     crops it, which keeps the % portal hotspots aligned to the archways on
+     phones too. */
+  .rce-heading-eyebrow {
+    font-size: 0.56rem;
   }
 
-  .rce-bg {
-    object-position: center;
-  }
-
-  .rce-portal-ring {
-    width: 2.5rem;
-    height: 3.2rem;
+  .rce-portal-num {
+    top: -1.1rem;
+    font-size: 0.55rem;
   }
 
   .rce-portal-label {
@@ -165,7 +180,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .rce-portal-ring {
+  .rce-portal-frame {
     transition: none;
   }
 }

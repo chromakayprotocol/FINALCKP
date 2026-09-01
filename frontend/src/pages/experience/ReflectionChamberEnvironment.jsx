@@ -3,14 +3,16 @@ import './reflectionChamberEnvironment.css';
 
 /**
  * The Reflection Chamber's visual hub — "Camera Reflectionis | Speculum
- * Interioris". Five portals over one background scene, one per pillar in
- * reflectionChamberModuleData.js, positioned to match the commissioned art
- * (Reflection_Chamber_Environment.png): Portal 5 (Mirror-Walker's Boundary,
- * blue) sits in the large central archway — it's the culminating pillar, and
- * carries Act II's own canonical color (REFLECTION_META.color) — with two
- * portals flanking it on each side, left to right: Portal 1 (purple),
- * Portal 2 (gold), Portal 5 (blue, center), Portal 3 (silver), Portal 4
- * (orange).
+ * Interioris". A full-screen background scene with five portal hotspots
+ * overlaid, one per pillar in reflectionChamberModuleData.js. The art
+ * (reflection_chamber_environment.webp) already bakes in five lit archways,
+ * so the overlays are interactive glow frames matched to those archways
+ * rather than drawn-from-scratch portal graphics: Portal 5 (Mirror-Walker's
+ * Boundary, blue) sits in the large central archway — it's the culminating
+ * pillar, and carries Act II's own canonical color (REFLECTION_META.color)
+ * — with two portals flanking it on each side, left to right: Portal 1
+ * (purple), Portal 2 (gold), Portal 5 (blue, center), Portal 3 (silver),
+ * Portal 4 (orange).
  *
  * Presentational only: takes the currently active pillar and a selection
  * callback, same as ReflectionProtocolPage.jsx's existing `activePillarId`/
@@ -22,21 +24,23 @@ import './reflectionChamberEnvironment.css';
  */
 
 // Real production art, committed directly to main (frontend/public/reclamation-
-// university/Reflection Chamber/Reflection_Chamber_Environment.png) outside this
+// university/Reflection Chamber/reflection_chamber_environment.webp) outside this
 // branch. The space in the folder name is real -- browsers percent-encode it
 // automatically when this string is assigned to an <img src>, so it's used
 // verbatim rather than pre-encoded.
-const CHAMBER_BG = '/reclamation-university/Reflection Chamber/Reflection_Chamber_Environment.png';
+const CHAMBER_BG = '/reclamation-university/Reflection Chamber/reflection_chamber_environment.webp';
 
-// Per-pillar portal color + position over the background art, in the art's
-// own left-to-right order (not PILLARS' index order — pillar 5 sits in the
+// Per-pillar portal color + hotspot bounding box over the background art
+// (left/top/width/height as % of the scene, matched to each archway's lit
+// opening in reflection_chamber_environment.webp), in the art's own
+// left-to-right order (not PILLARS' index order — pillar 5 sits in the
 // center archway, not on the far right).
 const PORTALS = [
-  { pillarId: 'owned-interior', color: '#a875ff', dim: '#5b3a99', left: '17.3%', top: '47%', size: 1 },
-  { pillarId: 'forged-witness', color: '#d4af37', dim: '#7a5f13', left: '34.5%', top: '41%', size: 1 },
-  { pillarId: 'mirror-walker-boundary', color: REFLECTION_META.color, dim: REFLECTION_META.dim, left: '50%', top: '36%', size: 1.35 },
-  { pillarId: 'sacred-restraint', color: '#c8d0d8', dim: '#6b747c', left: '65.5%', top: '41%', size: 1 },
-  { pillarId: 'open-frequency', color: '#e08030', dim: '#8a4d15', left: '82.5%', top: '47%', size: 1 },
+  { pillarId: 'owned-interior', color: '#a875ff', dim: '#5b3a99', left: '14.7%', top: '59.6%', width: '7%', height: '26.5%' },
+  { pillarId: 'forged-witness', color: '#d4af37', dim: '#7a5f13', left: '32.2%', top: '61.4%', width: '7%', height: '25%' },
+  { pillarId: 'mirror-walker-boundary', color: REFLECTION_META.color, dim: REFLECTION_META.dim, left: '47.5%', top: '55%', width: '8.6%', height: '32%' },
+  { pillarId: 'sacred-restraint', color: '#c8d0d8', dim: '#6b747c', left: '65%', top: '61.4%', width: '7%', height: '25%' },
+  { pillarId: 'open-frequency', color: '#e08030', dim: '#8a4d15', left: '78.3%', top: '59.6%', width: '7%', height: '26.5%' },
 ];
 
 const PILLAR_BY_ID = Object.fromEntries(PILLARS.map((pillar) => [pillar.id, pillar]));
@@ -54,7 +58,7 @@ export default function ReflectionChamberEnvironment({ activePillarId, onSelectP
       </div>
 
       <div className="rce-portals" role="tablist" aria-label="Five pillars of the Reflection Chamber">
-        {PORTALS.map(({ pillarId, color, dim, left, top, size }) => {
+        {PORTALS.map(({ pillarId, color, dim, left, top, width, height }) => {
           const pillar = PILLAR_BY_ID[pillarId];
           if (!pillar) return null;
           const isActive = activePillarId === pillarId;
@@ -69,15 +73,16 @@ export default function ReflectionChamberEnvironment({ activePillarId, onSelectP
               style={{
                 left,
                 top,
+                width,
+                height,
                 '--portal-color': color,
                 '--portal-dim': dim,
-                '--portal-scale': size,
               }}
               onClick={() => onSelectPillar(pillarId)}
               aria-selected={isActive}
               aria-label={`Portal ${pillar.index}: ${pillar.title}`}
             >
-              <span className="rce-portal-ring" />
+              <span className="rce-portal-frame" />
               <span className="rce-portal-num">{String(pillar.index).padStart(2, '0')}</span>
               <span className="rce-portal-label">{pillar.title}</span>
             </button>

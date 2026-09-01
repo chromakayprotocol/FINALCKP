@@ -1,17 +1,37 @@
-/* Portal One / Pillar One — The Owned Interior
-   Purple, matching the Chamber's own Portal One ring (ReflectionChamberEnvironment.jsx). */
+/* Elemental Rubrik: H2O / The Reflection Chamber — Portal One / Pillar One
+   The Owned Interior.
+
+   Color architecture (do not invert): H20 blue is the shared system
+   identity of every pillar in the Reflection Chamber — it owns structural
+   borders, primary actions, focus states, and system-level progress.
+   Purple is Pillar One's own secondary accent — it owns only Portal One
+   identification, selected/active Pillar One objects, Pillar One-specific
+   diagrams, and the completion seal. Purple must never become the default
+   border or primary-action color; blue must never be the only thing that
+   says "this is Pillar One." See docs/act-ii-reflection-chamber-architecture.md
+   for the wider Reflection Chamber and PILLARS data this pillar renders. */
 
 .pooi {
+  /* H20 system identity — shared across all five pillars */
+  --pooi-sky: #38bdf8;
+  --pooi-royal: #2563eb;
+  --pooi-h20-glow: rgba(56, 189, 248, 0.24);
+
+  /* Pillar One secondary identity */
   --pooi-purple: #a875ff;
-  --pooi-purple-dim: #5b3a99;
-  --pooi-bg: #0a0714;
+  --pooi-purple-dim: #6d4ac7;
+  --pooi-pillar-glow: rgba(168, 117, 255, 0.24);
+
+  --pooi-bg: #070a12;
   --pooi-surface: #150f24;
-  --pooi-border: rgba(168, 117, 255, 0.25);
+  --pooi-border: rgba(56, 189, 248, 0.22);
   --pooi-ivory: #e8eef4;
   --pooi-muted: rgba(232, 238, 244, 0.62);
 
   min-height: 100vh;
-  background: radial-gradient(ellipse at 50% 0%, #1b1330 0%, var(--pooi-bg) 55%);
+  background:
+    radial-gradient(ellipse at 50% 0%, #0f1c30 0%, var(--pooi-bg) 48%, var(--pooi-bg) 100%),
+    radial-gradient(circle at 50% 12%, rgba(168, 117, 255, 0.1) 0%, transparent 62%);
   color: var(--pooi-ivory);
   font-family: 'Inter', system-ui, sans-serif;
   padding: 1.25rem 1.25rem 4rem;
@@ -51,7 +71,7 @@
 
 .pooi-header-act {
   font-size: 0.7rem;
-  color: var(--pooi-purple);
+  color: var(--pooi-sky);
   letter-spacing: 0.08em;
 }
 
@@ -69,7 +89,7 @@
 
 .pooi-header-stage {
   font-size: 0.7rem;
-  color: var(--pooi-purple);
+  color: var(--pooi-sky);
   letter-spacing: 0.12em;
   text-transform: uppercase;
 }
@@ -96,15 +116,18 @@
   display: inline-block;
 }
 
+/* System progress is blue; the active dot's purple core marks "you are
+   currently inside Pillar One" without making the progress rail itself
+   purple (blue outer ring = H20 system position, purple inner = Pillar One). */
 .pooi-progress-dot.is-active {
   background: var(--pooi-purple);
-  border-color: var(--pooi-purple);
-  box-shadow: 0 0 10px 2px color-mix(in srgb, var(--pooi-purple) 60%, transparent);
+  border-color: var(--pooi-sky);
+  box-shadow: 0 0 10px 2px color-mix(in srgb, var(--pooi-sky) 55%, transparent);
 }
 
 .pooi-progress-dot.is-complete {
-  background: var(--pooi-purple-dim);
-  border-color: var(--pooi-purple);
+  background: var(--pooi-royal);
+  border-color: var(--pooi-sky);
 }
 
 .pooi-progress-label {
@@ -168,20 +191,23 @@
   cursor: not-allowed;
 }
 
+/* Primary/secondary actions stay H20 blue everywhere in the Chamber — a
+   button does not turn purple just because the user is inside Pillar One;
+   purple is identity, not interaction. */
 .pooi-btn--primary {
-  background: linear-gradient(135deg, var(--pooi-purple), var(--pooi-purple-dim));
+  background: linear-gradient(135deg, var(--pooi-royal), var(--pooi-sky));
   color: #ffffff;
-  box-shadow: 0 0 18px 2px color-mix(in srgb, var(--pooi-purple) 35%, transparent);
+  box-shadow: 0 0 18px 2px color-mix(in srgb, var(--pooi-sky) 35%, transparent);
 }
 
 .pooi-btn--primary:not(:disabled):hover {
   transform: translateY(-1px);
-  box-shadow: 0 0 24px 4px color-mix(in srgb, var(--pooi-purple) 55%, transparent);
+  box-shadow: 0 0 24px 4px color-mix(in srgb, var(--pooi-sky) 55%, transparent);
 }
 
 .pooi-btn--secondary {
   background: transparent;
-  color: var(--pooi-purple);
+  color: var(--pooi-sky);
   border-color: var(--pooi-border);
 }
 
@@ -205,7 +231,9 @@
 .pooi-textarea:focus,
 .pooi-field textarea:focus {
   outline: none;
-  border-color: var(--pooi-purple);
+  /* Focus is a system interaction state, not a Pillar identity state. */
+  border-color: var(--pooi-sky);
+  box-shadow: 0 0 0 3px var(--pooi-h20-glow);
 }
 
 .pooi-textarea--lg {
@@ -268,21 +296,23 @@
   margin-bottom: 0.5rem;
 }
 
+/* Portal One's own visual signature: royal-blue outer architecture, sky-blue
+   structural edge, purple internal energy — never a solid-purple portal. */
 .pooi-intro-ring {
   width: 100%;
   height: 100%;
   border-radius: 50% / 40%;
-  border: 2px solid var(--pooi-purple);
+  border: 2px solid var(--pooi-sky);
   box-shadow:
-    0 0 24px 6px color-mix(in srgb, var(--pooi-purple) 55%, transparent),
-    inset 0 0 28px color-mix(in srgb, var(--pooi-purple) 35%, transparent);
-  background: radial-gradient(ellipse at center, color-mix(in srgb, var(--pooi-purple) 30%, transparent) 0%, transparent 70%);
+    0 0 24px 6px color-mix(in srgb, var(--pooi-royal) 45%, transparent),
+    inset 0 0 28px color-mix(in srgb, var(--pooi-purple) 40%, transparent);
+  background: radial-gradient(ellipse at center, color-mix(in srgb, var(--pooi-purple) 32%, transparent) 0%, transparent 70%);
 }
 
 .pooi-intro-portal--lit .pooi-intro-ring {
   box-shadow:
-    0 0 34px 10px color-mix(in srgb, var(--pooi-purple) 80%, transparent),
-    inset 0 0 32px color-mix(in srgb, var(--pooi-purple) 55%, transparent);
+    0 0 34px 10px color-mix(in srgb, var(--pooi-royal) 65%, transparent),
+    inset 0 0 32px color-mix(in srgb, var(--pooi-purple) 60%, transparent);
 }
 
 .pooi-intro-eyebrow {
@@ -353,7 +383,7 @@
 }
 
 .pooi-phone-bubble--sent {
-  background: color-mix(in srgb, var(--pooi-purple) 25%, var(--pooi-surface));
+  background: color-mix(in srgb, var(--pooi-sky) 20%, var(--pooi-surface));
   border-radius: 12px 12px 2px 12px;
   padding: 0.6rem 0.8rem;
   text-align: left;
@@ -375,7 +405,7 @@
 }
 
 .pooi-phone-followup {
-  color: var(--pooi-purple);
+  color: var(--pooi-sky);
   letter-spacing: 0.08em;
 }
 
@@ -450,7 +480,8 @@
   font-size: 0.72rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--pooi-purple);
+  /* Classification taxonomy is system framework, not a Pillar-One marker. */
+  color: var(--pooi-sky);
 }
 
 .pooi-sorter-look-again {
@@ -467,7 +498,8 @@
 
 .pooi-sorter-placed {
   font-size: 0.75rem;
-  background: color-mix(in srgb, var(--pooi-purple) 18%, transparent);
+  background: color-mix(in srgb, var(--pooi-sky) 16%, transparent);
+  border-left: 2px solid var(--pooi-purple);
   border-radius: 6px;
   padding: 0.3rem 0.5rem;
   text-align: left;
@@ -615,7 +647,7 @@
 .pooi-modern-domain {
   font-size: 0.65rem;
   letter-spacing: 0.1em;
-  color: var(--pooi-purple);
+  color: var(--pooi-sky);
 }
 
 .pooi-modern-line {
@@ -687,7 +719,10 @@
   font-family: 'JetBrains Mono', monospace;
   font-size: 2.5rem;
   letter-spacing: 0.05em;
-  color: var(--pooi-purple);
+  /* System-level practice timer: H20 blue, with purple only as a faint
+     secondary glow so it still reads as Pillar One's own exercise. */
+  color: var(--pooi-sky);
+  text-shadow: 0 0 28px color-mix(in srgb, var(--pooi-purple) 30%, transparent);
 }
 
 /* Record */
@@ -706,7 +741,7 @@
   font-size: 0.7rem;
   letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: var(--pooi-purple);
+  color: var(--pooi-sky);
 }
 
 .pooi-record-list {
@@ -727,7 +762,8 @@
 }
 
 .pooi-record-check {
-  color: var(--pooi-purple);
+  /* Completion confirmation is system progress, not a Pillar identity mark. */
+  color: var(--pooi-sky);
 }
 
 .pooi-record-summary {

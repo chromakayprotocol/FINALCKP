@@ -31,8 +31,15 @@ const CHAMBER_BG = '/reclamation-university/Reflection Chamber/Reflection_Chambe
 // Per-pillar portal color + position over the background art, in the art's
 // own left-to-right order (not PILLARS' index order — pillar 5 sits in the
 // center archway, not on the far right).
+//
+// Portal One carries the Elemental Rubrik: H20 color architecture: its
+// architecture/edge (`structureColor`) is H20 sky blue — the same system
+// identity every pillar shares — while `color` (its internal energy/glow)
+// stays Pillar One's own purple. Portals 2-5 don't have an interior built
+// yet; give each the same `structureColor` (H20 sky blue) as its own
+// pillar-interior work lands, rather than changing their look here first.
 const PORTALS = [
-  { pillarId: 'owned-interior', color: '#a875ff', dim: '#5b3a99', left: '17.3%', top: '47%', size: 1 },
+  { pillarId: 'owned-interior', color: '#a875ff', dim: '#5b3a99', structureColor: '#38bdf8', left: '17.3%', top: '47%', size: 1 },
   { pillarId: 'forged-witness', color: '#d4af37', dim: '#7a5f13', left: '34.5%', top: '41%', size: 1 },
   { pillarId: 'mirror-walker-boundary', color: REFLECTION_META.color, dim: REFLECTION_META.dim, left: '50%', top: '36%', size: 1.35 },
   { pillarId: 'sacred-restraint', color: '#c8d0d8', dim: '#6b747c', left: '65.5%', top: '41%', size: 1 },
@@ -54,7 +61,7 @@ export default function ReflectionChamberEnvironment({ activePillarId, onSelectP
       </div>
 
       <div className="rce-portals" role="tablist" aria-label="Five pillars of the Reflection Chamber">
-        {PORTALS.map(({ pillarId, color, dim, left, top, size }) => {
+        {PORTALS.map(({ pillarId, color, dim, structureColor, left, top, size }) => {
           const pillar = PILLAR_BY_ID[pillarId];
           if (!pillar) return null;
           const isActive = activePillarId === pillarId;
@@ -71,6 +78,7 @@ export default function ReflectionChamberEnvironment({ activePillarId, onSelectP
                 top,
                 '--portal-color': color,
                 '--portal-dim': dim,
+                '--portal-structure-color': structureColor || color,
                 '--portal-scale': size,
               }}
               onClick={() => onSelectPillar(pillarId)}

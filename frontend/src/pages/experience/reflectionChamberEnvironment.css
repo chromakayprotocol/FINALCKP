@@ -91,9 +91,12 @@
   width: 3.4rem;
   height: 4.4rem;
   border-radius: 50% / 40%;
-  border: 2px solid var(--portal-color);
+  /* Structure (edge) carries the portal's architectural identity — H20 blue
+     for Portal One, each portal's own color until its interior is built.
+     The energy glow (--portal-color) always stays that pillar's accent. */
+  border: 2px solid var(--portal-structure-color, var(--portal-color));
   box-shadow:
-    0 0 14px 2px color-mix(in srgb, var(--portal-color) 55%, transparent),
+    0 0 14px 2px color-mix(in srgb, var(--portal-structure-color, var(--portal-color)) 45%, transparent),
     inset 0 0 18px color-mix(in srgb, var(--portal-color) 35%, transparent);
   background: radial-gradient(ellipse at center, color-mix(in srgb, var(--portal-color) 30%, transparent) 0%, transparent 70%);
   transition: box-shadow 0.25s ease, transform 0.25s ease;
@@ -103,13 +106,13 @@
 .rce-portal:focus-visible .rce-portal-ring {
   transform: scale(1.08);
   box-shadow:
-    0 0 22px 4px color-mix(in srgb, var(--portal-color) 75%, transparent),
+    0 0 22px 4px color-mix(in srgb, var(--portal-structure-color, var(--portal-color)) 65%, transparent),
     inset 0 0 24px color-mix(in srgb, var(--portal-color) 55%, transparent);
 }
 
 .rce-portal.is-active .rce-portal-ring {
   box-shadow:
-    0 0 28px 6px color-mix(in srgb, var(--portal-color) 90%, transparent),
+    0 0 28px 6px color-mix(in srgb, var(--portal-structure-color, var(--portal-color)) 80%, transparent),
     inset 0 0 26px color-mix(in srgb, var(--portal-color) 65%, transparent);
 }
 

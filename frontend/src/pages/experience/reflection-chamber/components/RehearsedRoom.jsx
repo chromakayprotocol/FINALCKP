@@ -14,6 +14,7 @@ export default function RehearsedRoom({
     <div className="pooi-rehearsed">
       <span className="pooi-code-panel-kicker">Shadow Code</span>
       <h2 className="pooi-rehearsed-title">{code.name}</h2>
+      {code.code && <p className="pooi-code-panel-code">{code.code}</p>}
       <p className="pooi-rehearsed-body">{code.body}</p>
 
       <div className="pooi-rehearsed-lines" role="list" aria-label="Familiar self-explanations">

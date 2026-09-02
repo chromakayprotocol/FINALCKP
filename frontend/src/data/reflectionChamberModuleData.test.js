@@ -1,5 +1,21 @@
 import { describe, expect, it } from 'vitest';
-import { PILLARS, PILLAR_TRACK_MAP, PILLAR_ONE_TRACK_CODES } from './reflectionChamberModuleData';
+import { PILLARS, PILLAR_TRACK_MAP, PILLAR_TRACK_CODES, PILLAR_CANONICAL_CODES } from './reflectionChamberModuleData';
+
+/* The 27-track source manifest (Chroma_Key_Act_Two_Reflection_Chamber_Track_Matrix),
+   in its own numbering. Track 13 has no row in public.tracks (its R2 key is
+   unconfirmed — see the seed migration's header) but is still curriculum. */
+const ALL_27_TRACKS = [
+  'The Reflection Chamber', 'Unsent Messages Season', 'Version of Me',
+  'Before The Verdict and the Door', 'Sun Don’t Invoice', 'The Ones We Still Carry',
+  'Willful Detonation', '5 Minutes From The Edge', 'Not Alone',
+  'The Shadow Magician', 'The Great Turning', 'Icarus Ain’t Cryin’ This Time',
+  'The Seeker and the Silent',
+  'Safer Lie', 'Ashes and Iron (Bloodline and Flame)', 'H2O',
+  'Live For Me', 'Tearin’ You Apart', 'Felt That Drift',
+  'Phantom', 'If He Could Only See', 'If You Really Listened',
+  'Promise', 'This Ain’t The Limit', 'I Own Every Word',
+  'The Veil Thins', 'Not Your Cross (The Seeker’s Initiation)',
+];
 
 /**
  * Guards the canonical track → pillar mapping. The music is structurally tied
@@ -8,6 +24,13 @@ import { PILLARS, PILLAR_TRACK_MAP, PILLAR_ONE_TRACK_CODES } from './reflectionC
  */
 describe('canonical track mapping', () => {
   const entriesFor = (pillar) => [...pillar.shadow, ...pillar.light].filter((entry) => entry.track);
+
+  it('accounts for all 27 tracks across the five pillars, none twice', () => {
+    const all = Object.values(PILLAR_TRACK_MAP).flat();
+    expect(all.length).toBe(27);
+    expect(new Set(all).size).toBe(27);
+    expect(new Set(all)).toEqual(new Set(ALL_27_TRACKS));
+  });
 
   it.each(Object.keys(PILLAR_TRACK_MAP))('only cites its own canonical tracks: %s', (pillarId) => {
     const pillar = PILLARS.find((p) => p.id === pillarId);
@@ -32,18 +55,38 @@ describe('canonical track mapping', () => {
     }
   });
 
-  it('keeps Willful Detonation out of Pillars One and Two', () => {
-    for (const tracks of Object.values(PILLAR_TRACK_MAP)) {
-      expect(tracks).not.toContain('Willful Detonation');
+  it('places Willful Detonation in Pillar Five only', () => {
+    expect(PILLAR_TRACK_MAP['mirror-walker-boundary']).toContain('Willful Detonation');
+    expect(PILLAR_TRACK_MAP['owned-interior']).not.toContain('Willful Detonation');
+    expect(PILLAR_TRACK_MAP['forged-witness']).not.toContain('Willful Detonation');
+  });
+
+  it.each(Object.keys(PILLAR_TRACK_MAP))('gives every track of %s its own distinct code pair', (pillarId) => {
+    const codes = PILLAR_TRACK_CODES[pillarId];
+    expect(codes.map((c) => c.track).sort()).toEqual([...PILLAR_TRACK_MAP[pillarId]].sort());
+
+    const shadows = new Set(codes.map((c) => c.shadow));
+    const lights = new Set(codes.map((c) => c.light));
+    expect(shadows.size).toBe(codes.length);
+    expect(lights.size).toBe(codes.length);
+  });
+
+  it.each(Object.keys(PILLAR_TRACK_MAP))('every shadow/light entry with a `code` matches its track\'s canonical phrase: %s', (pillarId) => {
+    const pillar = PILLARS.find((p) => p.id === pillarId);
+    const codesByTrack = new Map(PILLAR_TRACK_CODES[pillarId].map((c) => [c.track, c]));
+
+    for (const entry of pillar.shadow.filter((e) => e.track && e.code)) {
+      expect(entry.code).toBe(codesByTrack.get(entry.track).shadow);
+    }
+    for (const entry of pillar.light.filter((e) => e.track && e.code)) {
+      expect(entry.code).toBe(codesByTrack.get(entry.track).light);
     }
   });
 
-  it('gives each of Pillar One’s five tracks its own distinct code pair', () => {
-    expect(PILLAR_ONE_TRACK_CODES.map((c) => c.track)).toEqual(PILLAR_TRACK_MAP['owned-interior']);
-
-    const shadows = new Set(PILLAR_ONE_TRACK_CODES.map((c) => c.shadow));
-    const lights = new Set(PILLAR_ONE_TRACK_CODES.map((c) => c.light));
-    expect(shadows.size).toBe(PILLAR_ONE_TRACK_CODES.length);
-    expect(lights.size).toBe(PILLAR_ONE_TRACK_CODES.length);
+  it.each(Object.keys(PILLAR_TRACK_MAP))('has a canonical macro-theme code pair drawn from one of its own tracks: %s', (pillarId) => {
+    const canonical = PILLAR_CANONICAL_CODES[pillarId];
+    const codes = PILLAR_TRACK_CODES[pillarId];
+    expect(codes.some((c) => c.shadow === canonical.shadow.code)).toBe(true);
+    expect(codes.some((c) => c.light === canonical.light.code)).toBe(true);
   });
 });

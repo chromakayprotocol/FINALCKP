@@ -1284,10 +1284,18 @@ curriculum. The wrong song-to-Pillar association produces the wrong diagnostic a
 
 ---
 
-## 63. Pillar One track / code relationship
+## 63. Track / code relationship across all five Pillars
 
-The five Pillar One tracks do not all teach the same code. They operate as five encounters
-surrounding the larger Owned Interior theme.
+No Pillar's tracks all teach the same code. Each track is its own encounter surrounding that
+Pillar's macro-theme — the single Shadow/Light pair its interactive engine (today, only Pillar
+One has one) drives its arc with. This is the full canonical breakdown, sourced from the
+production track manifest (Chroma_Key_Act_Two_Reflection_Chamber_Track_Matrix) and cross-checked
+against `supabase/migrations/20260823130000_seed_act_two_reflection_chamber_tracks.sql`, which
+independently seeds a short pattern name per track (its `light_code`/`shadow_code` columns) —
+every pattern name below matches that seed exactly, so the interactive layer and the database
+now agree on vocabulary.
+
+### Pillar One — The Owned Interior
 
 | Track | Shadow Code | Light Code |
 | --- | --- | --- |
@@ -1297,7 +1305,51 @@ surrounding the larger Owned Interior theme.
 | **Phantom** | "The mirror only reflects my broken reality and isolation." | "The inner mirror holds my healed reflection, a phantom that empowers me." |
 | **The Veil Thins** | "Ascension is an escape into higher elevation and comfort." | "Ascension is full exposure; drop the act and walk in truth." |
 
-The Pillar therefore has one macro-theme with five distinct code encounters.
+### Pillar Two — The Forged Witness
+
+| Track | Shadow Code | Light Code |
+| --- | --- | --- |
+| **Version of Me** | "What protected you can imprison you." | "Keep the strength. Return the debt." |
+| **5 Minutes From The Edge** | "Loving someone means dying for them repeatedly to keep them sane." | "I can walk away to survive without punishing your shame." |
+| **Ashes and Iron (Bloodline and Flame)** | "My rage is an armor that will heal my broken pride." | "Only releasing the crusade will grant mercy unrehearsed." |
+| **Felt That Drift** | "Fear builds cages to maintain Earth's control." | "Mastery moves within; the body knows before the mind can look." |
+| **If He Could Only See** | "Safety means remaining silent and chasing external approval." | "The truth is louder than the lies they told; real love rises above the fear." |
+| **If You Really Listened** | "Moving on quietly means I am untouched by the fall." | "I am not numb; I alchemized a void into my survival." |
+
+### Pillar Three — Sacred Restraint & Reflection
+
+| Track | Shadow Code | Light Code |
+| --- | --- | --- |
+| **Unsent Messages Season** | "Silence can become avoidance wearing the mask of wisdom." | "My silence is chosen, not inherited." |
+| **Before The Verdict and the Door** | "Waiting for judgment absolves me of responsibility." | "Redemption asks for truth, not another hedge; step through the door." |
+| **The Ones We Still Carry** | "I must beg a silence to shift into sound to heal." | "I can walk forward, and let your reflection walk with me." |
+| **The Seeker and the Silent** † | "My departure makes me the villain in the absence of an explanation." | "Not all silence is absence; leaving is sometimes necessary to survive." |
+| **H2O** | "I must hold onto false projections to survive the flood." | "Break me down to elemental essence; water heals and reveals truth." |
+
+† No row in `public.tracks` — see §72's note on Track 13.
+
+### Pillar Four — Open Frequency
+
+| Track | Shadow Code | Light Code |
+| --- | --- | --- |
+| **Sun Don't Invoice** | "Giving with an invoice is still a transaction." | "I give without requiring repayment." |
+| **Not Alone** | "I must earn love with suffering and chains." | "You don't need to prove it, just allow; you are not alone." |
+| **The Great Turning** | "The crumbling of the world is a punishment." | "The turning is a preparation; everything we lose, we outgrew." |
+| **This Ain't The Limit** | "The ceiling of reality is a glass cage built from fear." | "The limit is a firewall wrapped in wisdom and mercy." |
+
+### Pillar Five — The Mirror-Walker's Boundary
+
+| Track | Shadow Code | Light Code |
+| --- | --- | --- |
+| **Willful Detonation** | "Do not carry a weapon someone else handed you." | "Return the weapon. Keep your will." |
+| **Icarus Ain't Cryin' This Time** | "I must kneel and accept divine games as a test of love." | "I draw the line; I am reborn and do not answer to a sky made of stone." |
+| **Live For Me** | "I must play savior even while you counterfeit the truth and drain my light." | "I cut the cords not to hate you, but because I love myself more." |
+| **Tearin' You Apart** | "Feeling it does not mean it belongs to you." | "I can feel what is yours without carrying it." |
+| **Promise** | "Loyalty requires that I bleed to keep you standing." | "I break the vow to stand by you so I do not turn my own heart into a crime." |
+| **I Own Every Word** | "I must shrink, walk on defense, and apologize to make others comfortable." | "I take my power back and stop living underneath bridges to keep the peace." |
+| **Not Your Cross (The Seeker's Initiation)** | "I am meant to be a landfill for grief, absorbing corrosion." | "Alchemy is not consumption; it is transformation with consent." |
+
+27 tracks, 27 distinct code pairs, none shared across Pillars.
 
 ---
 
@@ -1541,6 +1593,39 @@ three entries cited tracks belonging to other pillars:
 
 `frontend/src/data/reflectionChamberModuleData.test.js` guards all of this.
 
+**A second pass, once the full 27-track canon arrived, corrected two things this first pass got
+wrong and one thing the repository had wrong before either pass touched it.** The user's message
+carrying the complete Shadow/Light Code breakdown for all 27 tracks was cross-checked against
+`supabase/migrations/20260823130000_seed_act_two_reflection_chamber_tracks.sql`, which
+independently seeds a short pattern name per track (`light_code`/`shadow_code` columns) — that
+gave an authoritative name for every entry rather than an invented one, and surfaced these:
+
+| Entry | This PR's first pass had | Corrected to | Why |
+| --- | --- | --- | --- |
+| Pillar Two · "The Borrowed Trigger" (Ashes and Iron) | Guessed Ashes and Iron was the right *track* for a name I'd invented | **"The Holy Crusade"** — the migration's actual name for Ashes and Iron; "The Borrowed Trigger" is Willful Detonation's name | The name is literally about being handed a weapon — that's Willful Detonation's theme (§63, Pillar Five), not this one's |
+| Pillar Four · "The Willing Casualty" (Live For Me) | Guessed Live For Me was the right *track* to carry this pattern | **Moved to Pillar Two, track 5 Minutes From The Edge** — its actual home; Live For Me belongs to Pillar Five | 5 Minutes From The Edge was already correctly listed in Pillar Two's track array — it just had no authored code entry yet |
+| Pillar Five · "I Own Every Word"'s light entry, named "Full Exposure" | *(pre-existing, not touched by the first pass)* | **"Accountability Without Shrinking"** | "Full Exposure" and its body text are The Veil Thins' — already correctly used in Pillar One. This was a duplicate misattachment already in the repository before either pass. |
+
+All five Pillars now carry every one of their canonical tracks with a full, distinct Shadow/Light
+Code pair (§63) and a pattern name matching the Supabase seed exactly — 27 tracks, 27 pairs, zero
+collisions, verified by `reflectionChamberModuleData.test.js`. `PILLAR_ONE_TRACK_CODES` and
+`PILLAR_ONE_CANONICAL_CODES` were generalized into `PILLAR_TRACK_CODES`/`PILLAR_CANONICAL_CODES`
+(keyed by pillar id) so a future Pillar Two–Five engine reads the same shape Pillar One's does,
+rather than each pillar inventing its own. Each pillar's macro-theme (`canonicalCodes`) is drawn
+from the one track whose Light Code its pre-existing mantra or seal already echoes — Version of
+Me for Pillar Two (seal: "I keep the strength. I return the debt."), Unsent Messages Season for
+Pillar Three (seal: "My silence is chosen..."), Sun Don't Invoice for Pillar Four (mantra: "I was
+not built to hoard the light..."), Not Your Cross for Pillar Five (mantra: "Bring me your
+shadow..."). That's an editorial call, not something explicitly specified — open to being told
+otherwise.
+
+`CodeEntry` also gained an optional `code` field: the literal Shadow/Light Code phrase, distinct
+from `body` (the descriptive scene/application). Before this, the CONCEPT and Rehearsed Room
+screens labeled their panel "Shadow Code" but showed only a paraphrase — the actual phrase never
+appeared until deep in the new arc (§39, `STAGES.SHADOW_CODE`). `ShadowCodePanel` and
+`RehearsedRoom` now render `code.code` when present, so a screen that says "Shadow Code" actually
+shows one.
+
 **H20 blue is the primary accent (§08–§10).** The stylesheet was purple-dominant end to end — a
 purple-black ground, purple borders, a purple primary button, purple progress dots — which §09
 calls a branding failure outright. It now carries the spec's token set, with `--pooi-accent`
@@ -1572,8 +1657,19 @@ These are open items against §70, listed so nothing here reads as a passed chec
 5. **Persistence (§60, §70 "Data").** Session state is `localStorage` only, keyed per pillar and
    user. Pillar completion is not yet written through to the Chamber's global progression.
 6. **Typography (§13).** The pillar renders in Inter/Oxanium; Cinzel is not applied.
-7. **Willful Detonation** is assigned to Pillar Five by §62 but has no authored code entry there,
-   so it is deliberately absent from `PILLAR_TRACK_MAP` rather than guessed at.
+7. ~~Willful Detonation is assigned to Pillar Five by §62 but has no authored code entry
+   there~~ — **resolved.** All 27 tracks across all five Pillars now have a full authored Shadow
+   Code, Light Code, and pattern name (§63).
+8. **"The Seeker and the Silent" (Pillar Three) has no Supabase row.** Its R2 object key is
+   unconfirmed — this is documented in the seed migration's own header, not a gap introduced
+   here. The curriculum entry exists (`PILLAR_TRACK_CODES['sacred-restraint']`) because it's
+   decoupled from playback, but any UI that lists or plays a Pillar's tracks must not assume this
+   one has audio until a follow-up migration seeds it with a confirmed key.
+9. **Pillars Two through Five have no interactive engine.** Their curriculum data is now
+   complete and structured identically to Pillar One's (`tracks`, `trackCodes`,
+   `canonicalCodes` on every pillar), so a future `PillarExperience` config for any of them is a
+   data problem, not an architecture problem — but none of the eleven-stage Shadow Code arc
+   (§37–§48) exists for them yet. Only Pillar One is playable.
 
 ### Pre-existing issues found, not introduced here
 

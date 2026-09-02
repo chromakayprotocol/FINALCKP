@@ -20,6 +20,7 @@ export default function ShadowCodePanel({ code, variant = 'shadow', teachingLine
 
       {open && (
         <div className="pooi-code-panel-body">
+          {code.code && <p className="pooi-code-panel-code">{code.code}</p>}
           <div className="pooi-code-panel-row">
             <span className="pooi-code-panel-label">What it looks like</span>
             <p>{code.body}</p>

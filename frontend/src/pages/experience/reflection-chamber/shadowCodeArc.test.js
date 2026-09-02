@@ -5,6 +5,7 @@ vi.mock('../../../context/AuthContext', () => ({
   useAuth: () => ({ user: null }),
 }));
 
+import { SovereignProvider } from '../../../sovereign/runtime';
 import PillarExperience from './PillarExperience';
 import { OWNED_INTERIOR_CONFIG } from './data/ownedInteriorConfig';
 import { STAGES, STAGE_ORDER, stageIndex } from './utils/stageTransitions';
@@ -19,10 +20,18 @@ const STORAGE_KEY = 'ckp:reflection-chamber:owned-interior:anonymous';
 /* Seeds the pillar's own localStorage slot so a stage can be rendered directly
    rather than clicked through from the intro. This is the same persistence the
    experience actually uses (state/usePillarExperience.js), not a test-only
-   backdoor into the component. */
+   backdoor into the component. PillarExperience now also reports into the
+   Sovereign Runtime (see PillarExperience.jsx's header comment), which throws
+   without an ancestor SovereignProvider — namespace/userId omitted, same as
+   this codebase's other Sovereign-consuming component tests
+   (VibrationModuleExperience.test.js), which runs it with no persistence. */
 function renderAt(stage, patch = {}) {
   window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ currentStage: stage, ...patch }));
-  return render(<PillarExperience config={OWNED_INTERIOR_CONFIG} />);
+  return render(
+    <SovereignProvider>
+      <PillarExperience config={OWNED_INTERIOR_CONFIG} />
+    </SovereignProvider>,
+  );
 }
 
 beforeEach(() => {
@@ -149,7 +158,11 @@ describe('the stage sequence', () => {
       JSON.stringify({ currentStage: STAGES.CODE_DISCOVERY, reflection: { whatHappened: 'x' } }),
     );
     // No throw, and the inputs the arc added are controlled from the start.
-    const { container } = render(<PillarExperience config={OWNED_INTERIOR_CONFIG} />);
+    const { container } = render(
+      <SovereignProvider>
+        <PillarExperience config={OWNED_INTERIOR_CONFIG} />
+      </SovereignProvider>,
+    );
     expect(container.querySelector('textarea').value).toBe('');
   });
 });

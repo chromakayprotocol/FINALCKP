@@ -1672,6 +1672,38 @@ app's global reset present the padding math pushed content past the fixed viewpo
 file were deleted before committing — not part of the shipped change, and reproducible from this
 paragraph if the layout needs re-checking.
 
+**Persistence (§60, §70 "Data").** `usePillarExperience`'s `localStorage` state stays the UI's
+actual source of truth for stage position and form input — that doesn't change, and a signed-out
+or offline Seeker still gets a working pillar. But before this, that local state was *all* that
+existed: Pillar One's completion was invisible to the rest of the app. That turned out to be a
+real, pre-existing gap rather than an open design question — `sovereign/reflectionChamber/
+reflectionChamberSteps.js` already defines a six-step lifecycle for exactly this pillar (Enter →
+Diagnose → Reflect → Instruct → Practice → Seal, against a `reflection-chamber/<pillarId>`
+Sovereign Runtime module), and `mirrorClarity.js` already evaluates it for the Chamber's own
+environmental progress — nothing had ever dispatched into it. `PortalOneOwnedInterior.jsx` now
+hoists a `SovereignProvider` (same precedent as `ReclamationModulePage.jsx`'s six Hermetic Hall
+modules), and `PillarExperience.jsx` reports each step as a parallel signal alongside the existing
+local state, at the point in the flow that step's own `isComplete()` reads: `startModule` on
+mount; `advanceStep(ENTER)` on the intro's Enter click; `selectConcept` when the Seeker recognizes
+the Shadow Code (Diagnose) and again at the Light Code; `commitReflection` when the Personal
+Mirror is submitted (Reflect); `advanceStep(INSTRUCT)` on reaching the Light Code; `executeProtocol`
+on the Light Code practice submit (Practice); `advanceStep(SEAL)` on reaching the Pillar Record.
+Every dispatch is optional-chained off `sovereign.module`, matching `useLockBodyScroll`'s own
+defensive-check reasoning: the mount effect that starts the module runs before a click is
+physically possible, but nothing here should crash if it somehow hasn't yet.
+
+Verified against real state, not just "no throw" — `pillarSovereignWiring.test.js` renders the
+real component tree inside a real `SovereignProvider`, fires the actual clicks (Enter, recognizing
+a Shadow Code, submitting the Personal Mirror, reaching the Light Code, submitting its practice,
+reaching the Seal), and reads the Sovereign Runtime's own state back out via `SovereignContext` —
+same pattern as this codebase's existing `VibrationModuleExperience.test.js` — to confirm each
+dispatch lands exactly where that step's `isComplete()` in `reflectionChamberSteps.js` looks for
+it, and that `mirrorClarity()`'s score genuinely moves off zero. `evaluateModuleSteps()`'s own
+walk-and-lock gating (a step reads "locked" until everything before it is done) and Mirror
+Clarity's score aggregation are pre-existing, already-tested infrastructure
+(`sovereignSteps.test.js`, `mirrorClarity.test.js`) — this only had to prove Pillar One's own side
+of the contract, not re-verify logic that already had coverage.
+
 ### Known gaps — not yet implemented
 
 These are open items against §70, listed so nothing here reads as a passed check.
@@ -1681,20 +1713,25 @@ These are open items against §70, listed so nothing here reads as a passed chec
    Knowledge Boundary (§31), and the separate Carry Code screen (§50). The Modern Mirror
    signals (§21) exist as the digital sequence but not as the full screen described.
 2. **Audio (§57).** No music, environmental, or interface audio layer is wired into the pillar.
+   Per-track music can reuse the existing `tracks` table / R2 pattern
+   (`ReclamationLessonMedia.jsx`) directly — Pillar One's own track titles are already known
+   (§63). The environmental water ambience and interface sound cues have no existing asset
+   anywhere in the repo or its migrations; the plan is to synthesize both procedurally with the
+   Web Audio API (filtered/modulated noise for the ambience, short oscillator tones for
+   interface cues) rather than source or license an external file, which avoids a licensing
+   question entirely and ships as pure code. Not yet built.
 3. **Motion (§55, §56).** Only a single fade-in transition exists; the per-moment transition
    language is not implemented.
-4. **Persistence (§60, §70 "Data").** Session state is `localStorage` only, keyed per pillar and
-   user. Pillar completion is not yet written through to the Chamber's global progression.
-5. **Typography (§13).** The pillar renders in Inter/Oxanium; Cinzel is not applied.
-6. ~~Willful Detonation is assigned to Pillar Five by §62 but has no authored code entry
+4. **Typography (§13).** The pillar renders in Inter/Oxanium; Cinzel is not applied.
+5. ~~Willful Detonation is assigned to Pillar Five by §62 but has no authored code entry
    there~~ — **resolved.** All 27 tracks across all five Pillars now have a full authored Shadow
    Code, Light Code, and pattern name (§63).
-7. **"The Seeker and the Silent" (Pillar Three) has no Supabase row.** Its R2 object key is
+6. **"The Seeker and the Silent" (Pillar Three) has no Supabase row.** Its R2 object key is
    unconfirmed — this is documented in the seed migration's own header, not a gap introduced
    here. The curriculum entry exists (`PILLAR_TRACK_CODES['sacred-restraint']`) because it's
    decoupled from playback, but any UI that lists or plays a Pillar's tracks must not assume this
    one has audio until a follow-up migration seeds it with a confirmed key.
-9. **Pillars Two through Five have no interactive engine.** Their curriculum data is now
+7. **Pillars Two through Five have no interactive engine.** Their curriculum data is now
    complete and structured identically to Pillar One's (`tracks`, `trackCodes`,
    `canonicalCodes` on every pillar), so a future `PillarExperience` config for any of them is a
    data problem, not an architecture problem — but none of the eleven-stage Shadow Code arc

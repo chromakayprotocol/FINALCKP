@@ -1,5 +1,8 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useAuth } from '../../../context/AuthContext';
+import { useSovereign } from '../../../sovereign/runtime';
+import { reflectionChamberModuleId } from '../../../sovereign/reflectionChamber/mirrorClarity';
+import { REFLECTION_CHAMBER_STEP_IDS } from '../../../sovereign/reflectionChamber/reflectionChamberSteps';
 import { PILLARS } from '../../../data/reflectionChamberModuleData';
 import { usePillarExperience } from './state/usePillarExperience';
 import { useLockBodyScroll } from './hooks/useLockBodyScroll';
@@ -67,12 +70,37 @@ import './portalOneOwnedInterior.css';
  * The canonical Shadow/Light Codes come off the pillar itself
  * (`pillar.canonicalCodes`, reflectionChamberModuleData.js), not from config —
  * they are curriculum, not per-portal presentation.
+ *
+ * Progress also reports into the Sovereign Runtime (requires an ancestor
+ * SovereignProvider — see PortalOneOwnedInterior.jsx), as module
+ * `reflection-chamber/<pillarId>` against REFLECTION_CHAMBER_STEPS
+ * (reflectionChamberSteps.js), which mirrorClarity.js already evaluates
+ * for the Chamber's own environmental progress. This is a parallel signal
+ * only — usePillarExperience's localStorage state above stays the UI's
+ * actual source of truth for stage position and form input, so a stage
+ * refresh or a signed-out session never depends on the runtime dispatch
+ * having landed. Every dispatch below is optional-chained off
+ * `sovereign.module` for the same reason useLockBodyScroll's document
+ * check exists: the mount-effect that starts the module runs before any
+ * click is physically possible, but nothing here should crash if it
+ * somehow hasn't yet.
  */
 export default function PillarExperience({ config, onReturnToChamber, completedPillarIds = [] }) {
   const { user } = useAuth();
   const pillar = PILLARS.find((p) => p.id === config.pillarId);
   const { state, setStage, setPracticePhase, patch } = usePillarExperience(config.pillarId, user?.id);
   useLockBodyScroll();
+
+  const sovereign = useSovereign();
+  const pillarModuleId = reflectionChamberModuleId(config.pillarId);
+  useEffect(() => {
+    sovereign.curriculum.startModule(pillarModuleId);
+    // Mount-once: starts the module exactly when the Seeker enters this
+    // pillar. sovereign.curriculum changes identity every render (see
+    // useSovereign.js), so including it here would refire on every state
+    // update rather than once on mount.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pillarModuleId]);
 
   const [conceptPhase, setConceptPhase] = useState('reveal');
   const [applicationPhase, setApplicationPhase] = useState('modern');
@@ -95,7 +123,10 @@ export default function PillarExperience({ config, onReturnToChamber, completedP
       content = (
         <PillarIntro
           pillar={pillar}
-          onEnter={() => setStage(STAGES.SITUATION)}
+          onEnter={() => {
+            sovereign.module?.advanceStep(REFLECTION_CHAMBER_STEP_IDS.ENTER);
+            setStage(STAGES.SITUATION);
+          }}
           eyebrow={config.intro.eyebrow}
           word={config.intro.word}
           tagline={config.intro.tagline}
@@ -193,7 +224,15 @@ export default function PillarExperience({ config, onReturnToChamber, completedP
             value={state.reflection}
             onChange={(v) => patch({ reflection: v })}
             emotionOptions={config.reflectionEmotions}
-            onSubmit={() => setReflectionPhase('mirror')}
+            onSubmit={() => {
+              const { whatHappened, whatFelt, whatAssumed, whatKnow } = state.reflection;
+              sovereign.reflection.commitReflection(
+                REFLECTION_CHAMBER_STEP_IDS.REFLECT,
+                `What happened: ${whatHappened} | Felt: ${whatFelt.join(', ')} | Assumed: ${whatAssumed} | Know: ${whatKnow}`,
+                [],
+              );
+              setReflectionPhase('mirror');
+            }}
           />
         ) : (
           <MirrorAnalysis reflection={state.reflection} onContinue={() => setStage(STAGES.INSTRUCT)} />
@@ -270,7 +309,10 @@ export default function PillarExperience({ config, onReturnToChamber, completedP
           isRule={state.shadow.isRule}
           onIsRuleChange={(v) => patch({ shadow: { ...state.shadow, isRule: v } })}
           canonical={pillar.canonicalCodes.shadow}
-          onContinue={() => setStage(STAGES.SHADOW_ENCOUNTER)}
+          onContinue={() => {
+            sovereign.concepts.selectConcept(`${pillarModuleId}:shadow-code`);
+            setStage(STAGES.SHADOW_ENCOUNTER);
+          }}
         />
       );
       break;
@@ -319,7 +361,11 @@ export default function PillarExperience({ config, onReturnToChamber, completedP
           shadowCode={pillar.canonicalCodes.shadow.code}
           lightCode={pillar.canonicalCodes.light.code}
           lightBody={pillar.canonicalCodes.light.body}
-          onContinue={() => setStage(STAGES.LIGHT_PRACTICE)}
+          onContinue={() => {
+            sovereign.concepts.selectConcept(`${pillarModuleId}:light-code`);
+            sovereign.module?.advanceStep(REFLECTION_CHAMBER_STEP_IDS.INSTRUCT);
+            setStage(STAGES.LIGHT_PRACTICE);
+          }}
         />
       );
       break;
@@ -330,7 +376,14 @@ export default function PillarExperience({ config, onReturnToChamber, completedP
           lightCode={pillar.canonicalCodes.light.code}
           value={state.light}
           onChange={(v) => patch({ light: v })}
-          onContinue={() => setStage(STAGES.TRANSFER)}
+          onContinue={() => {
+            sovereign.synthesis.executeProtocol(`${pillarModuleId}:light-practice`, {
+              event: state.light.practiceEvent,
+              response: state.light.practiceResponse,
+              reclaimed: state.light.reclaimed,
+            });
+            setStage(STAGES.TRANSFER);
+          }}
         />
       );
       break;
@@ -364,7 +417,10 @@ export default function PillarExperience({ config, onReturnToChamber, completedP
             pillar={pillar}
             items={config.recordItems}
             summary={buildRecordSummary(state)}
-            onContinue={() => setSealPhase('final')}
+            onContinue={() => {
+              sovereign.module?.advanceStep(REFLECTION_CHAMBER_STEP_IDS.SEAL);
+              setSealPhase('final');
+            }}
           />
         ) : (
           <PillarSeal

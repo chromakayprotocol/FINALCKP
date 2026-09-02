@@ -22,6 +22,17 @@ import MirrorAnalysis from './components/MirrorAnalysis';
 import PracticeExercise from './components/PracticeExercise';
 import ObservationLog from './components/ObservationLog';
 import UnbentDoor from './components/UnbentDoor';
+import OwnedInteriorDefinition from './components/OwnedInteriorDefinition';
+import PersonalCommitment from './components/PersonalCommitment';
+import CodeDiscovery from './components/CodeDiscovery';
+import ShadowCodeRecognition from './components/ShadowCodeRecognition';
+import ShadowEncounter from './components/ShadowEncounter';
+import ActiveImagination from './components/ActiveImagination';
+import ShadowDialogue from './components/ShadowDialogue';
+import ShadowEnergy from './components/ShadowEnergy';
+import LightCodeRecode from './components/LightCodeRecode';
+import LightCodePractice from './components/LightCodePractice';
+import TransferTest from './components/TransferTest';
 import MasteryCheck from './components/MasteryCheck';
 import PillarRecord from './components/PillarRecord';
 import PillarSeal from './components/PillarSeal';
@@ -37,13 +48,24 @@ import './portalOneOwnedInterior.css';
  * One's). All state is local to this feature (state/usePillarExperience.js)
  * — no shared app-wide runtime, keyed per pillar + user in localStorage.
  *
+ * The stage order is curriculum, not chrome (see utils/stageTransitions.js):
+ * recognition first, then the Shadow Code arc. The Light Code is revealed only
+ * at STAGES.LIGHT_CODE, after the Seeker has met the Shadow it replaces —
+ * nothing earlier may present it, or the encounter becomes decorative.
+ *
  * `config` shape (see data/ownedInteriorConfig.js for a full example):
  *   pillarId, intro{eyebrow,word,tagline}, situation, sorter{statements,categories},
  *   conceptReveal{eyebrow,lines,closingLine}, shadowCodeIndex, shadowTeachingIndex,
  *   application{scenarios,digitalSequenceSteps,rehearsedShadowCodeIndex,rehearsedLines,rehearsedLead},
- *   reflectionEmotions, instructLightCodeIndex, instructTeachingIndex,
+ *   reflectionEmotions, ownedInterior{title,definition,layers},
  *   unbentDoor{lightCodeIndex,choices,promptQuestion,avoidedActionQuestion},
- *   mastery, recordItems, seal{eyebrow,word,lines}
+ *   commitment{anchors}, codeDiscovery{layers,leadText},
+ *   activeImagination{forms,prompts}, dialogue{prompts}, shadowEnergy{needs},
+ *   transfer, mastery, recordItems, seal{eyebrow,word,lines}
+ *
+ * The canonical Shadow/Light Codes come off the pillar itself
+ * (`pillar.canonicalCodes`, reflectionChamberModuleData.js), not from config —
+ * they are curriculum, not per-portal presentation.
  */
 export default function PillarExperience({ config, onReturnToChamber, completedPillarIds = [] }) {
   const { user } = useAuth();
@@ -178,12 +200,10 @@ export default function PillarExperience({ config, onReturnToChamber, completedP
 
     case STAGES.INSTRUCT:
       content = (
-        <ShadowCodePanel
-          code={pillar.light[config.instructLightCodeIndex]}
-          variant="light"
-          teachingLine={pillar.teaching[config.instructTeachingIndex]}
-          response={state.lightCodeResponse}
-          onResponseChange={(v) => patch({ lightCodeResponse: v })}
+        <OwnedInteriorDefinition
+          title={config.ownedInterior.title}
+          definition={config.ownedInterior.definition}
+          layers={config.ownedInterior.layers}
           onContinue={() => setStage(STAGES.PRACTICE)}
         />
       );
@@ -211,10 +231,117 @@ export default function PillarExperience({ config, onReturnToChamber, completedP
             onSelectChoice={(c) => patch({ unbentDoorChoice: c })}
             avoidedAction={state.avoidedAction}
             onAvoidedActionChange={(v) => patch({ avoidedAction: v })}
-            onComplete={() => setStage(STAGES.MASTERY)}
+            onComplete={() => setStage(STAGES.COMMITMENT)}
           />
         );
       }
+      break;
+
+    case STAGES.COMMITMENT:
+      content = (
+        <PersonalCommitment
+          value={state.commitment}
+          onChange={(v) => patch({ commitment: v })}
+          anchors={config.commitment.anchors}
+          onCommit={() => setStage(STAGES.CODE_DISCOVERY)}
+        />
+      );
+      break;
+
+    case STAGES.CODE_DISCOVERY:
+      content = (
+        <CodeDiscovery
+          layers={config.codeDiscovery.layers}
+          leadText={config.codeDiscovery.leadText}
+          story={state.reflection.whatAssumed}
+          value={state.shadow.discoveredCode}
+          onChange={(v) => patch({ shadow: { ...state.shadow, discoveredCode: v } })}
+          onContinue={() => setStage(STAGES.SHADOW_CODE)}
+        />
+      );
+      break;
+
+    case STAGES.SHADOW_CODE:
+      content = (
+        <ShadowCodeRecognition
+          discoveredCode={state.shadow.discoveredCode}
+          isRule={state.shadow.isRule}
+          onIsRuleChange={(v) => patch({ shadow: { ...state.shadow, isRule: v } })}
+          canonical={pillar.canonicalCodes.shadow}
+          onContinue={() => setStage(STAGES.SHADOW_ENCOUNTER)}
+        />
+      );
+      break;
+
+    case STAGES.SHADOW_ENCOUNTER:
+      content = <ShadowEncounter onEnter={() => setStage(STAGES.ACTIVE_IMAGINATION)} />;
+      break;
+
+    case STAGES.ACTIVE_IMAGINATION:
+      content = (
+        <ActiveImagination
+          forms={config.activeImagination.forms}
+          prompts={config.activeImagination.prompts}
+          value={state.shadow}
+          onChange={(v) => patch({ shadow: v })}
+          onContinue={() => setStage(STAGES.DIALOGUE)}
+        />
+      );
+      break;
+
+    case STAGES.DIALOGUE:
+      content = (
+        <ShadowDialogue
+          prompts={config.dialogue.prompts}
+          dialogue={state.shadow.dialogue}
+          onDialogueChange={(d) => patch({ shadow: { ...state.shadow, dialogue: d } })}
+          onContinue={() => setStage(STAGES.SHADOW_ENERGY)}
+        />
+      );
+      break;
+
+    case STAGES.SHADOW_ENERGY:
+      content = (
+        <ShadowEnergy
+          needs={config.shadowEnergy.needs}
+          value={state.shadow}
+          onChange={(v) => patch({ shadow: v })}
+          onContinue={() => setStage(STAGES.LIGHT_CODE)}
+        />
+      );
+      break;
+
+    case STAGES.LIGHT_CODE:
+      content = (
+        <LightCodeRecode
+          shadowCode={pillar.canonicalCodes.shadow.code}
+          lightCode={pillar.canonicalCodes.light.code}
+          lightBody={pillar.canonicalCodes.light.body}
+          onContinue={() => setStage(STAGES.LIGHT_PRACTICE)}
+        />
+      );
+      break;
+
+    case STAGES.LIGHT_PRACTICE:
+      content = (
+        <LightCodePractice
+          lightCode={pillar.canonicalCodes.light.code}
+          value={state.light}
+          onChange={(v) => patch({ light: v })}
+          onContinue={() => setStage(STAGES.TRANSFER)}
+        />
+      );
+      break;
+
+    case STAGES.TRANSFER:
+      content = (
+        <TransferTest
+          scenario={config.transfer}
+          value={state.light}
+          onChange={(v) => patch({ light: v })}
+          onContinue={() => setStage(STAGES.MASTERY)}
+        />
+      );
       break;
 
     case STAGES.MASTERY:

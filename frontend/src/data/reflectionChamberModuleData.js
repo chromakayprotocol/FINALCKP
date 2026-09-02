@@ -40,6 +40,92 @@ export const ACT_LEVEL_PAIR = {
   },
 };
 
+/* ---------------------------------------------------------------------------
+ * Canonical track → pillar mapping.
+ *
+ * The music is structurally tied to the Shadow/Light curriculum: a song is the
+ * emotional field in which one specific pattern becomes encounterable, so the
+ * wrong song-to-pillar association produces the wrong diagnostic architecture.
+ * This table is the source of truth for that mapping — the `track` field on an
+ * individual CodeEntry names which of its pillar's tracks that entry was drawn
+ * from, and must always be a member of the pillar's list here.
+ *
+ * "Willful Detonation" belongs to Pillar Five, not to Pillar One or Two. It has
+ * no authored code entry in Pillar Five yet, so it is deliberately absent from
+ * this table rather than guessed at.
+ * ------------------------------------------------------------------------- */
+export const PILLAR_TRACK_MAP = Object.freeze({
+  "owned-interior": [
+    "The Reflection Chamber",
+    "The Shadow Magician",
+    "Safer Lie",
+    "Phantom",
+    "The Veil Thins",
+  ],
+  "forged-witness": [
+    "Version of Me",
+    "5 Minutes From The Edge",
+    "Ashes and Iron (Bloodline and Flame)",
+    "Felt That Drift",
+    "If He Could Only See",
+    "If You Really Listened",
+  ],
+});
+
+/**
+ * Pillar One's macro-theme: the single Shadow Code the whole pillar exposes and
+ * the Light Code the Seeker carries out of the Chamber. The pattern names are
+ * organizing labels for the psychological material — they are subordinate to the
+ * codes, which are the instructional payload.
+ *
+ * Ownership is not blame: the Seeker does not become responsible for everything
+ * that happened, only for what happens with what happened.
+ */
+export const PILLAR_ONE_CANONICAL_CODES = Object.freeze({
+  shadow: Object.freeze({
+    pattern: "The Projecting Witness",
+    code: "My pain is an external curse, and God/Fate is to blame for my suffering.",
+    body: "The movement of internal pain outward — into circumstance, other people, Fate, God, reality, perceived enemies, external injustice. The event can be real; the injury can be real; the injustice can be real. The code is the additional rule underneath: if the source of all suffering exists outside me, then I have no authority over the internal system responding to it.",
+  }),
+  light: Object.freeze({
+    pattern: "The Owned Witness",
+    code: "The real war is within; I must reclaim the light that has always been mine.",
+    body: "Not a denial of external reality — a restoration of internal agency. The war is claimed as sovereign territory so that it can finally be worked.",
+  }),
+});
+
+/**
+ * The five Pillar One tracks do not all teach the same code. They are five
+ * distinct encounters surrounding the one Owned Interior macro-theme above.
+ */
+export const PILLAR_ONE_TRACK_CODES = Object.freeze([
+  Object.freeze({
+    track: "The Reflection Chamber",
+    shadow: "My pain is an external curse, and God/Fate is to blame for my suffering.",
+    light: "The real war is within; I must reclaim the light that has always been mine.",
+  }),
+  Object.freeze({
+    track: "The Shadow Magician",
+    shadow: "The shadow is a demon that shatters the self.",
+    light: "The shadow is a teacher to face; integration redeems the fracture.",
+  }),
+  Object.freeze({
+    track: "Safer Lie",
+    shadow: "Closing the door and shutting out love creates safety and peace.",
+    light: "Peace does not come from killing what you swore; truth always breaks the mirror.",
+  }),
+  Object.freeze({
+    track: "Phantom",
+    shadow: "The mirror only reflects my broken reality and isolation.",
+    light: "The inner mirror holds my healed reflection, a phantom that empowers me.",
+  }),
+  Object.freeze({
+    track: "The Veil Thins",
+    shadow: "Ascension is an escape into higher elevation and comfort.",
+    light: "Ascension is full exposure; drop the act and walk in truth.",
+  }),
+]);
+
 /** @typedef {{ name: string, track?: string, body: string, diagnostic?: string, instructional?: string }} CodeEntry */
 /** @typedef {{ id: string, title: string, prompt: string }} Practice */
 
@@ -51,6 +137,9 @@ export const PILLARS = [
     parallelTo: "Consciousness (Act I)",
     question: "Where have I located the war so I would not have to stand on the battlefield?",
     layer: "The mirror",
+    tracks: PILLAR_TRACK_MAP["owned-interior"],
+    trackCodes: PILLAR_ONE_TRACK_CODES,
+    canonicalCodes: PILLAR_ONE_CANONICAL_CODES,
     summary:
       "Raw recognition that the mirror is instrument, not prosecutor. The war that was externalized (God, fate, timelines, other people) is claimed as sovereign territory. Only then can it be worked.",
     teaching: [
@@ -70,7 +159,7 @@ export const PILLARS = [
       },
       {
         name: "The Rehearsed Room",
-        track: "Before the Verdict and the Door",
+        track: "Safer Lie",
         body: "Composure mistaken for resolution. Wanting absolution without disclosure. A room built entirely from sentences prepared in advance.",
         diagnostic:
           "What truth sits heavy like a bruise under your skin and still has no spoken record?",
@@ -121,6 +210,7 @@ export const PILLARS = [
     question:
       "What did the pressure force me to become, and can I credit the shaping without handing the aggressor the gratitude?",
     layer: "The version that survived",
+    tracks: PILLAR_TRACK_MAP["forged-witness"],
     summary:
       "The constructed self under siege. Hypervigilance renamed strength, isolation renamed focus, exhaustion renamed grind. Separating the forged version from the original current.",
     teaching: [
@@ -139,7 +229,7 @@ export const PILLARS = [
       },
       {
         name: "The Borrowed Trigger",
-        track: "Willful Detonation",
+        track: "Ashes and Iron (Bloodline and Flame)",
         body: "Being handed the matches and told the torch belonged to someone else. Grace weaponized; bond dismantled by the one it belonged to.",
         diagnostic:
           "Where have you been installed as the detonator of a bond that was not yours to destroy?",
@@ -279,7 +369,7 @@ export const PILLARS = [
       },
       {
         name: "The Willing Casualty",
-        track: "5 Minutes From the Edge",
+        track: "Live For Me",
         body: "Dying repeatedly inside someone else\u2019s unhealed pain and calling it devotion.",
         diagnostic:
           "Where have you treated your own near-destruction as proof of love?",
@@ -423,6 +513,9 @@ export const CLOSING = {
 export default {
   REFLECTION_META,
   ACT_LEVEL_PAIR,
+  PILLAR_TRACK_MAP,
+  PILLAR_ONE_CANONICAL_CODES,
+  PILLAR_ONE_TRACK_CODES,
   PILLARS,
   EXIT_CRITERIA,
   CADENCE,

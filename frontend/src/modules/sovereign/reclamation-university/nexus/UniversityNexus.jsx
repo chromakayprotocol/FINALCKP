@@ -44,60 +44,62 @@ export default function UniversityNexus() {
       style={{ '--nexus-bg': `url(${nexusBackgroundImage})` }}
     >
       <div className="un-stage">
-        <header className="un-header">
-          <span className="un-header__eyebrow">Reclamation University</span>
-          <h1>A Synthesized Framework for the Sovereign Self</h1>
-          <span className="un-header__attribution">— MM</span>
-        </header>
+        <div className="un-frame">
+          <header className="un-header">
+            <span className="un-header__eyebrow">Reclamation University</span>
+            <h1>A Synthesized Framework for the Sovereign Self</h1>
+            <span className="un-header__attribution">— MM</span>
+          </header>
 
-        <div className="un-axis" aria-label="Central Academic Axis">
-          <span className="un-axis__label">Hermetic Hall</span>
+          <div className="un-axis" aria-label="Central Academic Axis">
+            <span className="un-axis__label">Hermetic Hall</span>
 
-          <button type="button" className="un-axis__hall" onClick={goToHermeticHall}>
-            <img src={hermeticHallImage} alt="" aria-hidden="true" />
-            <span className="sr-only">Enter Hermetic Hall</span>
-          </button>
+            <button type="button" className="un-axis__hall" onClick={goToHermeticHall}>
+              <img src={hermeticHallImage} alt="" aria-hidden="true" />
+              <span className="sr-only">Enter Hermetic Hall</span>
+            </button>
 
-          <div className="un-axis__caption">
-            <span className="un-eyebrow">Central Academic Axis</span>
-            <strong>{axisComplete}% Complete</strong>
-            <span className="un-axis__enrolled">
-              Sovereign Souls: {centralAxisStats.sovereignSoulsEnrolled.toLocaleString()} Enrolled
-            </span>
+            <div className="un-axis__caption">
+              <span className="un-eyebrow">Central Academic Axis</span>
+              <strong>{axisComplete}% Complete</strong>
+              <span className="un-axis__enrolled">
+                Sovereign Souls: {centralAxisStats.sovereignSoulsEnrolled.toLocaleString()} Enrolled
+              </span>
+            </div>
           </div>
+
+          {universityProtocols.map((protocol) => (
+            <ProtocolNode key={protocol.id} protocol={protocol} onEnter={goToProtocol} />
+          ))}
+
+          <footer className="un-dock">
+            <div className="un-dock__profile">
+              <span className="un-dock__avatar" aria-hidden="true">
+                {user?.picture ? (
+                  <img src={user.picture} alt="" />
+                ) : (
+                  <UserIcon size={20} aria-hidden="true" />
+                )}
+              </span>
+              <span className="un-dock__name">{user?.name ?? 'Seeker'}</span>
+            </div>
+
+            <div className="un-dock__meters">
+              <DockMeter label="Knowledge Index" value={nexusDockStats.knowledgeIndex} tone="gold" />
+              <DockMeter label="Arsenal Attunement" value={nexusDockStats.arsenalAttunement} tone="silver" />
+              <DockMeter label="Celestial Alignment" value={nexusDockStats.celestialAlignment} tone="blue" />
+            </div>
+
+            <div className="un-dock__actions">
+              <button type="button" className="un-dock__btn">
+                <Settings size={14} aria-hidden="true" /> Options
+              </button>
+              <button type="button" className="un-dock__btn" onClick={handleLogout}>
+                <LogOut size={14} aria-hidden="true" /> Logout
+              </button>
+            </div>
+          </footer>
         </div>
-
-        {universityProtocols.map((protocol) => (
-          <ProtocolNode key={protocol.id} protocol={protocol} onEnter={goToProtocol} />
-        ))}
-
-        <footer className="un-dock">
-          <div className="un-dock__profile">
-            <span className="un-dock__avatar" aria-hidden="true">
-              {user?.picture ? (
-                <img src={user.picture} alt="" />
-              ) : (
-                <UserIcon size={20} aria-hidden="true" />
-              )}
-            </span>
-            <span className="un-dock__name">{user?.name ?? 'Seeker'}</span>
-          </div>
-
-          <div className="un-dock__meters">
-            <DockMeter label="Knowledge Index" value={nexusDockStats.knowledgeIndex} tone="gold" />
-            <DockMeter label="Arsenal Attunement" value={nexusDockStats.arsenalAttunement} tone="silver" />
-            <DockMeter label="Celestial Alignment" value={nexusDockStats.celestialAlignment} tone="blue" />
-          </div>
-
-          <div className="un-dock__actions">
-            <button type="button" className="un-dock__btn">
-              <Settings size={14} aria-hidden="true" /> Options
-            </button>
-            <button type="button" className="un-dock__btn" onClick={handleLogout}>
-              <LogOut size={14} aria-hidden="true" /> Logout
-            </button>
-          </div>
-        </footer>
       </div>
     </div>
   );

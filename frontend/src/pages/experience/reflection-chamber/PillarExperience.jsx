@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useAuth } from '../../../context/AuthContext';
 import { PILLARS } from '../../../data/reflectionChamberModuleData';
 import { usePillarExperience } from './state/usePillarExperience';
+import { useLockBodyScroll } from './hooks/useLockBodyScroll';
 import { STAGES, STAGE_ORDER, stageIndex, previousStage, PRACTICE_PHASES } from './utils/stageTransitions';
 import { buildRecordSummary } from './utils/buildRecordSummary';
 
@@ -71,6 +72,7 @@ export default function PillarExperience({ config, onReturnToChamber, completedP
   const { user } = useAuth();
   const pillar = PILLARS.find((p) => p.id === config.pillarId);
   const { state, setStage, setPracticePhase, patch } = usePillarExperience(config.pillarId, user?.id);
+  useLockBodyScroll();
 
   const [conceptPhase, setConceptPhase] = useState('reveal');
   const [applicationPhase, setApplicationPhase] = useState('modern');

@@ -13,6 +13,11 @@ export const OPENING_SITUATION = {
   message: 'Hey, are we still good for tomorrow?',
   status: 'SEEN · 10:48 PM',
   followUp: 'NO RESPONSE',
+  // Screen 02's supporting copy, held opposite the phone mock rather than
+  // under it — recognition precedes interpretation, so this states only
+  // what's observable and ends on the open question, no lesson yet.
+  copyLines: ['You sent the message.', 'They saw it.', "They haven't answered."],
+  copyClosing: ["That's all you know.", 'Or is it?'],
 };
 
 export const SORT_CATEGORIES = [

@@ -1639,28 +1639,57 @@ and the reduced-motion block was broadened from `.pooi-stage` alone to the whole
 classifier's incorrect state no longer uses a red border (§18): the zone firms up and the "Look
 again" label carries the meaning.
 
+**Full-screen layout (§11, §12).** The experience is now a fixed `100vw × 100dvh` shell
+(`position: fixed; inset: 0`) instead of a `min-height: 100vh`, `max-width: 720px` scrolling
+column. Body scroll is locked for as long as the pillar is mounted and restored on unmount
+(`hooks/useLockBodyScroll.js`) rather than left to the page. A single grid-column track capped
+at 1440px (§12's max content width) holds four rows — header, progress, stage, nav — of which
+only the stage row scrolls; everything else stays put. `min-height: 0` on that row is load-bearing
+(without it a CSS grid `1fr` row refuses to shrink below its content and `overflow-y: auto` never
+gets to do anything — an easy one to lose an hour to). Stage content defaults to `align-content:
+safe center`: a short screen centers in the available height instead of pinning to the top with
+dead space below, and `safe` falls back to top-alignment the moment content is taller than the
+viewport, so a long screen scrolls from its own top edge rather than overflowing both edges
+evenly and clipping its start off-screen.
+
+Both desktop two-column compositions the spec calls for are built: Screen 02's messaging pane
+sits at roughly 55% width with supporting copy opposite it (an 11fr/9fr split, `SituationPresentation.jsx`,
+new `copyLines`/`copyClosing` fields on `OPENING_SITUATION` carry the spec's exact "You sent the
+message... Or is it?" copy), and Screen 13's Personal Mirror is a literal four-panel grid
+(`PersonalReflection.jsx` → `.pooi-mirror-grid`) whose active panel picks up a purple border via
+`:focus-within` — no separate "active panel" state needed for that. Both stack to a single
+column under 900px per §58, phone/mirror panels first.
+
+Verified by rendering five representative stages to static HTML (real component tree, real CSS,
+`useAuth` mocked exactly as the test suite already does) and screenshotting them with the
+pre-installed headless Chromium at four viewports — 1440×900, 900×1000, 390×844, and a 1440×560
+"short" case specifically to exercise the `safe center` overflow fallback. That check caught a
+real bug before it shipped: `.pooi` had no explicit `box-sizing: border-box`, so without the
+app's global reset present the padding math pushed content past the fixed viewport and
+`overflow: hidden` clipped the header's right-aligned text. Fixed by making the component set
+`box-sizing: border-box` on itself rather than depending on an external reset staying true
+(`.pooi, .pooi *, .pooi *::before, .pooi *::after`). The diagnostic script and its throwaway test
+file were deleted before committing — not part of the shipped change, and reproducible from this
+paragraph if the layout needs re-checking.
+
 ### Known gaps — not yet implemented
 
 These are open items against §70, listed so nothing here reads as a passed check.
 
-1. **Full-screen layout (§11, §12).** The experience is a `min-height: 100vh`, `max-width: 720px`
-   scrolling column, not a fixed `100vw × 100dvh` screen on a 12-column grid. Body scroll is not
-   locked and the desktop two-column compositions (§16's 55% messaging pane, §27's four-panel
-   mirror) are single-column at every width. This is the largest remaining divergence.
-2. **Screens without a distinct implementation.** Several spec screens are folded into an
+1. **Screens without a distinct implementation.** Several spec screens are folded into an
    adjacent stage rather than standing alone: Script Interrupt (§25), Ownership Sort (§30),
    Knowledge Boundary (§31), and the separate Carry Code screen (§50). The Modern Mirror
    signals (§21) exist as the digital sequence but not as the full screen described.
-3. **Audio (§57).** No music, environmental, or interface audio layer is wired into the pillar.
-4. **Motion (§55, §56).** Only a single fade-in transition exists; the per-moment transition
+2. **Audio (§57).** No music, environmental, or interface audio layer is wired into the pillar.
+3. **Motion (§55, §56).** Only a single fade-in transition exists; the per-moment transition
    language is not implemented.
-5. **Persistence (§60, §70 "Data").** Session state is `localStorage` only, keyed per pillar and
+4. **Persistence (§60, §70 "Data").** Session state is `localStorage` only, keyed per pillar and
    user. Pillar completion is not yet written through to the Chamber's global progression.
-6. **Typography (§13).** The pillar renders in Inter/Oxanium; Cinzel is not applied.
-7. ~~Willful Detonation is assigned to Pillar Five by §62 but has no authored code entry
+5. **Typography (§13).** The pillar renders in Inter/Oxanium; Cinzel is not applied.
+6. ~~Willful Detonation is assigned to Pillar Five by §62 but has no authored code entry
    there~~ — **resolved.** All 27 tracks across all five Pillars now have a full authored Shadow
    Code, Light Code, and pattern name (§63).
-8. **"The Seeker and the Silent" (Pillar Three) has no Supabase row.** Its R2 object key is
+7. **"The Seeker and the Silent" (Pillar Three) has no Supabase row.** Its R2 object key is
    unconfirmed — this is documented in the seed migration's own header, not a gap introduced
    here. The curriculum entry exists (`PILLAR_TRACK_CODES['sacred-restraint']`) because it's
    decoupled from playback, but any UI that lists or plays a Pillar's tracks must not assume this

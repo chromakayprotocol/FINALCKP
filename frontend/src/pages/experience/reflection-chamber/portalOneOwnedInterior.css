@@ -14,6 +14,18 @@
  * Reach for --pooi-accent by default and --pooi-pillar only when the element is
  * genuinely Pillar-One-specific. */
 
+/* Border-box is assumed throughout this file's width math (100vw plus
+   padding, 12 equal grid columns, panel widths). The app-wide reset already
+   sets this globally (src/index.css), but this component must not silently
+   depend on that staying true — content-box here would push every padded
+   width past the fixed viewport and get clipped by .pooi's overflow:hidden. */
+.pooi,
+.pooi *,
+.pooi *::before,
+.pooi *::after {
+  box-sizing: border-box;
+}
+
 .pooi {
   --h20-sky: #38bdf8;
   --h20-royal: #2563eb;
@@ -35,16 +47,47 @@
   --pooi-muted: #aab4c3;
   --pooi-faint: #687386;
 
-  min-height: 100vh;
+  /* A fixed screen, not a scrolling curriculum page (§11): the Pillar owns
+     the whole viewport for as long as it's mounted (see useLockBodyScroll,
+     which locks the page behind it) and never grows past it. A single grid
+     column track capped at 1440px (§12's max content width), centered when
+     the viewport is wider, holds the header/progress/stage/nav rows — the
+     stage row is the only one that scrolls, so a screen with more content
+     than fits scrolls internally instead of moving the header off-screen. */
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100dvh;
+  overflow: hidden;
   background: radial-gradient(ellipse at 50% 0%, var(--pooi-bg-secondary) 0%, var(--pooi-bg) 55%);
   color: var(--pooi-ivory);
   font-family: 'Inter', system-ui, sans-serif;
-  padding: 1.25rem 1.25rem 4rem;
-  max-width: 720px;
-  margin: 0 auto;
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
+
+  display: grid;
+  grid-template-columns: minmax(0, 1440px);
+  grid-template-rows: auto auto minmax(0, 1fr) auto;
+  justify-content: center;
+  row-gap: 1rem;
+  padding: 32px 48px;
+}
+
+@media (min-width: 1600px) {
+  .pooi {
+    padding: 48px 64px;
+  }
+}
+
+@media (max-width: 1024px) {
+  .pooi {
+    padding: 24px;
+  }
+}
+
+@media (max-width: 640px) {
+  .pooi {
+    padding: 16px;
+    row-gap: 0.75rem;
+  }
 }
 
 /* Header */
@@ -143,13 +186,56 @@
   margin: 0 0.15rem;
 }
 
-/* Stage container */
+/* Stage container — the §12 12-column grid. Direct children (each stage
+   component's own root element) default to the "primary content" span the
+   spec calls for (6–8 of 12 columns, centered); a screen that needs a real
+   two-column composition (the Situation phone/copy split, the Personal
+   Mirror's four panels) opts into a wider host below instead of fighting
+   this default. `min-height: 0` is load-bearing: without it a grid row sized
+   `1fr` refuses to shrink below its content's height, and `overflow-y: auto`
+   never gets the chance to do anything. Re-keyed on every stage change (see
+   PillarStage.jsx), so a new screen always starts scrolled to its top rather
+   than inheriting the previous screen's scroll offset. */
 .pooi-stage {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 1.25rem;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  column-gap: 1.5rem;
+  row-gap: 1.25rem;
+  /* A short screen (most of them) centers in the available height rather
+     than pinning to the top with dead space below — this is a fixed screen,
+     not a page, so it should fill like one. `safe` falls back to top
+     alignment once content is taller than the viewport, so a long screen
+     scrolls from its own top edge instead of overflowing both edges evenly
+     and clipping its start off-screen. */
+  align-content: safe center;
+  padding-bottom: 0.5rem;
   animation: pooi-fade-in 0.4s ease;
+}
+
+.pooi-stage > * {
+  grid-column: 3 / span 8;
+}
+
+/* A screen with its own internal split (SituationPresentation,
+   PersonalReflection) gets a wider host so that split has room to work. */
+.pooi-stage > .pooi-situation,
+.pooi-stage > .pooi-personal-reflection {
+  grid-column: 2 / span 10;
+}
+
+@media (max-width: 1024px) {
+  .pooi-stage > * {
+    grid-column: 2 / span 10;
+  }
+}
+
+@media (max-width: 640px) {
+  .pooi-stage > * {
+    grid-column: 1 / -1;
+  }
 }
 
 @keyframes pooi-fade-in {
@@ -359,13 +445,51 @@
   color: var(--pooi-muted);
 }
 
-/* Situation / phone mock */
+/* Situation / phone mock — §16: the phone occupies the primary pane
+   (roughly 11/20 ≈ 55%), supporting copy sits opposite it rather than
+   stacked underneath. Stacks to one column, phone first, under 900px. */
 .pooi-situation {
+  display: grid;
+  grid-template-columns: 11fr 9fr;
+  align-items: center;
+  gap: 2.5rem;
+}
+
+.pooi-situation-phone-col {
+  display: flex;
+  justify-content: center;
+}
+
+.pooi-situation-copy-col {
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: flex-start;
   gap: 1rem;
-  text-align: center;
+  text-align: left;
+}
+
+.pooi-situation-copy p {
+  margin: 0.2rem 0;
+  color: var(--pooi-ivory);
+}
+
+.pooi-situation-copy p.pooi-situation-copy--closing {
+  color: var(--pooi-muted);
+  font-style: italic;
+  margin-top: 0.6rem;
+}
+
+@media (max-width: 900px) {
+  .pooi-situation {
+    grid-template-columns: 1fr;
+    justify-items: center;
+    text-align: center;
+  }
+
+  .pooi-situation-copy-col {
+    align-items: center;
+    text-align: center;
+  }
 }
 
 .pooi-phone {
@@ -708,6 +832,32 @@
   border-color: var(--pooi-accent);
   color: var(--pooi-ivory);
   background: color-mix(in srgb, var(--pooi-accent) 18%, transparent);
+}
+
+/* Personal Mirror — the literal four-panel grid (§27). Blue structures every
+   panel; the one the Seeker is actively working in picks up a purple border
+   via :focus-within — no separate "active panel" state needed for that. */
+.pooi-mirror-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+}
+
+.pooi-mirror-panel {
+  border: 1px solid var(--pooi-border);
+  border-radius: 12px;
+  padding: 1rem;
+  background: rgba(56, 189, 248, 0.03);
+}
+
+.pooi-mirror-panel:focus-within {
+  border-color: var(--pooi-pillar);
+}
+
+@media (max-width: 720px) {
+  .pooi-mirror-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* Mirror analysis */

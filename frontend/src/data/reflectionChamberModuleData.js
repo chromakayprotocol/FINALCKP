@@ -139,7 +139,13 @@ export const PILLARS = [
       },
       {
         name: "The Borrowed Trigger",
-        track: "Willful Detonation",
+        // Canon reconciliation: this shadow code previously carried
+        // "Willful Detonation" as its track, but that song belongs to
+        // Pillar Five, not here. Re-pointed to the Pillar Two track whose
+        // territory it actually names — the handed matches, the crusade,
+        // the bloodline verdict. See data/forgedWitnessConfig.js for the
+        // canonical six-track Pillar Two set.
+        track: "Ashes and Iron",
         body: "Being handed the matches and told the torch belonged to someone else. Grace weaponized; bond dismantled by the one it belonged to.",
         diagnostic:
           "Where have you been installed as the detonator of a bond that was not yours to destroy?",

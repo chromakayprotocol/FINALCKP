@@ -1,11 +1,44 @@
 /**
- * Portal One / "The Owned Interior" — ordered stage sequence.
+ * Reflection Chamber — sequence helpers.
  *
- * Local UI concern only: this is the screen-by-screen sequence inside the
- * Portal One experience. It has nothing to do with any app-wide runtime —
- * Reflection Chamber persists its own experience state (see
- * state/usePortalOneExperience.js), not a shared curriculum engine.
+ * Two layers live here, deliberately separated:
+ *
+ *   1. Generic sequence math (indexInSequence / nextInSequence /
+ *      previousInSequence). It knows nothing about any pillar — it walks
+ *      whatever ordered list of ids it is handed, so a pillar's screen
+ *      order can come from that pillar's own config.
+ *   2. Portal One's fixed stage sequence (STAGES / STAGE_ORDER and the
+ *      stageIndex/nextStage/previousStage wrappers). This is Portal One's
+ *      screen-by-screen order and nothing else's; it is kept intact so
+ *      Portal One's saved sessions and behaviour are unchanged.
+ *
+ * Local UI concern only — the Reflection Chamber persists its own
+ * experience state (state/usePillarExperience.js), not a shared app-wide
+ * curriculum engine.
  */
+
+/* ── Generic sequence math ─────────────────────────────────────────── */
+
+export function indexInSequence(sequence, id) {
+  return sequence.indexOf(id);
+}
+
+export function nextInSequence(sequence, id) {
+  const i = sequence.indexOf(id);
+  return i >= 0 && i < sequence.length - 1 ? sequence[i + 1] : id;
+}
+
+export function previousInSequence(sequence, id) {
+  const i = sequence.indexOf(id);
+  return i > 0 ? sequence[i - 1] : id;
+}
+
+/** Ordered ids of a config-supplied screen list (see data/forgedWitnessConfig.js). */
+export function screenIds(screens = []) {
+  return screens.map((screen) => screen.id);
+}
+
+/* ── Portal One / "The Owned Interior" ─────────────────────────────── */
 
 export const STAGES = Object.freeze({
   INTRO: 'intro',
@@ -34,17 +67,15 @@ export const STAGE_ORDER = [
 ];
 
 export function stageIndex(stage) {
-  return STAGE_ORDER.indexOf(stage);
+  return indexInSequence(STAGE_ORDER, stage);
 }
 
 export function nextStage(stage) {
-  const i = stageIndex(stage);
-  return i >= 0 && i < STAGE_ORDER.length - 1 ? STAGE_ORDER[i + 1] : stage;
+  return nextInSequence(STAGE_ORDER, stage);
 }
 
 export function previousStage(stage) {
-  const i = stageIndex(stage);
-  return i > 0 ? STAGE_ORDER[i - 1] : stage;
+  return previousInSequence(STAGE_ORDER, stage);
 }
 
 export const PRACTICE_PHASES = Object.freeze({

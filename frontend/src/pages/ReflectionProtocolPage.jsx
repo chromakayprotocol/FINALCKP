@@ -20,10 +20,19 @@ import {
 } from '../data/reflectionChamberModuleData';
 import ReflectionChamberEnvironment from './experience/ReflectionChamberEnvironment';
 import PortalOneOwnedInterior from './experience/reflection-chamber/PortalOneOwnedInterior';
+import PortalTwoForgedWitness from './experience/reflection-chamber/PortalTwoForgedWitness';
 import './ReflectionProtocolPage.css';
 
 const NEXUS_PATH = '/experiencemode/sovereign/reclamation-university/nexus';
-const INTERACTIVE_PILLAR_ID = 'owned-interior';
+
+/* Pillars with an interactive portal built. Selecting one of these in the
+   Chamber launches its experience; the rest still open as reference. Each
+   entry is a thin wrapper around the shared PillarExperience engine, so
+   adding Pillar Three here is one line, not a new route. */
+const INTERACTIVE_PILLARS = {
+  'owned-interior': PortalOneOwnedInterior,
+  'forged-witness': PortalTwoForgedWitness,
+};
 
 export default function ReflectionProtocolPage() {
   const navigate = useNavigate();
@@ -42,7 +51,7 @@ export default function ReflectionProtocolPage() {
   };
 
   const handleSelectPillar = (pillarId) => {
-    if (pillarId === INTERACTIVE_PILLAR_ID) {
+    if (INTERACTIVE_PILLARS[pillarId]) {
       setLaunchedPillarId(pillarId);
       return;
     }
@@ -50,17 +59,19 @@ export default function ReflectionProtocolPage() {
     setExpandedCode(null);
   };
 
-  if (launchedPillarId === INTERACTIVE_PILLAR_ID) {
+  const LaunchedPortal = launchedPillarId ? INTERACTIVE_PILLARS[launchedPillarId] : null;
+
+  if (LaunchedPortal) {
     return (
-      <PortalOneOwnedInterior
+      <LaunchedPortal
         completedPillarIds={completedPillarIds}
         onReturnToChamber={(completed) => {
           if (completed) {
             setCompletedPillarIds((prev) =>
-              prev.includes(INTERACTIVE_PILLAR_ID) ? prev : [...prev, INTERACTIVE_PILLAR_ID]
+              prev.includes(launchedPillarId) ? prev : [...prev, launchedPillarId]
             );
           }
-          setActivePillarId(INTERACTIVE_PILLAR_ID);
+          setActivePillarId(launchedPillarId);
           setLaunchedPillarId(null);
         }}
       />

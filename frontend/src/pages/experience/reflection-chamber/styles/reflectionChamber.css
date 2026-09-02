@@ -1,0 +1,83 @@
+/* Reflection Chamber — shared Chamber primitives.
+ *
+ * Styles here belong to every pillar, not to one. It currently holds the
+ * shared pieces introduced with the config-driven engine (the pillar
+ * bridge, the record's optional sections, the engine's missing-renderer
+ * notice); the older shared chrome still lives in
+ * portalOneOwnedInterior.css and is a candidate to migrate here in a
+ * separate pass, so that move can be verified against Portal One on its
+ * own rather than riding along with a new pillar.
+ *
+ * Accent colour is read from the pillar's own --pooi-purple / -dim tokens,
+ * so a pillar re-themes these by redefining those two variables (see
+ * forgedWitness.css) rather than by overriding rules here.
+ */
+
+/* ── Pillar bridge ─────────────────────────────────────────────────── */
+.pooi-bridge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 1.25rem;
+  padding: 2rem 0;
+}
+
+.pooi-bridge-lines {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  max-width: 34rem;
+}
+
+.pooi-bridge-lines p {
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 1.25rem;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.pooi-bridge-closing {
+  max-width: 34rem;
+  color: var(--pooi-muted);
+  font-size: 0.95rem;
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* ── Record sections ───────────────────────────────────────────────── */
+.pooi-record-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+  width: 100%;
+  margin: 1.25rem 0 0;
+  text-align: left;
+}
+
+.pooi-record-section dt {
+  font-family: 'Oxanium', system-ui, sans-serif;
+  font-size: 0.65rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--pooi-purple);
+  margin-bottom: 0.4rem;
+}
+
+.pooi-record-section dd {
+  margin: 0 0 0.35rem;
+  padding-left: 0.85rem;
+  border-left: 1px solid var(--pooi-border);
+  font-size: 0.95rem;
+  line-height: 1.55;
+  color: var(--pooi-ivory);
+}
+
+/* ── Engine fallback ───────────────────────────────────────────────── */
+.pooi-missing-screen {
+  padding: 1rem;
+  border: 1px dashed var(--pooi-border);
+  border-radius: 0.5rem;
+  color: var(--pooi-muted);
+  font-size: 0.9rem;
+}

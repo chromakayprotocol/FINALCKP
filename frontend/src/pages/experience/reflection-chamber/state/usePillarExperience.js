@@ -19,10 +19,31 @@ function emptyState() {
     rehearsedRoomSelection: null,
     rehearsedRoomAdmission: '',
     reflection: { whatHappened: '', whatFelt: [], whatAssumed: '', whatKnow: '' },
-    lightCodeResponse: '',
     observation: { noticed: '', changed: null },
     unbentDoorChoice: null,
     avoidedAction: '',
+    commitment: { response: '', anchor: null },
+    shadow: {
+      // The rule the Seeker found underneath their own story, in their own
+      // words — never rewritten into generic psychological terminology.
+      discoveredCode: '',
+      isRule: null,
+      figure: '',
+      notice: '',
+      wants: '',
+      protecting: '',
+      ifItStopped: '',
+      dialogue: [],
+      protectedNeed: null,
+      customNeed: '',
+    },
+    light: {
+      reclaimed: '',
+      practiceEvent: '',
+      practiceResponse: '',
+      oldCodeWould: '',
+      lightCodeWould: '',
+    },
     mastery: { whatKnow: '', whatFeel: '', whatAssuming: '', whatWouldDo: '' },
     completedAt: null,
   };
@@ -34,7 +55,20 @@ function loadInitialState([pillarId, userId]) {
   try {
     const raw = window.localStorage.getItem(storageKey(pillarId, userId));
     if (!raw) return base;
-    return { ...base, ...JSON.parse(raw) };
+    const saved = JSON.parse(raw);
+    // Merge one level into the nested groups too. A saved session from before a
+    // group gained a field would otherwise rehydrate without it, and the inputs
+    // bound to it would flip from controlled to uncontrolled mid-experience.
+    return {
+      ...base,
+      ...saved,
+      reflection: { ...base.reflection, ...saved.reflection },
+      observation: { ...base.observation, ...saved.observation },
+      commitment: { ...base.commitment, ...saved.commitment },
+      shadow: { ...base.shadow, ...saved.shadow },
+      light: { ...base.light, ...saved.light },
+      mastery: { ...base.mastery, ...saved.mastery },
+    };
   } catch {
     return base;
   }

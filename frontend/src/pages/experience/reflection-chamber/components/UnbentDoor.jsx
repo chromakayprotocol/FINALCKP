@@ -12,12 +12,15 @@ export default function UnbentDoor({
   onComplete,
   promptQuestion = DEFAULT_PROMPT_QUESTION,
   avoidedActionQuestion = DEFAULT_AVOIDED_ACTION_QUESTION,
+  // Not "Light Code": the Seeker has not met the Shadow yet, and the Light Code
+  // is a replacement earned after that encounter, not a label handed out here.
+  kicker = 'The Unbent Door',
 }) {
   const canComplete = selectedChoice && avoidedAction.trim().length > 0;
 
   return (
     <div className="pooi-unbent-door">
-      <span className="pooi-code-panel-kicker">Light Code</span>
+      <span className="pooi-code-panel-kicker">{kicker}</span>
       <h2 className="pooi-unbent-door-title">{code.name}</h2>
       <p className="pooi-unbent-door-body">{code.body}</p>
 

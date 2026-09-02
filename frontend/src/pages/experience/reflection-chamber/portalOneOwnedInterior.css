@@ -1,25 +1,93 @@
 /* Portal One / Pillar One — The Owned Interior
-   Purple, matching the Chamber's own Portal One ring (ReflectionChamberEnvironment.jsx). */
+ *
+ * Two accent families, and the hierarchy between them is load-bearing:
+ *
+ *   BLUE  = THE SYSTEM   Elemental Rubrik H20, the Reflection Chamber, system
+ *                        navigation, primary controls, global progress, active
+ *                        system states, the curriculum framework itself.
+ *   PURPLE = THIS PILLAR Portal One only — pillar-specific selections, pillar
+ *                        diagrams, Shadow/Light Code moments, pillar completion.
+ *
+ * Purple never replaces H20 blue and must never become the dominant theme; the
+ * target distribution is 60–70% dark neutral, 15–20% blue, 5–10% purple. A
+ * predominantly purple interface is a branding failure, not a style choice.
+ * Reach for --pooi-accent by default and --pooi-pillar only when the element is
+ * genuinely Pillar-One-specific. */
+
+/* Border-box is assumed throughout this file's width math (100vw plus
+   padding, 12 equal grid columns, panel widths). The app-wide reset already
+   sets this globally (src/index.css), but this component must not silently
+   depend on that staying true — content-box here would push every padded
+   width past the fixed viewport and get clipped by .pooi's overflow:hidden. */
+.pooi,
+.pooi *,
+.pooi *::before,
+.pooi *::after {
+  box-sizing: border-box;
+}
 
 .pooi {
-  --pooi-purple: #a875ff;
-  --pooi-purple-dim: #5b3a99;
-  --pooi-bg: #0a0714;
-  --pooi-surface: #150f24;
-  --pooi-border: rgba(168, 117, 255, 0.25);
-  --pooi-ivory: #e8eef4;
-  --pooi-muted: rgba(232, 238, 244, 0.62);
+  --h20-sky: #38bdf8;
+  --h20-royal: #2563eb;
+  --pillar-purple: #a875ff;
+  --pillar-purple-deep: #6d4ac7;
 
-  min-height: 100vh;
-  background: radial-gradient(ellipse at 50% 0%, #1b1330 0%, var(--pooi-bg) 55%);
+  /* Semantic aliases — use these, not the raw brand values above. */
+  --pooi-accent: var(--h20-sky);
+  --pooi-accent-strong: var(--h20-royal);
+  --pooi-pillar: var(--pillar-purple);
+  --pooi-pillar-deep: var(--pillar-purple-deep);
+
+  --pooi-bg: #070a12;
+  --pooi-bg-secondary: #0c1020;
+  --pooi-surface: #111827;
+  --pooi-surface-raised: #151c2e;
+  --pooi-border: rgba(255, 255, 255, 0.12);
+  --pooi-ivory: #f5f7fa;
+  --pooi-muted: #aab4c3;
+  --pooi-faint: #687386;
+
+  /* A fixed screen, not a scrolling curriculum page (§11): the Pillar owns
+     the whole viewport for as long as it's mounted (see useLockBodyScroll,
+     which locks the page behind it) and never grows past it. A single grid
+     column track capped at 1440px (§12's max content width), centered when
+     the viewport is wider, holds the header/progress/stage/nav rows — the
+     stage row is the only one that scrolls, so a screen with more content
+     than fits scrolls internally instead of moving the header off-screen. */
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100dvh;
+  overflow: hidden;
+  background: radial-gradient(ellipse at 50% 0%, var(--pooi-bg-secondary) 0%, var(--pooi-bg) 55%);
   color: var(--pooi-ivory);
   font-family: 'Inter', system-ui, sans-serif;
-  padding: 1.25rem 1.25rem 4rem;
-  max-width: 720px;
-  margin: 0 auto;
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
+
+  display: grid;
+  grid-template-columns: minmax(0, 1440px);
+  grid-template-rows: auto auto minmax(0, 1fr) auto;
+  justify-content: center;
+  row-gap: 1rem;
+  padding: 32px 48px;
+}
+
+@media (min-width: 1600px) {
+  .pooi {
+    padding: 48px 64px;
+  }
+}
+
+@media (max-width: 1024px) {
+  .pooi {
+    padding: 24px;
+  }
+}
+
+@media (max-width: 640px) {
+  .pooi {
+    padding: 16px;
+    row-gap: 0.75rem;
+  }
 }
 
 /* Header */
@@ -51,7 +119,7 @@
 
 .pooi-header-act {
   font-size: 0.7rem;
-  color: var(--pooi-purple);
+  color: var(--pooi-accent);
   letter-spacing: 0.08em;
 }
 
@@ -69,7 +137,7 @@
 
 .pooi-header-stage {
   font-size: 0.7rem;
-  color: var(--pooi-purple);
+  color: var(--pooi-pillar);
   letter-spacing: 0.12em;
   text-transform: uppercase;
 }
@@ -97,14 +165,14 @@
 }
 
 .pooi-progress-dot.is-active {
-  background: var(--pooi-purple);
-  border-color: var(--pooi-purple);
-  box-shadow: 0 0 10px 2px color-mix(in srgb, var(--pooi-purple) 60%, transparent);
+  background: var(--pooi-accent);
+  border-color: var(--pooi-accent);
+  box-shadow: 0 0 10px 2px color-mix(in srgb, var(--pooi-accent) 60%, transparent);
 }
 
 .pooi-progress-dot.is-complete {
-  background: var(--pooi-purple-dim);
-  border-color: var(--pooi-purple);
+  background: color-mix(in srgb, var(--pooi-accent-strong) 70%, transparent);
+  border-color: var(--pooi-accent);
 }
 
 .pooi-progress-label {
@@ -118,13 +186,56 @@
   margin: 0 0.15rem;
 }
 
-/* Stage container */
+/* Stage container — the §12 12-column grid. Direct children (each stage
+   component's own root element) default to the "primary content" span the
+   spec calls for (6–8 of 12 columns, centered); a screen that needs a real
+   two-column composition (the Situation phone/copy split, the Personal
+   Mirror's four panels) opts into a wider host below instead of fighting
+   this default. `min-height: 0` is load-bearing: without it a grid row sized
+   `1fr` refuses to shrink below its content's height, and `overflow-y: auto`
+   never gets the chance to do anything. Re-keyed on every stage change (see
+   PillarStage.jsx), so a new screen always starts scrolled to its top rather
+   than inheriting the previous screen's scroll offset. */
 .pooi-stage {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 1.25rem;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  column-gap: 1.5rem;
+  row-gap: 1.25rem;
+  /* A short screen (most of them) centers in the available height rather
+     than pinning to the top with dead space below — this is a fixed screen,
+     not a page, so it should fill like one. `safe` falls back to top
+     alignment once content is taller than the viewport, so a long screen
+     scrolls from its own top edge instead of overflowing both edges evenly
+     and clipping its start off-screen. */
+  align-content: safe center;
+  padding-bottom: 0.5rem;
   animation: pooi-fade-in 0.4s ease;
+}
+
+.pooi-stage > * {
+  grid-column: 3 / span 8;
+}
+
+/* A screen with its own internal split (SituationPresentation,
+   PersonalReflection) gets a wider host so that split has room to work. */
+.pooi-stage > .pooi-situation,
+.pooi-stage > .pooi-personal-reflection {
+  grid-column: 2 / span 10;
+}
+
+@media (max-width: 1024px) {
+  .pooi-stage > * {
+    grid-column: 2 / span 10;
+  }
+}
+
+@media (max-width: 640px) {
+  .pooi-stage > * {
+    grid-column: 1 / -1;
+  }
 }
 
 @keyframes pooi-fade-in {
@@ -133,8 +244,13 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .pooi-stage {
-    animation: none;
+  .pooi *,
+  .pooi *::before,
+  .pooi *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }
 
@@ -169,20 +285,20 @@
 }
 
 .pooi-btn--primary {
-  background: linear-gradient(135deg, var(--pooi-purple), var(--pooi-purple-dim));
+  background: linear-gradient(135deg, var(--pooi-accent), var(--pooi-accent-strong));
   color: #ffffff;
-  box-shadow: 0 0 18px 2px color-mix(in srgb, var(--pooi-purple) 35%, transparent);
+  box-shadow: 0 0 18px 2px color-mix(in srgb, var(--pooi-accent) 30%, transparent);
 }
 
 .pooi-btn--primary:not(:disabled):hover {
   transform: translateY(-1px);
-  box-shadow: 0 0 24px 4px color-mix(in srgb, var(--pooi-purple) 55%, transparent);
+  box-shadow: 0 0 24px 4px color-mix(in srgb, var(--pooi-accent) 45%, transparent);
 }
 
 .pooi-btn--secondary {
   background: transparent;
-  color: var(--pooi-purple);
-  border-color: var(--pooi-border);
+  color: var(--pooi-accent);
+  border-color: color-mix(in srgb, var(--pooi-accent) 45%, transparent);
 }
 
 .pooi-btn--float {
@@ -205,7 +321,8 @@
 .pooi-textarea:focus,
 .pooi-field textarea:focus {
   outline: none;
-  border-color: var(--pooi-purple);
+  border-color: var(--pooi-accent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--pooi-accent) 30%, transparent);
 }
 
 .pooi-textarea--lg {
@@ -238,8 +355,8 @@
 }
 
 .pooi-chip.is-selected {
-  border-color: var(--pooi-purple);
-  background: color-mix(in srgb, var(--pooi-purple) 22%, var(--pooi-surface));
+  border-color: var(--pooi-pillar);
+  background: color-mix(in srgb, var(--pooi-pillar) 22%, var(--pooi-surface));
 }
 
 .pooi-choice-row,
@@ -247,6 +364,15 @@
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
+}
+
+/* Focus — every interactive element needs a visible focus ring, and colour is
+   never the only carrier of state. System focus is Sky Blue; a focused element
+   that is also a Pillar-specific selection keeps its purple border underneath. */
+.pooi :is(button, [role='button'], a, input, textarea, select):focus-visible {
+  outline: 2px solid var(--pooi-accent);
+  outline-offset: 2px;
+  border-radius: 6px;
 }
 
 /* Intro / Seal */
@@ -272,24 +398,26 @@
   width: 100%;
   height: 100%;
   border-radius: 50% / 40%;
-  border: 2px solid var(--pooi-purple);
+  /* Blue structure on the outside, restrained purple illumination within: the
+     portal belongs to H20 first and to Pillar One second. */
+  border: 2px solid var(--pooi-accent);
   box-shadow:
-    0 0 24px 6px color-mix(in srgb, var(--pooi-purple) 55%, transparent),
-    inset 0 0 28px color-mix(in srgb, var(--pooi-purple) 35%, transparent);
-  background: radial-gradient(ellipse at center, color-mix(in srgb, var(--pooi-purple) 30%, transparent) 0%, transparent 70%);
+    0 0 24px 6px color-mix(in srgb, var(--pooi-accent) 45%, transparent),
+    inset 0 0 28px color-mix(in srgb, var(--pooi-pillar) 30%, transparent);
+  background: radial-gradient(ellipse at center, color-mix(in srgb, var(--pooi-pillar) 26%, transparent) 0%, transparent 70%);
 }
 
 .pooi-intro-portal--lit .pooi-intro-ring {
   box-shadow:
-    0 0 34px 10px color-mix(in srgb, var(--pooi-purple) 80%, transparent),
-    inset 0 0 32px color-mix(in srgb, var(--pooi-purple) 55%, transparent);
+    0 0 34px 10px color-mix(in srgb, var(--pooi-accent) 65%, transparent),
+    inset 0 0 32px color-mix(in srgb, var(--pooi-pillar) 45%, transparent);
 }
 
 .pooi-intro-eyebrow {
   font-size: 0.7rem;
   letter-spacing: 0.2em;
   text-transform: uppercase;
-  color: var(--pooi-purple);
+  color: var(--pooi-pillar);
 }
 
 .pooi-intro-title {
@@ -317,13 +445,51 @@
   color: var(--pooi-muted);
 }
 
-/* Situation / phone mock */
+/* Situation / phone mock — §16: the phone occupies the primary pane
+   (roughly 11/20 ≈ 55%), supporting copy sits opposite it rather than
+   stacked underneath. Stacks to one column, phone first, under 900px. */
 .pooi-situation {
+  display: grid;
+  grid-template-columns: 11fr 9fr;
+  align-items: center;
+  gap: 2.5rem;
+}
+
+.pooi-situation-phone-col {
+  display: flex;
+  justify-content: center;
+}
+
+.pooi-situation-copy-col {
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: flex-start;
   gap: 1rem;
-  text-align: center;
+  text-align: left;
+}
+
+.pooi-situation-copy p {
+  margin: 0.2rem 0;
+  color: var(--pooi-ivory);
+}
+
+.pooi-situation-copy p.pooi-situation-copy--closing {
+  color: var(--pooi-muted);
+  font-style: italic;
+  margin-top: 0.6rem;
+}
+
+@media (max-width: 900px) {
+  .pooi-situation {
+    grid-template-columns: 1fr;
+    justify-items: center;
+    text-align: center;
+  }
+
+  .pooi-situation-copy-col {
+    align-items: center;
+    text-align: center;
+  }
 }
 
 .pooi-phone {
@@ -353,7 +519,7 @@
 }
 
 .pooi-phone-bubble--sent {
-  background: color-mix(in srgb, var(--pooi-purple) 25%, var(--pooi-surface));
+  background: color-mix(in srgb, var(--pooi-accent-strong) 30%, var(--pooi-surface));
   border-radius: 12px 12px 2px 12px;
   padding: 0.6rem 0.8rem;
   text-align: left;
@@ -375,7 +541,7 @@
 }
 
 .pooi-phone-followup {
-  color: var(--pooi-purple);
+  color: var(--pooi-accent);
   letter-spacing: 0.08em;
 }
 
@@ -407,8 +573,8 @@
 }
 
 .pooi-sorter-chip.is-selected {
-  border-color: var(--pooi-purple);
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--pooi-purple) 40%, transparent);
+  border-color: var(--pooi-pillar);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--pooi-pillar) 40%, transparent);
 }
 
 .pooi-sorter-empty {
@@ -429,7 +595,10 @@
 }
 
 .pooi-sorter-zone.is-wrong {
-  border-color: #e07a7a;
+  /* The objective is recognition, not punishment — the zone firms up and the
+     "Look again" label carries the meaning. No alarm colour. */
+  border-style: solid;
+  border-color: var(--pooi-muted);
 }
 
 .pooi-sorter-zone-target {
@@ -450,12 +619,12 @@
   font-size: 0.72rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--pooi-purple);
+  color: var(--pooi-accent);
 }
 
 .pooi-sorter-look-again {
   font-size: 0.72rem;
-  color: #e07a7a;
+  color: var(--pooi-muted);
   font-style: italic;
 }
 
@@ -467,7 +636,7 @@
 
 .pooi-sorter-placed {
   font-size: 0.75rem;
-  background: color-mix(in srgb, var(--pooi-purple) 18%, transparent);
+  background: color-mix(in srgb, var(--pooi-pillar) 18%, transparent);
   border-radius: 6px;
   padding: 0.3rem 0.5rem;
   text-align: left;
@@ -485,7 +654,16 @@
 .pooi-mirror,
 .pooi-practice,
 .pooi-observation,
-.pooi-record {
+.pooi-record,
+.pooi-commitment,
+.pooi-code-discovery,
+.pooi-shadow-recognition,
+.pooi-active-imagination,
+.pooi-dialogue,
+.pooi-shadow-energy,
+.pooi-recode,
+.pooi-light-practice,
+.pooi-transfer {
   display: flex;
   flex-direction: column;
   gap: 0.85rem;
@@ -500,7 +678,7 @@
   font-size: 0.7rem;
   letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: var(--pooi-purple);
+  color: var(--pooi-pillar);
 }
 
 .pooi-concept-lines p {
@@ -549,9 +727,19 @@
   color: var(--pooi-ivory);
 }
 
+.pooi-code-panel--shadow {
+  border-color: color-mix(in srgb, var(--pooi-pillar) 40%, transparent);
+  background: linear-gradient(160deg, color-mix(in srgb, var(--pooi-pillar-deep) 16%, var(--pooi-surface)), var(--pooi-surface));
+}
+
+/* The Light Code is not a different brand — it is the pillar's recognition
+   reintegrated into the H20 system, so blue expands outward from the purple
+   focal point rather than purple taking the screen. */
 .pooi-code-panel--light {
-  --pooi-purple: #d4af37;
-  --pooi-purple-dim: #7a5f13;
+  --pooi-pillar: var(--h20-sky);
+  border-color: color-mix(in srgb, var(--pooi-accent) 45%, transparent);
+  background: linear-gradient(160deg, color-mix(in srgb, var(--pooi-accent-strong) 18%, var(--pooi-surface)), var(--pooi-surface));
+  box-shadow: 0 0 28px color-mix(in srgb, var(--pooi-accent) 18%, transparent);
 }
 
 .pooi-rehearsed-title,
@@ -608,14 +796,14 @@
 }
 
 .pooi-modern-card.is-selected {
-  border-color: var(--pooi-purple);
-  background: color-mix(in srgb, var(--pooi-purple) 18%, transparent);
+  border-color: var(--pooi-accent-strong);
+  background: color-mix(in srgb, var(--pooi-pillar) 16%, transparent);
 }
 
 .pooi-modern-domain {
   font-size: 0.65rem;
   letter-spacing: 0.1em;
-  color: var(--pooi-purple);
+  color: var(--pooi-accent);
 }
 
 .pooi-modern-line {
@@ -641,9 +829,35 @@
 }
 
 .pooi-digital-seq-step.is-lit {
-  border-color: var(--pooi-purple);
+  border-color: var(--pooi-accent);
   color: var(--pooi-ivory);
-  background: color-mix(in srgb, var(--pooi-purple) 20%, transparent);
+  background: color-mix(in srgb, var(--pooi-accent) 18%, transparent);
+}
+
+/* Personal Mirror — the literal four-panel grid (§27). Blue structures every
+   panel; the one the Seeker is actively working in picks up a purple border
+   via :focus-within — no separate "active panel" state needed for that. */
+.pooi-mirror-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+}
+
+.pooi-mirror-panel {
+  border: 1px solid var(--pooi-border);
+  border-radius: 12px;
+  padding: 1rem;
+  background: rgba(56, 189, 248, 0.03);
+}
+
+.pooi-mirror-panel:focus-within {
+  border-color: var(--pooi-pillar);
+}
+
+@media (max-width: 720px) {
+  .pooi-mirror-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* Mirror analysis */
@@ -659,11 +873,11 @@
   font-size: 0.7rem;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--pooi-purple);
+  color: var(--pooi-pillar);
 }
 
 .pooi-mirror-arrow {
-  color: var(--pooi-purple);
+  color: var(--pooi-accent);
   font-size: 1rem;
 }
 
@@ -687,7 +901,7 @@
   font-family: 'JetBrains Mono', monospace;
   font-size: 2.5rem;
   letter-spacing: 0.05em;
-  color: var(--pooi-purple);
+  color: var(--pooi-accent);
 }
 
 /* Record */
@@ -706,7 +920,7 @@
   font-size: 0.7rem;
   letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: var(--pooi-purple);
+  color: var(--pooi-pillar);
 }
 
 .pooi-record-list {
@@ -727,7 +941,7 @@
 }
 
 .pooi-record-check {
-  color: var(--pooi-purple);
+  color: var(--pooi-pillar);
 }
 
 .pooi-record-summary {
@@ -742,7 +956,7 @@
   justify-content: space-between;
   align-items: center;
   font-size: 0.75rem;
-  color: var(--pooi-muted);
+  color: var(--pooi-faint);
 }
 
 .pooi-nav-back {
@@ -761,6 +975,225 @@
 @media (max-width: 480px) {
   .pooi-sorter-zones,
   .pooi-modern-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+ * The Shadow Code arc (screens 22–33).
+ *
+ * The environment tracks the curriculum: analytical screens keep their blue
+ * structure, the Shadow encounter drops illumination and localises purple, and
+ * the Light Code expands blue back outward from that purple focal point —
+ * re-encoding, not annihilation.
+ * ------------------------------------------------------------------------- */
+
+.pooi-copy {
+  margin: 0;
+  color: var(--pooi-muted);
+  line-height: 1.6;
+}
+
+.pooi-copy--sparse {
+  text-align: center;
+  margin: 0.15rem 0;
+}
+
+.pooi-copy--strong {
+  color: var(--pooi-ivory);
+  font-weight: 600;
+}
+
+.pooi-definition {
+  margin: 0;
+  font-size: 1rem;
+  line-height: 1.7;
+  color: var(--pooi-ivory);
+  border-left: 2px solid var(--pooi-accent);
+  padding-left: 0.9rem;
+}
+
+.pooi-input {
+  width: 100%;
+  background: rgba(245, 247, 250, 0.04);
+  border: 1px solid var(--pooi-border);
+  border-radius: 10px;
+  color: var(--pooi-ivory);
+  padding: 0.55rem 0.75rem;
+  font-family: inherit;
+  font-size: 0.85rem;
+}
+
+.pooi-input:focus {
+  outline: none;
+  border-color: var(--pooi-accent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--pooi-accent) 30%, transparent);
+}
+
+.pooi-fieldset {
+  border: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.pooi-quote {
+  margin: 0;
+  padding: 0.9rem 1rem;
+  border-left: 2px solid var(--pooi-pillar);
+  background: color-mix(in srgb, var(--pooi-pillar) 10%, transparent);
+  border-radius: 0 10px 10px 0;
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+.pooi-quote--shadow {
+  border-left-color: var(--pooi-pillar-deep);
+}
+
+/* The Seeker's own wording is the centre of the arc — it gets the emphasis,
+   and the canonical code is never substituted for it. */
+.pooi-field--emphasis .pooi-field-label {
+  color: var(--pooi-pillar);
+}
+
+.pooi-field--emphasis textarea {
+  border-color: color-mix(in srgb, var(--pooi-pillar) 45%, transparent);
+}
+
+/* Screen 23 — the fifth layer arriving under the four already separated. */
+.pooi-mirror-layer--code .pooi-mirror-layer-label {
+  color: var(--pooi-pillar);
+  font-size: 0.85rem;
+  letter-spacing: 0.22em;
+}
+
+.pooi-code-discovery-story {
+  margin: 0;
+  font-style: italic;
+  color: var(--pooi-muted);
+}
+
+.pooi-code-panel-code {
+  margin: 0;
+  font-family: 'Oxanium', system-ui, sans-serif;
+  font-size: 1.05rem;
+  line-height: 1.5;
+}
+
+/* Screen 26 — illumination drops, purple localises to the figure itself. */
+.pooi-shadow-encounter {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.6rem;
+  padding: 2.5rem 1.25rem;
+  background: radial-gradient(ellipse at 50% 35%, color-mix(in srgb, var(--pooi-pillar-deep) 22%, transparent) 0%, transparent 65%);
+}
+
+.pooi-shadow-form {
+  width: 6rem;
+  height: 7.5rem;
+  display: grid;
+  place-items: center;
+  border-radius: 50% / 40%;
+  border: 1px solid color-mix(in srgb, var(--pooi-accent) 30%, transparent);
+  margin-bottom: 0.75rem;
+}
+
+.pooi-shadow-form-core {
+  width: 55%;
+  height: 65%;
+  border-radius: 50% / 42%;
+  background: radial-gradient(ellipse at center, color-mix(in srgb, var(--pooi-pillar) 55%, transparent) 0%, transparent 72%);
+  box-shadow: inset 0 0 24px color-mix(in srgb, var(--pooi-pillar-deep) 60%, transparent);
+}
+
+/* Screen 27 — sparse on purpose: fewer edges, more room. */
+.pooi-active-imagination {
+  gap: 1.15rem;
+}
+
+/* Screen 28 — the Seeker writes both sides; the system writes neither. */
+.pooi-dialogue-log {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.pooi-dialogue-turn {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  padding-left: 0.75rem;
+  border-left: 1px solid var(--pooi-border);
+}
+
+.pooi-dialogue-line {
+  margin: 0;
+  font-size: 0.85rem;
+  line-height: 1.55;
+}
+
+.pooi-dialogue-line--shadow {
+  color: var(--pooi-muted);
+}
+
+.pooi-dialogue-speaker {
+  display: block;
+  font-size: 0.62rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--pooi-accent);
+}
+
+.pooi-dialogue-line--shadow .pooi-dialogue-speaker {
+  color: var(--pooi-pillar);
+}
+
+/* Screens 30–31 — the Shadow recedes, the Light remains, and the blue system
+   reasserts itself around it. Nothing is struck through or destroyed. */
+.pooi-recode {
+  align-items: center;
+  text-align: center;
+}
+
+.pooi-recode-pair {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+}
+
+.pooi-recode-side {
+  width: 100%;
+}
+
+.pooi-recode-side--shadow {
+  opacity: 0.55;
+  color: var(--pooi-muted);
+}
+
+.pooi-recode-arrow {
+  color: var(--pooi-accent);
+  font-size: 1.25rem;
+}
+
+.pooi-transfer-pair {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem;
+}
+
+@media (max-width: 480px) {
+  .pooi-transfer-pair {
     grid-template-columns: 1fr;
   }
 }

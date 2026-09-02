@@ -7,6 +7,14 @@ import {
   PERSONAL_REFLECTION_EMOTIONS,
   REHEARSED_LINES,
   UNBENT_DOOR_CHOICES,
+  COMMITMENT_ANCHORS,
+  CODE_LAYERS,
+  CODE_DISCOVERY_LEAD,
+  SHADOW_FIGURE_FORMS,
+  ACTIVE_IMAGINATION_PROMPTS,
+  DIALOGUE_PROMPTS,
+  PROTECTED_NEEDS,
+  TRANSFER_SCENARIO,
   MASTERY_SCENARIO,
   PILLAR_RECORD_ITEMS,
 } from './portalOneContent';
@@ -60,9 +68,16 @@ export const OWNED_INTERIOR_CONFIG = {
 
   reflectionEmotions: PERSONAL_REFLECTION_EMOTIONS,
 
-  // Index into pillar.light[] revealed in the Instruct stage.
-  instructLightCodeIndex: 0,
-  instructTeachingIndex: 2,
+  /* Screen 15 — the pillar's conceptual definition. This stage used to reveal
+     the Light Code, which put the replacement principle in the Seeker's hands
+     before they had met the Shadow it replaces. The Light Code now lives in
+     its own stage, after the encounter (see `lightCode` below). */
+  ownedInterior: {
+    title: 'The Owned Interior is not a place where nothing affects you.',
+    definition:
+      'It is the place where you can recognize what is happening inside you without automatically assigning all of it to the world outside you.',
+    layers: CODE_LAYERS,
+  },
 
   practice: {
     timerSeconds: 60,
@@ -76,6 +91,33 @@ export const OWNED_INTERIOR_CONFIG = {
       'What would you do differently if you were responding to what you actually know instead of what you assume?',
     avoidedActionQuestion: 'What is one action you know you have been avoiding?',
   },
+
+  /* The Shadow Code arc. Screens 22–33: the rule underneath the story, the
+     encounter with the part of the Seeker that learned it, and the governed
+     replacement carried back out of the Chamber. */
+  commitment: {
+    anchors: COMMITMENT_ANCHORS,
+  },
+
+  codeDiscovery: {
+    layers: CODE_LAYERS,
+    leadText: CODE_DISCOVERY_LEAD,
+  },
+
+  activeImagination: {
+    forms: SHADOW_FIGURE_FORMS,
+    prompts: ACTIVE_IMAGINATION_PROMPTS,
+  },
+
+  dialogue: {
+    prompts: DIALOGUE_PROMPTS,
+  },
+
+  shadowEnergy: {
+    needs: PROTECTED_NEEDS,
+  },
+
+  transfer: TRANSFER_SCENARIO,
 
   mastery: MASTERY_SCENARIO,
 

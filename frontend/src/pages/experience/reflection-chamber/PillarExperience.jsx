@@ -6,6 +6,7 @@ import { REFLECTION_CHAMBER_STEP_IDS } from '../../../sovereign/reflectionChambe
 import { PILLARS } from '../../../data/reflectionChamberModuleData';
 import { usePillarExperience } from './state/usePillarExperience';
 import { useLockBodyScroll } from './hooks/useLockBodyScroll';
+import { usePillarAudio } from './audio/usePillarAudio';
 import { STAGES, STAGE_ORDER, stageIndex, previousStage, PRACTICE_PHASES } from './utils/stageTransitions';
 import { buildRecordSummary } from './utils/buildRecordSummary';
 
@@ -91,6 +92,13 @@ export default function PillarExperience({ config, onReturnToChamber, completedP
   const { state, setStage, setPracticePhase, patch } = usePillarExperience(config.pillarId, user?.id);
   useLockBodyScroll();
 
+  // The Reflection Chamber is Act II in full (REFLECTION_META.roman: "II" in
+  // reflectionChamberModuleData.js) — hardcoded rather than threaded through
+  // config since every Reflection Chamber pillar shares this one Act, not
+  // because it's Pillar One-specific. A future Act's own PillarExperience
+  // equivalent would pass its own number here.
+  const pillarAudio = usePillarAudio(2);
+
   const sovereign = useSovereign();
   const pillarModuleId = reflectionChamberModuleId(config.pillarId);
   useEffect(() => {
@@ -124,6 +132,10 @@ export default function PillarExperience({ config, onReturnToChamber, completedP
         <PillarIntro
           pillar={pillar}
           onEnter={() => {
+            // The Enter click is the real user gesture browsers require
+            // before any audio can start (autoplay policy) — music and the
+            // water ambience both begin here, not on mount.
+            pillarAudio.start();
             sovereign.module?.advanceStep(REFLECTION_CHAMBER_STEP_IDS.ENTER);
             setStage(STAGES.SITUATION);
           }}
@@ -168,7 +180,10 @@ export default function PillarExperience({ config, onReturnToChamber, completedP
             eyebrow={config.conceptReveal.eyebrow}
             lines={config.conceptReveal.lines}
             closingLine={config.conceptReveal.closingLine}
-            onContinue={() => setConceptPhase('panel')}
+            onContinue={() => {
+              pillarAudio.tones.playReveal();
+              setConceptPhase('panel');
+            }}
           />
         ) : (
           <ShadowCodePanel
@@ -310,6 +325,7 @@ export default function PillarExperience({ config, onReturnToChamber, completedP
           onIsRuleChange={(v) => patch({ shadow: { ...state.shadow, isRule: v } })}
           canonical={pillar.canonicalCodes.shadow}
           onContinue={() => {
+            pillarAudio.tones.playReveal();
             sovereign.concepts.selectConcept(`${pillarModuleId}:shadow-code`);
             setStage(STAGES.SHADOW_ENCOUNTER);
           }}
@@ -318,7 +334,14 @@ export default function PillarExperience({ config, onReturnToChamber, completedP
       break;
 
     case STAGES.SHADOW_ENCOUNTER:
-      content = <ShadowEncounter onEnter={() => setStage(STAGES.ACTIVE_IMAGINATION)} />;
+      content = (
+        <ShadowEncounter
+          onEnter={() => {
+            pillarAudio.tones.playTransition();
+            setStage(STAGES.ACTIVE_IMAGINATION);
+          }}
+        />
+      );
       break;
 
     case STAGES.ACTIVE_IMAGINATION:
@@ -362,6 +385,7 @@ export default function PillarExperience({ config, onReturnToChamber, completedP
           lightCode={pillar.canonicalCodes.light.code}
           lightBody={pillar.canonicalCodes.light.body}
           onContinue={() => {
+            pillarAudio.tones.playReveal();
             sovereign.concepts.selectConcept(`${pillarModuleId}:light-code`);
             sovereign.module?.advanceStep(REFLECTION_CHAMBER_STEP_IDS.INSTRUCT);
             setStage(STAGES.LIGHT_PRACTICE);
@@ -418,6 +442,7 @@ export default function PillarExperience({ config, onReturnToChamber, completedP
             items={config.recordItems}
             summary={buildRecordSummary(state)}
             onContinue={() => {
+              pillarAudio.tones.playComplete();
               sovereign.module?.advanceStep(REFLECTION_CHAMBER_STEP_IDS.SEAL);
               setSealPhase('final');
             }}

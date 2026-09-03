@@ -1,9 +1,21 @@
 import { describe, test, expect, beforeEach, vi } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { useContext } from 'react';
 
 vi.mock('../../../context/AuthContext', () => ({
   useAuth: () => ({ user: null }),
+}));
+
+const playTrack = vi.fn();
+vi.mock('../../../context/audioprovider', () => ({
+  useAudio: () => ({ playTrack }),
+}));
+
+const resolveActDefaultTrack = vi.fn(async () => ({
+  id: 'h2o', title: 'H2O', audio_url: 'https://example.com/h2o.mp3',
+}));
+vi.mock('./audio/actDefaultTracks', () => ({
+  resolveActDefaultTrack: (...args) => resolveActDefaultTrack(...args),
 }));
 
 import { SovereignProvider, SovereignContext } from '../../../sovereign/runtime';
@@ -80,6 +92,16 @@ describe('Pillar One — real Sovereign Runtime wiring', () => {
     expect(state.curriculum.modules[MODULE_ID].viewedSteps).toContain(REFLECTION_CHAMBER_STEP_IDS.ENTER);
     expect(statusOf(state, REFLECTION_CHAMBER_STEP_IDS.ENTER)).toBe('complete');
     expect(mirrorClarity(state, ['owned-interior']).score).toBeGreaterThan(0);
+  });
+
+  test('the Enter click also starts Act Two\'s default track (H2O) -- the real user gesture audio needs', async () => {
+    renderPillar();
+    fireEvent.click(screen.getByRole('button', { name: /^enter$/i }));
+
+    expect(resolveActDefaultTrack).toHaveBeenCalledWith(2);
+    await waitFor(() => {
+      expect(playTrack).toHaveBeenCalledWith(expect.objectContaining({ title: 'H2O' }));
+    });
   });
 
   test('recognizing the Shadow Code selects a concept, completing Diagnose', () => {

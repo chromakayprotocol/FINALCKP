@@ -1567,10 +1567,21 @@ architecture to carry this curriculum would violate §61.
 
 ### Reconciled in this revision
 
-**The Shadow Code arc (§37–§48) is implemented.** `STAGE_ORDER` gained eleven stages —
+**The Shadow Code arc (§37–§48) is implemented.** `STAGE_ORDER` gained new screens —
 `COMMITMENT`, `CODE_DISCOVERY`, `SHADOW_CODE`, `SHADOW_ENCOUNTER`, `ACTIVE_IMAGINATION`,
 `DIALOGUE`, `SHADOW_ENERGY`, `LIGHT_CODE`, `LIGHT_PRACTICE`, `TRANSFER` — each with its own
-component and its own slice of session state.
+component and its own slice of session state. These are UI content screens
+(`utils/stageTransitions.js`'s own `STAGES`/`STAGE_ORDER`), a different thing from the Sovereign
+Runtime's step lifecycle (`REFLECTION_CHAMBER_STEPS`, §72's Persistence section) — don't describe
+either as an N-stage fixed lifecycle modeled on Hermetic Hall's. That's a real, named,
+already-corrected mistake in this codebase's own history
+(`docs/act-ii-reflection-chamber-architecture.md` §4: an earlier draft forced Reflection Chamber
+pillars onto Hermetic Hall's 11-step "teach a principle" shape; a pillar is diagnosing a pattern
+and rewriting it, not teaching a principle, and the fix was the Chamber's own six-step lifecycle).
+Neither list above is that mistake reintroduced — the Sovereign side already uses the Chamber's
+own six steps, and the screen list above is pillar-specific content, not a generic contract — but
+the count and the word "stage" read the same at a glance, so naming the distinction here matters
+more than getting the framing right once in a chat reply.
 
 **The Light Code no longer arrives early.** The `INSTRUCT` stage previously revealed the Light
 Code before the Seeker had met the Shadow, which made the encounter decorative — exactly what
@@ -1704,6 +1715,34 @@ Clarity's score aggregation are pre-existing, already-tested infrastructure
 (`sovereignSteps.test.js`, `mirrorClarity.test.js`) — this only had to prove Pillar One's own side
 of the contract, not re-verify logic that already had coverage.
 
+**Audio (§57).** All three layers are built. **Music** is *not* a per-pillar choice — it's the
+Act's own default track, keyed by Act number rather than pillar id
+(`audio/actDefaultTracks.js`'s `ACT_DEFAULT_TRACK_TITLE`): Act I "Keepers in the Light", Act II
+"H2O", Act III "Reclamation", Act IV "Charioteer". Act I and Act IV have no seeded track yet —
+`resolveActDefaultTrack()` returns `null` for those rather than guessing at an R2 key, and the
+caller just plays nothing. Reflection Chamber pillars are entirely Act II, so Pillar One resolves
+to "H2O" specifically, through the app's existing, already-root-mounted `useAudio()` player
+(`context/audioprovider.jsx`) rather than a second one — the same `tracks`-table / R2-key query
+pattern `ReclamationLessonMedia.jsx` already uses. **Environment** (water ambience) and
+**interface** (selection/transition/reveal/completion cues) have no existing asset anywhere in
+the repo or its migrations, so both are synthesized procedurally with the raw Web Audio API
+(`audio/waterAmbience.js`: brown noise through a lowpass filter whose cutoff drifts via a slow
+oscillator; `audio/uiTones.js`: short enveloped sine tones) rather than sourced or licensed —
+avoids a licensing question entirely and ships as pure code. Nothing starts on mount: browsers
+keep an `AudioContext` suspended and block `<audio>` autoplay until a real user gesture, so music
+and the ambience both begin from the intro's Enter click (`usePillarAudio.js`'s `start()`), the
+same click already used for the Sovereign Runtime's `ENTER` step above. Interface tones are wired
+at the pillar's coarse macro-beats (recognizing the Shadow Code, entering the Shadow encounter,
+the Light Code reveal, the Seal) rather than at every micro-interaction across every leaf
+component — a deliberate scope line, not an oversight; see the gap list below.
+
+Verified with a minimal fake `AudioContext` (`audio/__testUtils__/fakeAudioContext.js`) standing
+in for the real one jsdom doesn't provide — real node-graph assertions (a non-silent noise
+buffer, a lowpass filter, a drift oscillator feeding its frequency, gain ramps that never snap to
+silence or exceed a "stays under the music" ceiling), not just "did it throw." Every module is
+also verified to no-op safely with **no** `AudioContext` present at all — the actual jsdom
+default, and a real fallback path for old or restricted browsers, not just a testing artifact.
+
 ### Known gaps — not yet implemented
 
 These are open items against §70, listed so nothing here reads as a passed check.
@@ -1712,14 +1751,14 @@ These are open items against §70, listed so nothing here reads as a passed chec
    adjacent stage rather than standing alone: Script Interrupt (§25), Ownership Sort (§30),
    Knowledge Boundary (§31), and the separate Carry Code screen (§50). The Modern Mirror
    signals (§21) exist as the digital sequence but not as the full screen described.
-2. **Audio (§57).** No music, environmental, or interface audio layer is wired into the pillar.
-   Per-track music can reuse the existing `tracks` table / R2 pattern
-   (`ReclamationLessonMedia.jsx`) directly — Pillar One's own track titles are already known
-   (§63). The environmental water ambience and interface sound cues have no existing asset
-   anywhere in the repo or its migrations; the plan is to synthesize both procedurally with the
-   Web Audio API (filtered/modulated noise for the ambience, short oscillator tones for
-   interface cues) rather than source or license an external file, which avoids a licensing
-   question entirely and ships as pure code. Not yet built.
+2. ~~Audio (§57). No music, environmental, or interface audio layer is wired into the pillar~~ —
+   **resolved**, with two honest scope lines. First, Act I ("Keepers in the Light") and Act IV
+   ("Charioteer") have no seeded track yet, so their pillars (when built) will play no music until
+   those exist in Supabase — not a code gap, a content one. Second, interface tones fire at the
+   pillar's macro-beats (§57's list: selection, classification, transition, reveal, completion),
+   not at every chip/card click across every leaf component (`ReflectionSorter`, emotion chips,
+   etc.) — extending that further is straightforward (each is `tones.playSelect()` at the same
+   call site pattern already used) but wasn't done blind; it's additive polish, not correctness.
 3. **Motion (§55, §56).** Only a single fade-in transition exists; the per-moment transition
    language is not implemented.
 4. **Typography (§13).** The pillar renders in Inter/Oxanium; Cinzel is not applied.
@@ -1734,8 +1773,8 @@ These are open items against §70, listed so nothing here reads as a passed chec
 7. **Pillars Two through Five have no interactive engine.** Their curriculum data is now
    complete and structured identically to Pillar One's (`tracks`, `trackCodes`,
    `canonicalCodes` on every pillar), so a future `PillarExperience` config for any of them is a
-   data problem, not an architecture problem — but none of the eleven-stage Shadow Code arc
-   (§37–§48) exists for them yet. Only Pillar One is playable.
+   data problem, not an architecture problem — but none of the Shadow Code arc's screens
+   (§37–§48) exist for them yet. Only Pillar One is playable.
 
 ### Pre-existing issues found, not introduced here
 

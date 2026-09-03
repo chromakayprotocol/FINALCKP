@@ -9,51 +9,30 @@ vi.mock('../../../context/audioprovider', () => ({
 }));
 
 import PortalTwoForgedWitness from './PortalTwoForgedWitness';
-import { FORGED_WITNESS_CONFIG, TRACKS } from './data/forgedWitnessConfig';
+import { TRACKS, ACTIVE_IMAGINATION_PROMPTS, SYNTHESIS_PROMPTS } from './data/forgedWitnessConfig';
 
 const KEY = 'ckp:reflection-chamber:forged-witness:seeker-2';
 const read = () => JSON.parse(window.localStorage.getItem(KEY));
 
 const click = (name) => fireEvent.click(screen.getByRole('button', { name }));
-const type = (label, value) =>
-  fireEvent.change(screen.getByLabelText(label), { target: { value } });
+const type = (label, value) => fireEvent.change(screen.getByLabelText(label), { target: { value } });
 
 /**
- * Walks one encounter's ten beats, driven by the track's own config rather
- * than hardcoded copy — so this stays a test of the flow, not of the words.
+ * Walks one track's three phases (encounter, Active Imagination, recode),
+ * driven by the track's own config rather than hardcoded copy — so this
+ * stays a test of the flow, not of the words. Every track has the same
+ * shape (§13 of the scope-control directive): a config plugged into the
+ * same shared prompt component, nothing track-specific in the machinery.
  */
 function completeTrack(track) {
-  click(/The song has finished/i);
+  type(track.encounterQuestion, `${track.territory}: what I noticed`);
+  click('Continue');
 
-  type('What surfaced', `${track.territory}: what surfaced`);
-  click(/^Continue$/i);
+  ACTIVE_IMAGINATION_PROMPTS.forEach((p) => type(p.label, `${track.territory}: ${p.key}`));
+  click('Continue');
 
-  click(track.pattern.responses[0]);
-  type(track.pattern.adaptationQuestion, `${track.territory}: adaptation`);
-  click(/^Continue$/i);
-
-  click(/^Continue$/i); // Shadow Code reveal
-
-  type(track.recognition.protectionQuestion, `${track.territory}: protected`);
-  type(track.recognition.costQuestion, `${track.territory}: cost`);
-  click(/^Continue$/i);
-
-  type('Who appeared?', `${track.territory}: the figure`);
-  const protectingPrompt = track.imagination.prompts.find((p) => /protecting/i.test(p));
-  type(protectingPrompt, `${track.territory}: protected need`);
-  click(/^Continue$/i);
-
-  type(track.practice.question, `${track.territory}: practice`);
-  click(/^Continue$/i);
-
-  click(/^Continue$/i); // Light Code reveal
-
-  type(track.application.question, `${track.territory}: application`);
-  click(/^Continue$/i);
-
-  type(track.integration.keepQuestion, `${track.territory}: keep`);
-  type(track.integration.returnQuestion, `${track.territory}: debt`);
-  click(/Seal this encounter/i);
+  track.prompts.forEach((p) => type(p.label, `${track.territory}: ${p.key}`));
+  click('Continue'); // the Light Code reveal's own continue
 }
 
 beforeEach(() => {
@@ -61,52 +40,31 @@ beforeEach(() => {
 });
 
 describe('The Forged Witness — full pillar flow', () => {
-  it('carries the Seeker from the bridge through six encounters to the seal', () => {
+  it('carries the Seeker from the intro through six encounters to the seal', () => {
     const onReturnToChamber = vi.fn();
     render(<PortalTwoForgedWitness onReturnToChamber={onReturnToChamber} />);
 
-    // Bridge from Pillar One, then activation.
-    expect(
-      screen.getByText(/Pillar One taught you to separate the event from the story\./i)
-    ).toBeInTheDocument();
-    click(/Enter the Forged Witness/i);
     click(/^Enter$/i);
 
     TRACKS.forEach(completeTrack);
 
     expect(read().completedTracks).toHaveLength(6);
 
-    // Armor inventory — every encounter is laid out as a forged piece.
-    expect(screen.getByText('What you were forged into')).toBeInTheDocument();
-    click(/Balance the armor/i);
-
-    // Strength/debt arrives pre-filled from each encounter's integration.
-    expect(screen.getByText('Keep the strength. Return the debt.')).toBeInTheDocument();
-    click(/Name the code underneath/i);
-
     // Synthesis — the Seeker writes the rule; nothing is generated for them.
-    expect(
-      screen.getByText(FORGED_WITNESS_CONFIG.synthesis.survivalCodePrompt)
-    ).toBeInTheDocument();
-    type('My survival code', 'Stay ahead of it so it cannot reach you.');
-    click(/Test it outside/i);
+    expect(screen.getByText(SYNTHESIS_PROMPTS[0].label)).toBeInTheDocument();
+    SYNTHESIS_PROMPTS.forEach((p) => type(p.label, `synthesis: ${p.key}`));
+    click('Continue');
 
-    // Transfer — tested against the Seeker's own material.
-    type(FORGED_WITNESS_CONFIG.synthesis.transferQuestion, 'I let it land before I move.');
-    click(/Integrate/i);
-
-    // Integration — the difference, then the carry code.
-    type('The old version would have…', 'managed everyone in the room');
-    type('The Forged Witness will…', 'say the true sentence');
-    type('Carry code', 'Keep the strength. Return the debt.');
-    click(/Write the record/i);
+    // Carry Code — the one sentence, then the record it feeds.
+    type('Carry Code', 'Keep the strength. Return the debt.');
+    click('Continue');
 
     // Record — built from what the Seeker actually wrote.
     expect(screen.getByText('Recognition Record')).toBeInTheDocument();
-    expect(screen.getByText('Stay ahead of it so it cannot reach you.')).toBeInTheDocument();
-    expect(screen.getByText('ARMOR: keep')).toBeInTheDocument();
-    expect(screen.getByText('NUMBNESS: debt')).toBeInTheDocument();
-    click(/^Continue$/i);
+    expect(screen.getByText(TRACKS[0].title)).toBeInTheDocument();
+    expect(screen.getByText(`${TRACKS[0].territory}: ${TRACKS[0].prompts[0].key}`)).toBeInTheDocument();
+    expect(screen.getByText('Keep the strength. Return the debt.')).toBeInTheDocument();
+    click('Continue');
 
     // Seal.
     expect(screen.getByText('I decide what remains.')).toBeInTheDocument();
@@ -116,15 +74,32 @@ describe('The Forged Witness — full pillar flow', () => {
     expect(read().completedAt).toBeTruthy();
   });
 
-  it('will not advance a beat the Seeker has not answered', () => {
+  it('will not advance the encounter beat until the Seeker answers it', () => {
     render(<PortalTwoForgedWitness />);
-    click(/Enter the Forged Witness/i);
     click(/^Enter$/i);
-    click(/The song has finished/i);
 
-    // The encounter beat is unanswered, so Continue stays closed.
-    expect(screen.getByRole('button', { name: /^Continue$/i })).toBeDisabled();
-    type('What surfaced', 'the alert one');
-    expect(screen.getByRole('button', { name: /^Continue$/i })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Continue' })).toBeDisabled();
+    type(TRACKS[0].encounterQuestion, 'the alert one');
+    expect(screen.getByRole('button', { name: 'Continue' })).toBeEnabled();
+  });
+
+  it('reveals the Light Code only once every recode prompt is answered', () => {
+    render(<PortalTwoForgedWitness />);
+    click(/^Enter$/i);
+
+    type(TRACKS[0].encounterQuestion, 'noticed it');
+    click('Continue');
+    ACTIVE_IMAGINATION_PROMPTS.forEach((p) => type(p.label, 'something'));
+    click('Continue');
+
+    expect(screen.getByText(TRACKS[0].shadowCode)).toBeInTheDocument();
+    expect(screen.queryByText(TRACKS[0].lightCode)).not.toBeInTheDocument();
+
+    const prompts = TRACKS[0].prompts;
+    prompts.slice(0, -1).forEach((p) => type(p.label, 'partial answer'));
+    expect(screen.queryByText(TRACKS[0].lightCode)).not.toBeInTheDocument();
+
+    type(prompts[prompts.length - 1].label, 'final answer');
+    expect(screen.getByText(TRACKS[0].lightCode)).toBeInTheDocument();
   });
 });

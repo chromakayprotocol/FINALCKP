@@ -1,4 +1,4 @@
-import { useAudio } from '../../../../../context/audioprovider';
+import { useAudio } from '../../../../context/audioprovider';
 
 /**
  * The encounter's link to the app's existing audio layer.

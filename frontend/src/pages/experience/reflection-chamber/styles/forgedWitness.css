@@ -6,12 +6,15 @@
  *  1. Re-theme the shared Chamber chrome by redefining the accent tokens.
  *     Every .pooi-* component then renders in Pillar Two's colours without
  *     a single shared rule being touched or duplicated.
- *  2. Style Pillar Two's own .fw-* mechanics.
+ *  2. Style Pillar Two's own .fw-* mechanics — deliberately few: every
+ *     track and the closing synthesis share the same handful of classes
+ *     (see components/PromptGroup.jsx and components/forged-witness/),
+ *     so this file styles a pattern, not per-track one-offs.
  *
  * Colour contract: H20 blue stays primary — borders, active controls,
- * current, progress, focus, glow. The forged secondary is used only for
- * metal edges, armour pieces and the debt side of the balance; it is never
- * a background, so Pillar Two never reads as Fire.
+ * current, progress, focus, glow. The forged secondary marks only the
+ * Shadow Code edge and the territory kicker; it is never a background,
+ * so Pillar Two never reads as Fire.
  *
  * The forged tones below are implementation placeholders, not yet canonical
  * CKP values. They are variable-driven so they can be re-specified here
@@ -34,60 +37,7 @@
   background: radial-gradient(ellipse at 50% 0%, #0d1c2e 0%, var(--pooi-bg) 55%);
 }
 
-/* ── Track chrome ──────────────────────────────────────────────────── */
-.forged-witness-pillar .fw-track-head {
-  display: flex;
-  align-items: baseline;
-  gap: 0.75rem;
-  flex-wrap: wrap;
-  padding-bottom: 0.75rem;
-  border-bottom: 1px solid var(--pooi-border);
-  font-family: 'Oxanium', system-ui, sans-serif;
-}
-
-.forged-witness-pillar .fw-track-order {
-  font-size: 0.65rem;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--pooi-muted);
-}
-
-.forged-witness-pillar .fw-track-name {
-  font-size: 1rem;
-  font-weight: 600;
-  color: var(--pooi-ivory);
-}
-
-.forged-witness-pillar .fw-track-territory {
-  margin-left: auto;
-  font-size: 0.6rem;
-  letter-spacing: 0.22em;
-  padding: 0.2rem 0.55rem;
-  border: 1px solid var(--forged);
-  border-radius: 999px;
-  color: var(--forged);
-}
-
-.forged-witness-pillar .fw-step {
-  animation: fw-step-in 420ms ease both;
-}
-
-@keyframes fw-step-in {
-  from { opacity: 0; transform: translateY(10px); }
-  to   { opacity: 1; transform: none; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .forged-witness-pillar .fw-step { animation: none; }
-}
-
-.forged-witness-pillar .fw-step-advance {
-  display: flex;
-  justify-content: flex-end;
-  margin-top: 1.5rem;
-}
-
-/* ── Song ──────────────────────────────────────────────────────────── */
+/* ── Song / encounter ──────────────────────────────────────────────── */
 .forged-witness-pillar .fw-song {
   display: flex;
   flex-direction: column;
@@ -111,14 +61,7 @@
   color: var(--pooi-ivory);
 }
 
-.forged-witness-pillar .fw-song-subtitle {
-  margin: 0;
-  color: var(--pooi-muted);
-  font-style: italic;
-}
-
-.forged-witness-pillar .fw-song-lead,
-.forged-witness-pillar .fw-song-note {
+.forged-witness-pillar .fw-song-lead {
   max-width: 30rem;
   color: var(--pooi-muted);
   line-height: 1.6;
@@ -136,21 +79,25 @@
   cursor: pointer;
 }
 
-.forged-witness-pillar .fw-song-play:hover {
+.forged-witness-pillar .fw-song-play:hover:not(:disabled) {
   background: rgba(56, 189, 248, 0.2);
 }
 
-/* ── Beats and fields ──────────────────────────────────────────────── */
-.forged-witness-pillar .fw-beat,
-.forged-witness-pillar .fw-pattern,
-.forged-witness-pillar .fw-imagination {
-  display: flex;
-  flex-direction: column;
-  gap: 1.25rem;
+.forged-witness-pillar .fw-song-play:disabled {
+  opacity: 0.5;
+  cursor: default;
 }
 
-.forged-witness-pillar .fw-question,
-.forged-witness-pillar .fw-screen-title {
+/* ── Shared prompt pattern (recognition, recode, application, synthesis) ── */
+.forged-witness-pillar .fw-question-kicker {
+  font-family: 'Oxanium', system-ui, sans-serif;
+  font-size: 0.65rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--pooi-muted);
+}
+
+.forged-witness-pillar .fw-question {
   font-family: 'Cinzel', Georgia, serif;
   font-size: 1.4rem;
   line-height: 1.4;
@@ -158,22 +105,19 @@
   color: var(--pooi-ivory);
 }
 
-.forged-witness-pillar .fw-screen-lead,
-.forged-witness-pillar .fw-beat-note,
-.forged-witness-pillar .fw-imagination-instruction,
-.forged-witness-pillar .fw-empty {
+.forged-witness-pillar .fw-prompt-group,
+.forged-witness-pillar .fw-imagination,
+.forged-witness-pillar .fw-recode,
+.forged-witness-pillar .fw-integration {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.forged-witness-pillar .fw-imagination-instruction {
   color: var(--pooi-muted);
   line-height: 1.65;
   margin: 0;
-}
-
-.forged-witness-pillar .fw-scenario {
-  padding: 1rem;
-  border-left: 2px solid var(--forged);
-  background: var(--pooi-surface);
-  border-radius: 0 0.4rem 0.4rem 0;
-  margin: 0;
-  line-height: 1.6;
 }
 
 .forged-witness-pillar .fw-field {
@@ -188,11 +132,6 @@
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--h20-sky);
-}
-
-.forged-witness-pillar .fw-field-hint {
-  font-size: 0.8rem;
-  color: var(--pooi-muted);
 }
 
 .forged-witness-pillar .fw-field-input {
@@ -213,40 +152,7 @@
   outline-offset: 2px;
 }
 
-/* ── Choices ───────────────────────────────────────────────────────── */
-.forged-witness-pillar .fw-choices,
-.forged-witness-pillar .fw-transfer-picker {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-}
-
-.forged-witness-pillar .fw-choice {
-  padding: 0.55rem 0.95rem;
-  border-radius: 999px;
-  border: 1px solid var(--pooi-border);
-  background: transparent;
-  color: var(--pooi-ivory);
-  font-size: 0.85rem;
-  cursor: pointer;
-  transition: border-color 160ms ease, background 160ms ease;
-}
-
-.forged-witness-pillar .fw-choice:hover {
-  border-color: var(--h20-sky);
-}
-
-.forged-witness-pillar .fw-choice.is-selected {
-  border-color: var(--h20-sky);
-  background: rgba(56, 189, 248, 0.15);
-}
-
-.forged-witness-pillar .fw-choice:focus-visible {
-  outline: 2px solid var(--h20-sky);
-  outline-offset: 2px;
-}
-
-/* ── Codes ─────────────────────────────────────────────────────────── */
+/* ── Shadow / Light Code reveals ───────────────────────────────────── */
 .forged-witness-pillar .fw-code {
   padding: 1.25rem;
   border-radius: 0.5rem;
@@ -279,287 +185,19 @@
   color: var(--pooi-ivory);
 }
 
-/* ── Pattern chain ─────────────────────────────────────────────────── */
-.forged-witness-pillar .fw-pattern-chain {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  list-style: none;
-  margin: 0;
-  padding: 0;
+.forged-witness-pillar .fw-code--light .fw-code-body {
+  margin-bottom: 1rem;
 }
 
-.forged-witness-pillar .fw-pattern-node {
-  padding: 0.8rem 1rem;
-  border-radius: 0.45rem;
-  border: 1px solid var(--pooi-border);
-  background: var(--pooi-surface);
-}
-
-.forged-witness-pillar .fw-pattern-node.is-given {
-  border-left: 3px solid var(--forged);
-}
-
-.forged-witness-pillar .fw-pattern-node p {
-  margin: 0.25rem 0 0;
-  color: var(--pooi-ivory);
-}
-
-.forged-witness-pillar .fw-pattern-kicker {
-  font-family: 'Oxanium', system-ui, sans-serif;
-  font-size: 0.6rem;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: var(--pooi-muted);
-}
-
-/* ── Adaptation map ────────────────────────────────────────────────── */
-.forged-witness-pillar .fw-map {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.6rem;
-  list-style: none;
-  margin: 1rem 0;
-  padding: 0;
-}
-
-.forged-witness-pillar .fw-map-node {
-  display: flex;
-  flex-direction: column;
-  gap: 0.2rem;
-  padding: 0.8rem;
-  border-radius: 0.45rem;
-  border: 1px solid rgba(56, 189, 248, 0.18);
-  background: rgba(12, 22, 38, 0.6);
-  opacity: 0.55;
-}
-
-.forged-witness-pillar .fw-map-node.is-complete {
-  opacity: 1;
-  border-color: var(--h20-sky);
-  border-right: 2px solid var(--forged);
-  box-shadow: 0 0 18px rgba(56, 189, 248, 0.18);
-}
-
-.forged-witness-pillar .fw-map-node.is-current {
-  opacity: 1;
-  border-color: var(--h20-royal);
-}
-
-.forged-witness-pillar .fw-map-num {
-  font-family: 'Oxanium', system-ui, sans-serif;
-  font-size: 0.6rem;
-  color: var(--pooi-muted);
-}
-
-.forged-witness-pillar .fw-map-territory {
-  font-family: 'Oxanium', system-ui, sans-serif;
-  font-size: 0.7rem;
-  letter-spacing: 0.16em;
-  color: var(--h20-sky);
-}
-
-.forged-witness-pillar .fw-map-title {
-  font-size: 0.8rem;
-  color: var(--pooi-ivory);
-}
-
-.forged-witness-pillar .fw-map-learned {
-  font-size: 0.72rem;
-  color: var(--pooi-muted);
-  line-height: 1.4;
-}
-
-/* ── Inventory / balance / synthesis ───────────────────────────────── */
-.forged-witness-pillar .fw-inventory,
-.forged-witness-pillar .fw-balancer,
-.forged-witness-pillar .fw-synthesis,
-.forged-witness-pillar .fw-transfer,
-.forged-witness-pillar .fw-integration {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.forged-witness-pillar .fw-inventory-list,
-.forged-witness-pillar .fw-balance-list,
-.forged-witness-pillar .fw-reference-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-
-.forged-witness-pillar .fw-piece,
-.forged-witness-pillar .fw-balance {
-  padding: 1rem;
-  border-radius: 0.5rem;
-  border: 1px solid var(--pooi-border);
-  border-left: 3px solid var(--forged);
-  background: var(--pooi-surface);
-}
-
-.forged-witness-pillar .fw-piece-head,
-.forged-witness-pillar .fw-balance-head {
-  display: flex;
-  align-items: baseline;
-  gap: 0.6rem;
-  margin-bottom: 0.6rem;
-}
-
-.forged-witness-pillar .fw-piece-territory {
-  font-family: 'Oxanium', system-ui, sans-serif;
-  font-size: 0.6rem;
-  letter-spacing: 0.2em;
-  color: var(--forged);
-}
-
-.forged-witness-pillar .fw-piece-title {
-  font-size: 0.9rem;
-  color: var(--pooi-ivory);
-}
-
-.forged-witness-pillar .fw-piece-body {
-  display: flex;
-  flex-direction: column;
-  gap: 0.6rem;
-  margin: 0;
-}
-
-.forged-witness-pillar .fw-piece-body dt {
-  font-family: 'Oxanium', system-ui, sans-serif;
-  font-size: 0.6rem;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--pooi-muted);
-}
-
-.forged-witness-pillar .fw-piece-body dd {
-  margin: 0.15rem 0 0;
-  font-size: 0.92rem;
-  line-height: 1.5;
-}
-
-.forged-witness-pillar .fw-balance-source {
-  margin: 0 0 0.75rem;
-  color: var(--pooi-muted);
-  font-size: 0.88rem;
-}
-
-.forged-witness-pillar .fw-balance-cols {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.85rem;
-}
-
-.forged-witness-pillar .fw-reference {
-  padding: 1rem;
-  border-radius: 0.5rem;
-  border: 1px dashed var(--pooi-border);
-}
-
-.forged-witness-pillar .fw-reference-label {
-  font-family: 'Oxanium', system-ui, sans-serif;
-  font-size: 0.6rem;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: var(--pooi-muted);
-}
-
-.forged-witness-pillar .fw-reference-list li {
-  display: flex;
-  flex-direction: column;
-  gap: 0.15rem;
-  padding: 0.6rem 0;
-  border-bottom: 1px solid var(--pooi-border);
-}
-
-.forged-witness-pillar .fw-reference-list li:last-child { border-bottom: 0; }
-
-.forged-witness-pillar .fw-reference-territory {
-  font-family: 'Oxanium', system-ui, sans-serif;
-  font-size: 0.6rem;
-  letter-spacing: 0.2em;
-  color: var(--forged);
-}
-
-.forged-witness-pillar .fw-reference-learned { font-size: 0.9rem; }
-
-.forged-witness-pillar .fw-reference-code {
-  font-size: 0.8rem;
-  color: var(--pooi-muted);
-  font-style: italic;
-}
-
-/* ── Transfer ──────────────────────────────────────────────────────── */
-.forged-witness-pillar .fw-transfer-grid {
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
-  gap: 0.85rem;
-  align-items: stretch;
-}
-
-.forged-witness-pillar .fw-transfer-col {
-  padding: 1rem;
-  border-radius: 0.5rem;
-  background: var(--pooi-surface);
-  border: 1px solid var(--pooi-border);
-}
-
-.forged-witness-pillar .fw-transfer-col--old { border-left: 3px solid var(--forged-deep); }
-.forged-witness-pillar .fw-transfer-col--new { border-left: 3px solid var(--h20-sky); }
-
-.forged-witness-pillar .fw-transfer-col p {
-  margin: 0.2rem 0 0.9rem;
-  font-size: 0.9rem;
-  line-height: 1.5;
-}
-
-.forged-witness-pillar .fw-transfer-kicker {
-  font-family: 'Oxanium', system-ui, sans-serif;
-  font-size: 0.58rem;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: var(--pooi-muted);
-}
-
-.forged-witness-pillar .fw-transfer-code {
-  font-family: 'Cinzel', Georgia, serif;
-  color: var(--pooi-ivory);
-}
-
-.forged-witness-pillar .fw-transfer-pause {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  writing-mode: vertical-rl;
-  font-family: 'Oxanium', system-ui, sans-serif;
-  font-size: 0.6rem;
-  letter-spacing: 0.35em;
-  color: var(--h20-sky);
-}
-
+/* ── Carry Code ────────────────────────────────────────────────────── */
 .forged-witness-pillar .fw-carry-quote {
   margin: 0;
   padding: 1rem 1.25rem;
   border-left: 3px solid var(--h20-sky);
   background: var(--pooi-surface);
   border-radius: 0 0.45rem 0.45rem 0;
-}
-
-.forged-witness-pillar .fw-carry-quote p {
-  margin: 0.35rem 0 0;
   font-family: 'Cinzel', Georgia, serif;
   font-size: 1.15rem;
   line-height: 1.45;
-}
-
-/* ── Narrow screens ────────────────────────────────────────────────── */
-@media (max-width: 640px) {
-  .forged-witness-pillar .fw-map { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .forged-witness-pillar .fw-balance-cols { grid-template-columns: 1fr; }
-  .forged-witness-pillar .fw-transfer-grid { grid-template-columns: 1fr; }
-  .forged-witness-pillar .fw-transfer-pause { writing-mode: horizontal-tb; padding: 0.4rem 0; }
+  color: var(--pooi-ivory);
 }

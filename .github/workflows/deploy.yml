@@ -16,11 +16,33 @@ jobs:
         with:
           node-version: '20'
           cache: 'npm'
-          cache-dependency-path: frontend/package-lock.json
+          # The root lockfile is the real one: package.json declares
+          # frontend/ as an npm workspace, so `npm ci` below walks up and
+          # resolves against ./package-lock.json. frontend/package-lock.json
+          # is a stale leftover (it does not even contain vitest) and made
+          # this cache key blind to actual dependency changes.
+          cache-dependency-path: package-lock.json
 
       - name: Install dependencies
         working-directory: frontend
         run: npm ci
+
+      # --- Pre-deployment integrity suite -------------------------------
+      # A green Vite build proves the module graph compiles and nothing
+      # else. Deployment is gated on the checks below, in this order, so a
+      # broken Nexus cannot ship because it happened to bundle.
+
+      # `test:ci` is the full src/ suite minus a named quarantine list of
+      # pre-existing, missing-content failures. Every exclusion is spelled
+      # out individually, with its reason, in frontend/vitest.ci.config.js.
+      # `npm run test:unit` runs the suite unfiltered for local truth.
+      - name: Unit tests
+        working-directory: frontend
+        run: npm run test:ci
+
+      - name: Nexus asset integrity
+        working-directory: frontend
+        run: npm run check:nexus-assets
 
       - name: Build
         working-directory: frontend
@@ -35,6 +57,23 @@ jobs:
           # secret just to unblock the live VMA chat widget.
           VITE_APP_VMA_WORKER_URL: https://chroma-key-vma.matrixmediamoguls.workers.dev
 
+      - name: Static route smoke checks
+        working-directory: frontend
+        run: npm run smoke:routes
+
+      # Anon-key only. Asserts the deployed project actually exposes the
+      # Reclamation University + Sovereign Runtime tables the Nexus reads;
+      # a migration file in git is not evidence that the table exists.
+      # See docs/reclamation-university-data-integrity.md.
+      - name: Verify Supabase schema
+        working-directory: frontend
+        run: npm run verify:supabase
+        env:
+          SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
+
+      # --- Deployment ---------------------------------------------------
+
       - name: Verify Cloudflare Pages project access
         uses: cloudflare/wrangler-action@v3
         with:
@@ -43,8 +82,19 @@ jobs:
           command: pages project list
 
       - name: Deploy to Cloudflare Pages
+        id: deploy
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFARE_ACCOUNT_ID }}
           command: pages deploy frontend/build --project-name=chromakeyprotocol
+
+      # --- Post-deployment smoke check ----------------------------------
+      # Re-runs the same route assertions against the live deployment, so
+      # "it deployed" and "it serves" are two separate facts.
+
+      - name: Post-deployment smoke check
+        working-directory: frontend
+        run: npm run smoke:routes -- --base "${SMOKE_BASE_URL}"
+        env:
+          SMOKE_BASE_URL: ${{ steps.deploy.outputs.deployment-url || 'https://chromakeyprotocol.pages.dev' }}

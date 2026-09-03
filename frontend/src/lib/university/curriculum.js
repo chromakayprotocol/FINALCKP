@@ -1,18 +1,19 @@
 /**
- * Reclamation University curriculum configuration.
+ * Reclamation University curriculum METADATA.
  *
- * This is the data layer for the University Nexus dashboard. UI components
- * read from here rather than hardcoding domain/module/principle copy, so the
- * curriculum can grow without touching the visual layer.
+ * Static, seeker-independent configuration for the University Nexus
+ * dashboard: artwork paths, titles, themes, node positions, routes and
+ * availability. UI components read from here rather than hardcoding
+ * domain/module/principle copy, so the curriculum can grow without
+ * touching the visual layer.
  *
- * The seven Hermetic principles are the one subsystem with a real,
- * Supabase-backed progress table today (`rec_uni_user_progress`, keyed by
- * these `slug`s — see HermeticHallViewport.jsx). The four Protocols and the
- * bottom-dock subsystems (Light Codes, Field Exercises, Case Studies,
- * Protocol Labs, Examinations, Graduation) don't have dedicated tables or
- * routes yet, so they render as previews/"soon" states until that schema
- * (see spec: university_domains, university_modules, university_lessons,
- * artifacts, user_activity) lands.
+ * This file owns NO personalized learner state. Every percentage the Nexus
+ * displays for a seeker is derived in `nexusState.js` from rows that a real
+ * writer in this app persists. The `statValue`, `centralAxisStats
+ * .completePercent`, `nexusDockStats` and `defaultSeekerProgress` display
+ * placeholders that used to live here were removed rather than relocated:
+ * a hardcoded 64% rendered in a personalized slot is indistinguishable from
+ * real progress, which is exactly the failure mode this split prevents.
  *
  * Exception: Reflection Protocol is live — Act II Water / Reflection Chamber
  * five-pillar module (see reflectionChamberModuleData.js + ReflectionProtocolPage).
@@ -42,7 +43,6 @@ export const universityProtocols = [
     theme: 'fracture',
     image: `${NEXUS_BASE}/Nexus_Fracture_Protocol.png`,
     statLabel: 'Academic Mastery',
-    statValue: 64,
     position: 'top-left',
     available: true,
     facultySlug: 'foundations',
@@ -53,7 +53,6 @@ export const universityProtocols = [
     theme: 'reflection',
     image: `${NEXUS_BASE}/Nexus_Reflection_Protocol.png`,
     statLabel: 'Spiritual Mastery',
-    statValue: 23,
     position: 'top-right',
     available: true,
     // Dedicated Act II Water module — five pillars of governed feeling.
@@ -65,7 +64,6 @@ export const universityProtocols = [
     theme: 'crucible',
     image: `${NEXUS_BASE}/Nexus_Crucible_Protocol.png`,
     statLabel: 'Knowledge',
-    statValue: 32,
     position: 'bottom-left',
     available: false,
   },
@@ -75,28 +73,26 @@ export const universityProtocols = [
     theme: 'reclamation',
     image: `${NEXUS_BASE}/Nexus_Reclamation_Protocol.png`,
     statLabel: 'Alignment',
-    statValue: 27,
     position: 'bottom-right',
     available: false,
   },
 ];
 
-// Central Academic Axis (the Hermetic Hall medallion) display stats.
-export const centralAxisStats = {
-  completePercent: 64,
-  sovereignSoulsEnrolled: 1287,
-};
+// Central Academic Axis (the Hermetic Hall medallion).
+//
+// `completePercent` used to live here as a hardcoded 64 and was used as the
+// fallback whenever the real Hermetic Hall query returned nothing — which,
+// given that query's module-id mismatch, was always. It is gone: the axis
+// percentage is derived state (nexusState.js) with no static fallback.
+//
+// Nothing personalized remains in this object. `sovereignSoulsEnrolled` is
+// not backed by a live source, so it is not exported as a displayable stat;
+// see the Nexus component, which no longer renders an enrollment count.
 
-// Bottom dock meters — placeholder display values until their backing
-// subsystems (arsenal/celestial tables) exist; Knowledge Index mirrors the
-// same "no dedicated table yet" caveat as defaultSeekerProgress below.
-export const nexusDockStats = {
-  knowledgeIndex: 72,
-  arsenalAttunement: 51,
-  celestialAlignment: 68,
-};
-
-// Mirrors the slugs/order already used by HermeticHallViewport + rec_uni_user_progress.module_id.
+// The seven Hermetic principles as static metadata (numbering + keywords for
+// display). These slugs are the Hall's canonical principle identifiers; the
+// module ids their progress is actually persisted under are resolved in
+// nexusState.js (`hermetic-hall/<slug>` in sovereign_module_state), not here.
 export const hermeticPrinciples = [
   { number: 'I', slug: 'mentalism', name: 'Mentalism', keywords: 'Mind. All. Universe.' },
   { number: 'II', slug: 'correspondence', name: 'Correspondence', keywords: 'Above. Below. Within.' },
@@ -107,18 +103,11 @@ export const hermeticPrinciples = [
   { number: 'VII', slug: 'gender', name: 'Gender', keywords: 'Masculine. Feminine. Creation.' },
 ];
 
-// Placeholder seeker-wide stats: these subsystems (modules/lessons/artifacts/
-// journal tables) don't exist yet, so these are display defaults rather than
-// a computed value. `hermeticProgress` (from useSeekerProgress) is the one
-// slice of this that is genuinely computed from Supabase data.
-export const defaultSeekerProgress = {
-  overallProgress: 64,
-  modulesCompleted: 38,
-  modulesTotal: 72,
-  lessonsCompleted: 112,
-  lessonsTotal: 214,
-  artifactsSealed: 23,
-  artifactsTotal: 72,
-  journalEntries: 47,
-  daysActive: 19,
-};
+// `defaultSeekerProgress` used to live here: a block of invented seeker-wide
+// totals (38/72 modules, 112/214 lessons, 23/72 artifacts, 47 journal
+// entries, 19 days active) that the Nexus hook installed as its state
+// whenever Supabase was unavailable. Nothing distinguished it from real
+// data once rendered, so it was removed rather than renamed. If preview
+// fixtures are ever needed for design work, they belong in a file whose
+// name says so (`*.fixture.js`) and must never be reachable from the
+// production Nexus state path.

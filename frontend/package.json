@@ -71,10 +71,18 @@
     "start": "npm run restore-env && vite",
     "build": "vite build",
     "test": "vitest run src/context/authUserNormalizer.test.js",
+    "test:unit": "vitest run src",
+    "test:ci": "vitest run --config vitest.ci.config.js",
+    "test:layout": "playwright test",
+    "harness": "vite --config vite.harness.config.js",
+    "check:nexus-assets": "node scripts/check-nexus-assets.mjs",
+    "smoke:routes": "node scripts/smoke-routes.mjs",
+    "verify:supabase": "node scripts/verify-supabase-schema.mjs",
     "preview": "vite preview"
   },
   "devDependencies": {
     "@eslint/js": "9.23.0",
+    "@playwright/test": "1.56.1",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
     "@vitejs/plugin-react": "^4.7.0",

@@ -2124,3 +2124,145 @@ onboarding's progress persistence are real gaps now, not deferred
 work-in-progress — treat rebuilding any of them as new feature work against
 the target architecture (Supabase + Workers), not as restoring what was
 here before.
+
+## Phase 21: Nexus environment reconciliation
+
+The Reclamation University Nexus was visually mature but partially
+synthetic: several of the percentages it presented as personalized seeker
+state were hardcoded display placeholders, and the one value that was
+genuinely computed was computed from a query that could never return a row.
+This phase gave every displayed value exactly one authoritative source, and
+made every production-state failure explicit. **No visual redesign** — the
+cinematic 16:9 composition is unchanged; the only additions to the DOM are
+an unresolved-state treatment and a data-state notice.
+
+Full reference: `docs/reclamation-university-data-integrity.md`.
+
+**The root finding.** `useSeekerProgress()` queried `rec_uni_user_progress`
+for the bare Hermetic principle slugs (`mentalism`, `correspondence`, …).
+No writer in this repository has ever produced a row with those ids: all
+seven Hermetic Hall experiences moved onto the Sovereign Runtime in Phase
+8/15 and write `sovereign_module_state` with `module_id =
+'hermetic-hall/<slug>'`. The query was structurally incapable of returning
+data, so the Hall percentage was pinned to 0% for every seeker — and
+`centralAxisStats.completePercent = 64` silently stood in for it on every
+render. Both halves are gone.
+
+**Where learner state actually lives** (audited, not assumed):
+
+| Track | Engine | Table | `module_id` |
+|---|---|---|---|
+| Hermetic Hall (7 principles) | Sovereign Runtime experiences | `sovereign_module_state` | `hermetic-hall/<slug>` |
+| Reflection Protocol (5 pillars) | Reflection Chamber | `sovereign_module_state` | `reflection-chamber/<pillar>` |
+| Fracture Protocol (`foundations`) | `ReclamationModuleEngine` | `rec_uni_user_progress` | curriculum `module.id` |
+
+Both tables already exist and already have writers; reading only one of
+them is what produced the bug. Legacy `rec_uni_user_progress` ids for the
+Hermetic principles are still recognised so an older row still counts.
+
+**Added:**
+- `frontend/src/lib/university/nexusState.js` — the canonical `NexusState`
+  projection. Pure (rows in, state out), so every failure case is
+  unit-testable. Owns `PROTOCOL_MODULE_MAP`, derived from the real
+  curriculum registries rather than restated, and the deterministic
+  `completed / total × 100` + `not_started`/`in_progress`/`completed` bands.
+- `frontend/src/lib/university/nexusProgressSource.js` — the one Supabase
+  read, keeping "signed out", "loaded", and "authenticated but the read
+  failed" as three distinct outcomes.
+- `frontend/src/modules/sovereign/reclamation-university/nexus/useNexusState.js`
+  — replaces `useSeekerProgress.js`. The Nexus, `ProtocolNode` and
+  `DockMeter` all read this one projection; none of them calculates
+  anything independently.
+- Scripts: `check-nexus-assets.mjs` (filesystem existence, not string
+  matching — the PR #63 regression left every URL well-formed and every
+  image 404ing), `smoke-routes.mjs` (SPA-serves the build and asserts the
+  four canonical routes return the app shell; `--base <url>` smokes a live
+  deployment), `verify-supabase-schema.mjs` (anon-key-only PostgREST
+  exposure check; refuses to run if a service-role key is present).
+- Tests: `nexusState.test.js`, `UniversityNexus.test.js`,
+  `nexusRoutes.test.js`, `nexusAssets.test.js`,
+  `nexusAccessibility.test.js`, `reclamationUniversityAnalytics.test.js`,
+  and a Playwright layout suite (`frontend/e2e/`, 6 viewports × 3 zoom
+  levels) driven against a credential-free harness.
+
+**Removed** (not relocated — a placeholder in a personalized slot is
+indistinguishable from real data once rendered): `statValue` from all four
+protocols, `centralAxisStats.completePercent`, `nexusDockStats`,
+`defaultSeekerProgress`, and the unsourced `sovereignSoulsEnrolled: 1287`
+enrollment count.
+
+**Dock meters.** Knowledge Index is now a real derivation — completed over
+available educational modules across the Hermetic Hall plus every available
+Protocol. Arsenal Attunement and Celestial Alignment report
+`status: unavailable` and render "Coming Soon": no arsenal/artifact
+curriculum defines an enumerable denominator and no alignment curriculum
+exists. A null production value beats false personalization.
+
+**Availability unchanged.** Fracture and Reflection stay available;
+Crucible and Reclamation stay locked with `progress: null`, a lock
+affordance and an accessible name ending `— coming soon`. Neither was
+enabled to make the screen look complete.
+
+**Analytics: verified, not re-fixed.** The archived log's
+`supabase.from(...).insert(...).catch is not a function` is **stale** — the
+current `emitAnalyticsEvent()` awaits the builder and destructures
+`{ error }`, and a repository-wide search for `.catch(` on a Supabase
+builder finds no remaining instance. Pinned by a regression test whose
+Supabase double deliberately has no `.catch`, so the pattern cannot return
+silently.
+
+**CI.** The workflow's `cache-dependency-path` pointed at
+`frontend/package-lock.json`, which is a stale leftover — it does not even
+contain vitest. Root `package.json` declares `frontend/` as an npm
+workspace, so `npm ci` run in `frontend/` walks up and resolves against the
+root `package-lock.json`; the cache key was therefore blind to real
+dependency changes. Repointed at the root lockfile. The vestigial
+`frontend/package-lock.json` is left in place rather than deleted.
+
+`.github/workflows/deploy.yml` now gates deployment on unit tests →
+asset integrity → build → static route smoke → Supabase schema
+verification, then re-smokes the live deployment after deploy. A green Vite
+build is no longer treated as evidence that the Nexus works.
+
+`npm run test:ci` runs the `src/` suite minus three files quarantined
+individually (never by glob), with reasons, in
+`frontend/vitest.ci.config.js`: `hermeticImportedCurriculum.test.js`,
+`hermeticJourneyTabs.test.js` and `hermeticLearningExperience.test.js` all
+assert authored lesson content that `hermeticCourseData.js` no longer ships
+(`lessons: []`). These are the same failures Phase 20 recorded as
+pre-existing. They are excluded so the deploy gate is enforceable at all —
+no test was edited or weakened, and `npm run test:unit` still runs them so
+their real state stays visible.
+
+**Diagnostics.** `frontend/.codex-vite-err.log` moved to
+`diagnostics/archive/2026-vite-runtime-errors.log` with a README
+classifying each recorded symptom as environment, stale, or current.
+
+**Routes.** The canonical University landing surface is
+`…/reclamation-university/nexus`. `…/reclamation-university` already
+redirected there; `/reclamation-university` now redirects there directly
+rather than double-hopping. Every legitimate deep link (Hermetic Hall,
+Reflection Protocol, `:facultySlug[/:moduleSlug]`, `sovereign-os`, the
+`/qa/*` harnesses) is preserved. The audit found no remaining duplicate
+University-home route — the older circular principle-selector viewport was
+already retired.
+
+**Not done in this pass** — deliberately, and stated rather than papered
+over:
+
+- **The deployed Supabase schema is still unverified.** Outbound HTTPS to
+  `*.supabase.co` is blocked by this working environment's network policy,
+  so `verify:supabase` could only be authored and syntax-checked, not run
+  against production. The `PGRST205` in the archived log means the
+  Reclamation University migration may still be unapplied on the live
+  project. Run `npm run verify:supabase --prefix frontend` from an
+  environment with network access — or let the deploy workflow's step run
+  it — before treating the schema as confirmed. A migration file in git is
+  not evidence that the table exists.
+- Backfilling Hermetic Hall progress for seekers whose completions predate
+  the Sovereign Runtime migration. The reader now recognises the legacy
+  ids, but no migration writes them.
+- `/Reclamation_User_Journey` — an unlinked Act III journey picker whose
+  "LAUNCH SOVEREIGN PROTOCOL" button targets `/protocol/3`, a route deleted
+  in Phase 20. A real broken link, found during the route audit, outside
+  this reconciliation's scope. Flagged, not changed.

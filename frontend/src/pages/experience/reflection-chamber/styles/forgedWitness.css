@@ -1,0 +1,203 @@
+/* Portal Two / Pillar Two — The Forged Witness.
+ *
+ * Scoped entirely to .forged-witness-pillar, which PillarExperience puts on
+ * the pillar root from config.themeClass. Two jobs:
+ *
+ *  1. Re-theme the shared Chamber chrome by redefining the accent tokens.
+ *     Every .pooi-* component then renders in Pillar Two's colours without
+ *     a single shared rule being touched or duplicated.
+ *  2. Style Pillar Two's own .fw-* mechanics — deliberately few: every
+ *     track and the closing synthesis share the same handful of classes
+ *     (see components/PromptGroup.jsx and components/forged-witness/),
+ *     so this file styles a pattern, not per-track one-offs.
+ *
+ * Colour contract: H20 blue stays primary — borders, active controls,
+ * current, progress, focus, glow. The forged secondary marks only the
+ * Shadow Code edge and the territory kicker; it is never a background,
+ * so Pillar Two never reads as Fire.
+ *
+ * The forged tones below are implementation placeholders, not yet canonical
+ * CKP values. They are variable-driven so they can be re-specified here
+ * without touching a single component.
+ */
+
+.pooi.forged-witness-pillar {
+  --h20-sky: #38bdf8;
+  --h20-royal: #2563eb;
+  --forged: #c47a44;
+  --forged-deep: #7a4528;
+
+  /* Shared chrome tokens, re-pointed. */
+  --pooi-purple: var(--h20-sky);
+  --pooi-purple-dim: var(--h20-royal);
+  --pooi-bg: #050b14;
+  --pooi-surface: #0c1626;
+  --pooi-border: rgba(56, 189, 248, 0.25);
+
+  background: radial-gradient(ellipse at 50% 0%, #0d1c2e 0%, var(--pooi-bg) 55%);
+}
+
+/* ── Song / encounter ──────────────────────────────────────────────── */
+.forged-witness-pillar .fw-song {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.75rem;
+  padding: 2.5rem 0;
+}
+
+.forged-witness-pillar .fw-song-territory {
+  font-family: 'Oxanium', system-ui, sans-serif;
+  font-size: 0.7rem;
+  letter-spacing: 0.32em;
+  color: var(--forged);
+}
+
+.forged-witness-pillar .fw-song-title {
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: clamp(2rem, 6vw, 3rem);
+  margin: 0;
+  color: var(--pooi-ivory);
+}
+
+.forged-witness-pillar .fw-song-lead {
+  max-width: 30rem;
+  color: var(--pooi-muted);
+  line-height: 1.6;
+}
+
+.forged-witness-pillar .fw-song-play {
+  margin-top: 0.5rem;
+  padding: 0.7rem 1.6rem;
+  border-radius: 999px;
+  border: 1px solid var(--h20-sky);
+  background: rgba(56, 189, 248, 0.1);
+  color: var(--pooi-ivory);
+  font-family: 'Oxanium', system-ui, sans-serif;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+}
+
+.forged-witness-pillar .fw-song-play:hover:not(:disabled) {
+  background: rgba(56, 189, 248, 0.2);
+}
+
+.forged-witness-pillar .fw-song-play:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+/* ── Shared prompt pattern (recognition, recode, application, synthesis) ── */
+.forged-witness-pillar .fw-question-kicker {
+  font-family: 'Oxanium', system-ui, sans-serif;
+  font-size: 0.65rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--pooi-muted);
+}
+
+.forged-witness-pillar .fw-question {
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 1.4rem;
+  line-height: 1.4;
+  margin: 0;
+  color: var(--pooi-ivory);
+}
+
+.forged-witness-pillar .fw-prompt-group,
+.forged-witness-pillar .fw-imagination,
+.forged-witness-pillar .fw-recode,
+.forged-witness-pillar .fw-integration {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.forged-witness-pillar .fw-imagination-instruction {
+  color: var(--pooi-muted);
+  line-height: 1.65;
+  margin: 0;
+}
+
+.forged-witness-pillar .fw-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.forged-witness-pillar .fw-field-label {
+  font-family: 'Oxanium', system-ui, sans-serif;
+  font-size: 0.7rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--h20-sky);
+}
+
+.forged-witness-pillar .fw-field-input {
+  width: 100%;
+  padding: 0.7rem 0.85rem;
+  border-radius: 0.45rem;
+  border: 1px solid var(--pooi-border);
+  background: var(--pooi-surface);
+  color: var(--pooi-ivory);
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 0.95rem;
+  line-height: 1.55;
+  resize: vertical;
+}
+
+.forged-witness-pillar .fw-field-input:focus-visible {
+  outline: 2px solid var(--h20-sky);
+  outline-offset: 2px;
+}
+
+/* ── Shadow / Light Code reveals ───────────────────────────────────── */
+.forged-witness-pillar .fw-code {
+  padding: 1.25rem;
+  border-radius: 0.5rem;
+  border: 1px solid var(--pooi-border);
+  background: var(--pooi-surface);
+}
+
+.forged-witness-pillar .fw-code--shadow {
+  border-left: 3px solid var(--forged-deep);
+}
+
+.forged-witness-pillar .fw-code--light {
+  border-left: 3px solid var(--h20-sky);
+  box-shadow: 0 0 24px rgba(56, 189, 248, 0.12);
+}
+
+.forged-witness-pillar .fw-code-label {
+  font-family: 'Oxanium', system-ui, sans-serif;
+  font-size: 0.65rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--pooi-muted);
+}
+
+.forged-witness-pillar .fw-code-body {
+  margin: 0.5rem 0 0;
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 1.35rem;
+  line-height: 1.45;
+  color: var(--pooi-ivory);
+}
+
+.forged-witness-pillar .fw-code--light .fw-code-body {
+  margin-bottom: 1rem;
+}
+
+/* ── Carry Code ────────────────────────────────────────────────────── */
+.forged-witness-pillar .fw-carry-quote {
+  margin: 0;
+  padding: 1rem 1.25rem;
+  border-left: 3px solid var(--h20-sky);
+  background: var(--pooi-surface);
+  border-radius: 0 0.45rem 0.45rem 0;
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 1.15rem;
+  line-height: 1.45;
+  color: var(--pooi-ivory);
+}

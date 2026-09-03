@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useReducer } from 'react';
+import { useCallback, useEffect, useMemo, useReducer } from 'react';
 import { STAGES, PRACTICE_PHASES } from '../utils/stageTransitions';
 
 const STORAGE_PREFIX = 'ckp:reflection-chamber:';
@@ -9,6 +9,23 @@ function storageKey(pillarId, userId) {
 
 function emptyState() {
   return {
+    /* ── Generic pillar-session state ──────────────────────────────────
+     * Every pillar gets these. `experience` is the pillar's own namespace:
+     * the hook never learns any pillar's vocabulary, it just carries the
+     * object. Pillar Two's six-track state lives under experience.tracks
+     * (see data/forgedWitnessConfig.js), Pillar Three's will look like
+     * something else entirely, and neither needs a change here. */
+    currentScreen: null,
+    completedScreens: [],
+    currentTrack: null,
+    completedTracks: [],
+    experience: {},
+
+    /* ── Portal One's legacy fields ────────────────────────────────────
+     * Portal One predates the generic namespace above and still reads and
+     * writes these directly. They are kept so existing saved sessions
+     * load unchanged; retiring them belongs to a separate, controlled
+     * migration of Portal One onto `experience`, not to this one. */
     currentStage: STAGES.INTRO,
     practicePhase: PRACTICE_PHASES.OBSERVE,
     sorterPlacements: {},
@@ -68,10 +85,17 @@ function loadInitialState([pillarId, userId]) {
       shadow: { ...base.shadow, ...saved.shadow },
       light: { ...base.light, ...saved.light },
       mastery: { ...base.mastery, ...saved.mastery },
+      // Sessions saved before the generic namespace existed have no
+      // `experience` key; the spread above would leave it undefined.
+      experience: { ...base.experience, ...(saved.experience || {}) },
     };
   } catch {
     return base;
   }
+}
+
+function withoutDuplicate(list, id) {
+  return list.includes(id) ? list : [...list, id];
 }
 
 function reducer(state, action) {
@@ -82,6 +106,34 @@ function reducer(state, action) {
       return { ...state, practicePhase: action.phase };
     case 'PATCH':
       return { ...state, ...action.patch };
+
+    case 'SET_SCREEN':
+      return { ...state, currentScreen: action.screenId };
+    case 'COMPLETE_SCREEN':
+      return { ...state, completedScreens: withoutDuplicate(state.completedScreens, action.screenId) };
+
+    case 'SET_TRACK':
+      return { ...state, currentTrack: action.trackId };
+    case 'COMPLETE_TRACK':
+      return { ...state, completedTracks: withoutDuplicate(state.completedTracks, action.trackId) };
+
+    case 'PATCH_EXPERIENCE':
+      return { ...state, experience: { ...state.experience, ...action.patch } };
+
+    case 'PATCH_TRACK': {
+      const tracks = state.experience.tracks || {};
+      return {
+        ...state,
+        experience: {
+          ...state.experience,
+          tracks: {
+            ...tracks,
+            [action.trackId]: { ...(tracks[action.trackId] || {}), ...action.patch },
+          },
+        },
+      };
+    }
+
     case 'RESET':
       return emptyState();
     default:
@@ -92,9 +144,10 @@ function reducer(state, action) {
 /**
  * Owns one pillar's experience state (§23 of the component guide): local
  * to that pillar's session, distinct from the static curriculum in
- * reflectionChamberModuleData.js. Persisted to localStorage, keyed by
+ * reflectionChamberModuleData.js. Persisted to localStorage keyed by
  * pillar + user, so every pillar in the Reflection Chamber gets its own
- * independent save slot from the same shared hook — no shared runtime.
+ * independent save slot from this one shared hook — no shared runtime,
+ * and no second persistence mechanism.
  */
 export function usePillarExperience(pillarId, userId) {
   const [state, dispatch] = useReducer(reducer, [pillarId, userId], loadInitialState);
@@ -114,5 +167,42 @@ export function usePillarExperience(pillarId, userId) {
   const patch = useCallback((patchObj) => dispatch({ type: 'PATCH', patch: patchObj }), []);
   const reset = useCallback(() => dispatch({ type: 'RESET' }), []);
 
-  return { state, setStage, setPracticePhase, patch, reset };
+  const setScreen = useCallback((screenId) => dispatch({ type: 'SET_SCREEN', screenId }), []);
+  const completeScreen = useCallback((screenId) => dispatch({ type: 'COMPLETE_SCREEN', screenId }), []);
+  const setTrack = useCallback((trackId) => dispatch({ type: 'SET_TRACK', trackId }), []);
+  const completeTrack = useCallback((trackId) => dispatch({ type: 'COMPLETE_TRACK', trackId }), []);
+  const patchExperience = useCallback((patchObj) => dispatch({ type: 'PATCH_EXPERIENCE', patch: patchObj }), []);
+  const patchTrack = useCallback(
+    (trackId, patchObj) => dispatch({ type: 'PATCH_TRACK', trackId, patch: patchObj }),
+    []
+  );
+
+  const actions = useMemo(
+    () => ({
+      setStage,
+      setPracticePhase,
+      patch,
+      reset,
+      setScreen,
+      completeScreen,
+      setTrack,
+      completeTrack,
+      patchExperience,
+      patchTrack,
+    }),
+    [
+      setStage,
+      setPracticePhase,
+      patch,
+      reset,
+      setScreen,
+      completeScreen,
+      setTrack,
+      completeTrack,
+      patchExperience,
+      patchTrack,
+    ]
+  );
+
+  return { state, ...actions, actions };
 }

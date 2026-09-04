@@ -193,10 +193,54 @@
   color: var(--un-text);
 }
 
-.un-axis__enrolled {
+/* Sub-caption under the axis percentage: "4 of 7 principles complete".
+   Renders only when a real Hall percentage was derived. */
+.un-axis__detail {
   font-size: 0.75cqw;
   color: var(--un-text-muted);
   letter-spacing: 0.05em;
+}
+
+/* Stands in for the percentage when no seeker value could be derived —
+   deliberately not styled like a number, so it never reads as one. */
+.un-axis__unresolved {
+  font-family: var(--un-font-display);
+  font-size: 1.1cqw;
+  letter-spacing: 0.08em;
+  color: var(--un-text-muted);
+  text-transform: uppercase;
+}
+
+/* ---------- Data-state indicator ----------
+   Absolutely positioned inside the 16:9 frame, under the header, so an
+   explicit production-state failure is visible without reflowing any of
+   the cinematic composition below it. */
+.un-datastate {
+  position: absolute;
+  left: 50%;
+  /* Sits in the gap between the header block (ends ~9.3cqw) and the top of
+     the Central Academic Axis (~13.4cqw), in the same cqw unit family as
+     the rest of the composition so it tracks at every stage size. */
+  top: 10cqw;
+  transform: translateX(-50%);
+  z-index: 6;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5cqw;
+  max-width: 60cqw;
+  padding: 0.4cqw 1cqw;
+  border-radius: 999px;
+  font-size: 0.7cqw;
+  letter-spacing: 0.04em;
+  text-align: center;
+  background: rgba(5, 4, 3, 0.88);
+  border: 1px solid rgba(201, 154, 61, 0.5);
+  color: var(--un-text-muted);
+}
+
+.un-datastate--error {
+  border-color: rgba(208, 67, 28, 0.75);
+  color: #f0b9a4;
 }
 
 /* ---------- Protocol nodes ---------- */
@@ -279,6 +323,18 @@
   font-family: var(--un-font-display);
   font-size: 1.5cqw;
   color: var(--un-text);
+}
+
+/* No derived value for this node (locked protocol, signed out, or a failed
+   read). The ring stays in place — the composition is unchanged — but it
+   stops presenting itself as a measured percentage. */
+.un-protocol__stat--unresolved {
+  border-color: rgba(201, 154, 61, 0.45);
+  box-shadow: 0 0 0.8cqw rgba(201, 154, 61, 0.2), inset 0 0 0.8cqw rgba(0, 0, 0, 0.6);
+}
+
+.un-protocol__stat--unresolved .un-protocol__stat-value {
+  color: var(--un-text-muted);
 }
 
 .un-protocol__stat-label {
@@ -407,6 +463,20 @@
   font-size: 0.6cqw;
   color: var(--un-text-muted);
   align-self: flex-end;
+  white-space: nowrap;
+}
+
+/* A metric with no backing subsystem, or one that could not be read.
+   Reads as "Coming Soon"/"Unavailable" with an empty track rather than a
+   fabricated fill. */
+.un-meter--unresolved .un-meter__track {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.un-meter--unresolved .un-meter__value {
+  font-style: italic;
+  opacity: 0.75;
 }
 
 .un-dock__actions {

@@ -315,9 +315,12 @@ function AppRoutes() {
         }
       />
 
+      {/* Legacy short path. Points straight at the canonical Nexus surface
+          rather than at the base route above (which would only redirect
+          again) -- one hop, one canonical destination. */}
       <Route
         path="/reclamation-university"
-        element={<Navigate to="/experiencemode/sovereign/reclamation-university" replace />}
+        element={<Navigate to="/experiencemode/sovereign/reclamation-university/nexus" replace />}
       />
 
       <Route

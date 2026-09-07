@@ -1,4 +1,8 @@
 @import "./styles/global.css";
+/* The Chroma Frame — the Protocol's central architecture. Loaded here so
+   the --ckp-* token layer exists before any screen-level stylesheet that
+   derives from it. See docs/CENTRAL_ARCHITECTURE.md. */
+@import "./system/chromaFrame.css";
 
 @tailwind base;
 @tailwind components;

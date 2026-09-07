@@ -112,7 +112,7 @@
 .rug-step-btn:hover{ color:var(--ivory); }
 .rug-step-btn.is-active{ color:var(--crimson-bright); background:rgba(180,85,63,.1); }
 .rug-step-btn.is-terminal{ color:var(--gold); }
-.rug-step-btn.is-terminal.is-active{ color:var(--gold-bright); background:rgba(201,162,39,.12); }
+.rug-step-btn.is-terminal.is-active{ color:var(--gold-bright); background:color-mix(in srgb, var(--ckp-key) 12%, transparent); }
 .rug-step-body{ margin-top:12px; padding:16px 18px; border:1px solid var(--line-2); border-radius:3px; background:rgba(0,0,0,.22); }
 .rug-step-body p{ margin:0; font-size:14px; line-height:1.66; color:#D6CEC0; font-weight:300; }
 .rug-step-example{ margin-top:12px; padding-top:12px; border-top:1px solid var(--line); }
@@ -226,7 +226,7 @@
 /* -------------------------------------------------------------- SUMMARY -- */
 .rug-badges{ display:flex; flex-wrap:wrap; gap:10px; margin:18px 0 8px; }
 .rug-badge{ font-family:var(--f-hud); font-size:var(--ru-label); letter-spacing:.14em; padding:8px 12px; border-radius:2px; border:1px solid var(--line-2); color:var(--bronze-dim); }
-.rug-badge.on{ border-color:var(--gold); color:var(--gold-bright); background:rgba(201,162,39,.08); }
+.rug-badge.on{ border-color:var(--gold); color:var(--gold-bright); background:color-mix(in srgb, var(--ckp-key) 8%, transparent); }
 .rug-learned{ display:grid; gap:10px; margin:16px 0; padding:0; list-style:none; }
 .rug-learned li{ font-size:14px; line-height:1.6; color:#D6CEC0; font-weight:300; display:grid; grid-template-columns:30px minmax(0,1fr); gap:12px; }
 .rug-learned li b{ font-family:var(--f-hud); font-size:var(--ru-label); letter-spacing:.14em; color:var(--crimson); padding-top:3px; }
@@ -237,7 +237,7 @@
 .rug-questions{ display:grid; gap:6px; margin:14px 0; padding-left:0; list-style:none; }
 .rug-questions li{ font-size:14px; line-height:1.55; color:#D6CEC0; font-weight:300; padding-left:16px; position:relative; }
 .rug-questions li::before{ content:"›"; position:absolute; left:0; color:var(--crimson); }
-.rug-carry{ margin-top:20px; padding:20px; border:1px solid var(--gold-dim); border-radius:3px; background:rgba(201,162,39,.05); }
+.rug-carry{ margin-top:20px; padding:20px; border:1px solid var(--gold-dim); border-radius:3px; background:color-mix(in srgb, var(--ckp-key) 5%, transparent); }
 .rug-carry span{ display:block; font-family:var(--f-hud); font-size:var(--ru-label); letter-spacing:.24em; color:var(--gold); margin-bottom:8px; }
 .rug-carry p{ margin:0; font:italic 1.05rem/1.5 var(--f-quote); color:var(--gold-bright); }
 .rug-meta{ display:flex; gap:24px; align-items:center; }

@@ -28,21 +28,43 @@
 .rux, .rup, .rur, .ruc, .rug, .hermetic-hall {
 
   /* ---------------------------------------------------------------- GROUND */
-  --ru-bg:          #08080B;
-  --ru-bg-2:        #0D0D12;
-  --ru-panel:       #111117;
-  --ru-panel-2:     #15151C;
-  --ru-well:        #0A0A10;
+  /* Derived from the Chroma Frame's token layer (src/system/chromaFrame.css).
+     These values were the Protocol's de-facto ground before the frame
+     existed; the frame adopted them wholesale, so nothing here changes
+     appearance -- it changes WHERE the value is defined. The literal after
+     each var() is the pre-frame value, kept as a fallback so a module
+     stylesheet loaded in isolation (a test harness, Storybook) still renders. */
+  --ru-bg:          var(--ckp-obsidian, #08080B);
+  --ru-bg-2:        var(--ckp-ground, #0D0D12);
+  --ru-panel:       var(--ckp-panel, #111117);
+  --ru-panel-2:     var(--ckp-panel-lift, #15151C);
+  --ru-well:        var(--ckp-well, #0A0A10);
 
   /* ------------------------------------------------------------- MATERIALS */
-  --ru-gold:        #C9A227;
-  --ru-gold-bright: #E9CE72;
-  --ru-gold-dim:    #6E5D2C;
-  --ru-ivory:       #F1ECE2;
-  --ru-read:        #DCD5C8;   /* long-form body                    11.9:1 */
-  --ru-bronze:      #9D8862;   /* secondary text                     5.8:1 */
-  --ru-bronze-dim:  #8A7A5C;   /* micro-labels, was #6E6149 (3.3:1)  4.8:1 */
-  --ru-placeholder: #8A7A5C;   /* was #4A443A (2.1:1)                4.8:1 */
+  /* The University transmits on the `indigo` channel, declared here so every
+     Hermetic module inherits it whether or not it is mounted in a
+     <ChromaFrame> yet.
+
+     These were --ru-key / -bright / -dim until the Crucible Code claimed
+     gold outright (aurum is Act IV's key and nothing else's). The tokens are
+     named --ru-key now because that is what they are: whatever key the
+     enclosing channel declares. A variable called `gold` holding indigo is
+     exactly the drift this system exists to end, so the name moved with the
+     colour rather than outliving it. */
+  --ckp-key:        var(--ckp-ch-indigo, #4038C9);
+  --ckp-key-bright: var(--ckp-ch-indigo-bright, #9B8CFF);
+  --ckp-key-dim:    #211C63;
+  --ckp-key-wash:   rgba(64, 56, 201, .10);
+
+  --ru-key:         var(--ckp-key);
+  --ru-key-bright:  var(--ckp-key-bright);
+  --ru-key-dim:     var(--ckp-key-dim);
+  --ru-key-wash:    var(--ckp-key-wash);
+  --ru-ivory:       var(--ckp-ivory, #F1ECE2);
+  --ru-read:        var(--ckp-read, #DCD5C8);      /* long-form body    11.9:1 */
+  --ru-bronze:      var(--ckp-quiet, #9D8862);     /* secondary text     5.8:1 */
+  --ru-bronze-dim:  var(--ckp-faint, #8A7A5C);     /* micro-labels       4.8:1 */
+  --ru-placeholder: var(--ckp-faint, #8A7A5C);     /*                    4.8:1 */
 
   /* Default accent. Every module overrides this triplet and nothing else. */
   --ru-accent:        #D2382C;
@@ -53,10 +75,12 @@
   --ru-line-2:      #332B1E;
 
   /* ----------------------------------------------------------------- TYPE */
-  --ru-f-display: 'Cinzel', Georgia, serif;
-  --ru-f-quote:   'Cormorant Garamond', Georgia, serif;  /* has a true italic */
-  --ru-f-read:    var(--font-body, Inter, system-ui, sans-serif);
-  --ru-f-hud:     var(--font-mono, 'JetBrains Mono', monospace);
+  /* The frame's three voices: SIGIL / SCRIPT / SIGNAL. Quote is the one
+     University-local addition (Cormorant has a true italic; Cinzel has none). */
+  --ru-f-display: var(--ckp-sigil, 'Cinzel', Georgia, serif);
+  --ru-f-quote:   var(--ckp-quote, 'Cormorant Garamond', Georgia, serif);
+  --ru-f-read:    var(--ckp-script, 'Spectral', Georgia, serif);
+  --ru-f-hud:     var(--ckp-signal, 'JetBrains Mono', monospace);
 
   --ru-display:  clamp(34px, 5.2vw, 58px);
   --ru-title:    clamp(26px, 3.4vw, 40px);
@@ -122,7 +146,7 @@
   font-weight: 500;
   line-height: 1.35;
   letter-spacing: var(--ru-ls-h3);
-  color: var(--ru-gold);
+  color: var(--ru-key);
   margin: 0 0 var(--ru-s3);
 }
 
@@ -188,7 +212,7 @@
   font-style: italic;
   font-weight: 400;
   line-height: 1.34;
-  color: var(--ru-gold-bright);
+  color: var(--ru-key-bright);
   border-left: 1px solid var(--ru-accent);
   padding-left: var(--ru-s5);
   margin: var(--ru-s6) 0;
@@ -201,7 +225,7 @@
   font-style: italic;
   font-weight: 500;
   line-height: 1.42;
-  color: var(--ru-gold-bright);
+  color: var(--ru-key-bright);
   margin: 0;
 }
 
@@ -241,7 +265,7 @@
   margin-bottom: var(--ru-s5);
 }
 .rux-eyebrow.gold, .rup-eyebrow.gold, .rur-eyebrow.gold,
-.ruc-eyebrow.gold, .rug-eyebrow.gold { color: var(--ru-gold); }
+.ruc-eyebrow.gold, .rug-eyebrow.gold { color: var(--ru-key); }
 
 .rux-panel-label, .rup-panel-label, .rur-panel-label,
 .ruc-panel-label, .rug-panel-label { margin-bottom: var(--ru-s3); }
@@ -345,7 +369,7 @@
   transition: border-color .22s, color .22s, background .22s;
 }
 .rux-btn:hover, .rup-btn:hover, .rur-btn:hover, .ruc-btn:hover, .rug-btn:hover,
-.ru-btn:hover { border-color: var(--ru-gold); color: var(--ru-gold-bright); }
+.ru-btn:hover { border-color: var(--ru-key); color: var(--ru-key-bright); }
 .rux-btn.on, .rup-btn.on, .rur-btn.on, .ruc-btn.on, .rug-btn.on, .ru-btn.on {
   border-color: var(--ru-accent); color: var(--ru-accent-bright);
 }
@@ -357,13 +381,13 @@
   padding: 14px 26px;
   border-radius: 2px;
   cursor: pointer;
-  background: linear-gradient(180deg, rgba(201,162,39,.16), rgba(201,162,39,.05));
-  border: 1px solid var(--ru-gold);
-  color: var(--ru-gold-bright);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--ckp-key) 16%, transparent), color-mix(in srgb, var(--ckp-key) 5%, transparent));
+  border: 1px solid var(--ru-key);
+  color: var(--ru-key-bright);
   transition: background .22s, box-shadow .22s;
 }
 .rux-cta:hover, .rup-cta:hover, .rur-cta:hover, .ruc-cta:hover, .rug-cta:hover,
-.ru-cta:hover { background: rgba(201,162,39,.24); box-shadow: 0 0 26px -8px rgba(233,206,114,.6); }
+.ru-cta:hover { background: color-mix(in srgb, var(--ckp-key) 24%, transparent); box-shadow: 0 0 26px -8px color-mix(in srgb, var(--ckp-key-bright) 60%, transparent); }
 .rux-cta.done, .rup-cta.done, .rur-cta.done, .ruc-cta.done, .rug-cta.done,
 .ru-cta.done {
   border-color: var(--ru-accent);
@@ -388,7 +412,7 @@
 .rux-input:focus, .rup-input:focus, .rur-input:focus, .ruc-input:focus, .rug-input:focus,
 .ru-input:focus,
 .rux-area:focus, .rup-area:focus, .rur-area:focus, .ruc-area:focus, .rug-area:focus,
-.ru-area:focus { outline: none; border-color: var(--ru-gold); }
+.ru-area:focus { outline: none; border-color: var(--ru-key); }
 
 .rux-area, .rup-area, .rur-area, .ruc-area, .rug-area, .ru-area {
   min-height: 92px; resize: vertical;
@@ -429,7 +453,7 @@
 
 .rux :focus-visible, .rup :focus-visible, .rur :focus-visible,
 .ruc :focus-visible, .rug :focus-visible, .hermetic-hall :focus-visible {
-  outline: 2px solid var(--ru-gold-bright);
+  outline: 2px solid var(--ru-key-bright);
   outline-offset: 2px;
 }
 
@@ -464,7 +488,7 @@
   cursor: default;
   transition: border-color .25s, opacity .25s;
 }
-.rux-node.is-done, .rup-node.is-done, .rur-node.is-done, .ruc-node.is-done, .rug-node.is-done { opacity: .75; border-top-color: var(--ru-gold-dim); }
+.rux-node.is-done, .rup-node.is-done, .rur-node.is-done, .ruc-node.is-done, .rug-node.is-done { opacity: .75; border-top-color: var(--ru-key-dim); }
 .rux-node.is-active, .rup-node.is-active, .rur-node.is-active, .ruc-node.is-active, .rug-node.is-active { opacity: 1; border-top-color: var(--ru-accent); }
 .rux-node-row, .rup-node-row, .rur-node-row, .ruc-node-row, .rug-node-row { display: flex; align-items: center; justify-content: space-between; gap: var(--ru-s2); }
 .rux-node-num, .rup-node-num, .rur-node-num, .ruc-node-num, .rug-node-num {

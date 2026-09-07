@@ -1,0 +1,237 @@
+/* The living reference's own layout. Deliberately thin: everything visual
+   here — type, colour, panel edges, meters — comes from chromaFrame.css.
+   If this file ever needs a colour of its own, the frame is missing a token. */
+
+.cfr-grid {
+  position: absolute;
+  inset: 5.2cqw 4cqw 6cqw;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-auto-rows: min-content;
+  gap: 1.2cqw;
+  align-content: start;
+  overflow: hidden;
+}
+
+.cfr-head {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5cqw;
+  max-width: 70cqw;
+}
+
+.cfr-head .ckp-title {
+  font-size: clamp(22px, 3.1cqw, 48px);
+  line-height: 1;
+}
+
+.cfr-head .ckp-body {
+  max-width: 58cqw;
+  font-size: clamp(12px, 0.92cqw, 15px);
+}
+
+.cfr-head em {
+  font-style: normal;
+  color: var(--ckp-key-bright);
+}
+
+/* -------------------------------------------------------- THE CHANNELS -- */
+
+.cfr-channels {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(var(--cfr-channels, 8), minmax(0, 1fr));
+  gap: 0.5cqw;
+}
+
+.cfr-chip {
+  display: grid;
+  gap: 0.3cqw;
+  padding: 0.6cqw 0.7cqw;
+  text-align: left;
+  background: rgba(10, 10, 16, 0.66);
+  border: 1px solid var(--ckp-rule);
+  transition: border-color var(--ckp-fast) var(--ckp-ease),
+    background-color var(--ckp-fast) var(--ckp-ease);
+}
+
+.cfr-chip:hover,
+.cfr-chip.is-active {
+  border-color: var(--chip);
+  background: rgba(10, 10, 16, 0.9);
+}
+
+.cfr-chip__swatch {
+  height: 5px;
+  background: linear-gradient(90deg, var(--chip), var(--chip-bright));
+  box-shadow: 0 0 10px var(--chip);
+}
+
+.cfr-chip__name {
+  font-family: var(--ckp-signal);
+  font-size: 11px;
+  letter-spacing: var(--ckp-track-signal);
+  text-transform: uppercase;
+  color: var(--chip-bright);
+}
+
+.cfr-chip__domain {
+  font-family: var(--ckp-script);
+  font-size: 11px;
+  line-height: 1.35;
+  color: var(--ckp-faint);
+}
+
+/* ------------------------------------------------------------- PANELS -- */
+
+.cfr-card {
+  padding: 1cqw 1.1cqw;
+  display: grid;
+  gap: 0.7cqw;
+  align-content: start;
+}
+
+.cfr-layers,
+.cfr-voices {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.45cqw;
+}
+
+.cfr-layers li {
+  display: grid;
+  grid-template-columns: 1.6em 5.5em 1fr;
+  gap: 0.7cqw;
+  align-items: baseline;
+}
+
+.cfr-layers__name {
+  font-family: var(--ckp-signal);
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ckp-ivory);
+}
+
+.cfr-layers__note,
+.cfr-voices__note {
+  font-family: var(--ckp-script);
+  font-size: 11px;
+  line-height: 1.45;
+  color: var(--ckp-quiet);
+}
+
+.cfr-voices li {
+  display: grid;
+  gap: 0.2cqw;
+}
+
+/* ------------------------------------------------------ READOUT STATES -- */
+
+.cfr-readouts {
+  display: grid;
+  gap: 0.55cqw;
+}
+
+/* One row per state, stacked, so the five outcomes read as a comparison
+   rather than as five unrelated widgets. */
+.cfr-readout-case {
+  display: grid;
+  grid-template-columns: 8.5em 1fr;
+  align-items: center;
+  gap: 0.7cqw;
+}
+
+.cfr-readout-case .ckp-meter {
+  grid-template-columns: 1fr auto;
+}
+
+.cfr-readout-case .ckp-meter__label {
+  display: none;
+}
+
+.cfr-readout-case .ckp-meter__track {
+  width: 100%;
+}
+
+/* -------------------------------------------------------- SURFACE MAP -- */
+
+.cfr-map {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: 0.5cqw;
+}
+
+.cfr-map ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(14cqw, 1fr));
+  gap: 0.4cqw;
+}
+
+.cfr-surface {
+  width: 100%;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  grid-template-areas: 'dot title icon' 'dot where icon';
+  align-items: center;
+  gap: 0 0.5cqw;
+  padding: 0.45cqw 0.7cqw;
+  text-align: left;
+  border: 1px solid var(--ckp-rule);
+  background: rgba(10, 10, 16, 0.6);
+  color: var(--ckp-quiet);
+  transition: border-color var(--ckp-fast) var(--ckp-ease),
+    color var(--ckp-fast) var(--ckp-ease);
+}
+
+.cfr-surface:hover:not(:disabled) {
+  border-color: var(--chip);
+  color: var(--chip-bright);
+}
+
+.cfr-surface:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.cfr-surface__dot {
+  grid-area: dot;
+  width: 7px;
+  height: 7px;
+  background: var(--chip);
+  box-shadow: 0 0 8px var(--chip);
+  transform: rotate(45deg);
+}
+
+.cfr-surface__title {
+  grid-area: title;
+  font-family: var(--ckp-signal);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ckp-ivory);
+}
+
+.cfr-surface__where {
+  grid-area: where;
+  font-family: var(--ckp-script);
+  font-size: 11px;
+  color: var(--ckp-faint);
+}
+
+.cfr-surface svg {
+  grid-area: icon;
+}
+
+/* A vacant surface is struck through: it is named because it once existed
+   and has no replacement, not because it is coming. */
+.cfr-map li[data-status='vacant'] .cfr-surface__title {
+  text-decoration: line-through;
+  text-decoration-color: var(--ckp-key-dim);
+}

@@ -48,7 +48,7 @@
   content:""; position:fixed; inset:0; pointer-events:none; z-index:0;
   background:
     radial-gradient(900px 520px at 70% 6%, rgba(139,111,217,.08), transparent 70%),
-    radial-gradient(700px 480px at 10% 94%, rgba(201,162,39,.05), transparent 70%);
+    radial-gradient(700px 480px at 10% 94%, color-mix(in srgb, var(--ckp-key) 5%, transparent), transparent 70%);
 }
 
 /* ------------------------------------------------------------ TOP HEADER -- */
@@ -144,7 +144,7 @@
 .rup-artifact-card{ padding:18px 20px; border:1px solid var(--line); border-radius:3px; background:rgba(11,10,16,.9); }
 .rup-artifact-card h4{ margin:0 0 8px; font-family:var(--f-hud); font-size:var(--ru-label); letter-spacing:.2em; color:var(--violet-bright); }
 .rup-artifact-card p{ margin:0; font-size:14px; line-height:1.65; color:var(--ivory); font-weight:300; }
-.rup-carry{ margin-top:20px; padding:20px; border:1px solid var(--gold-dim); border-radius:3px; background:rgba(201,162,39,.05); }
+.rup-carry{ margin-top:20px; padding:20px; border:1px solid var(--gold-dim); border-radius:3px; background:color-mix(in srgb, var(--ckp-key) 5%, transparent); }
 .rup-carry span{ display:block; font-family:var(--f-hud); font-size:var(--ru-label); letter-spacing:.24em; color:var(--gold); margin-bottom:8px; }
 .rup-carry p{ margin:0; font:italic 1.05rem/1.5 var(--f-quote); color:var(--gold-bright); }
 
@@ -169,7 +169,7 @@
 /* -------------------------------------------------------------- SUMMARY -- */
 .rup-badges{ display:flex; flex-wrap:wrap; gap:10px; margin:18px 0 8px; }
 .rup-badge{ font-family:var(--f-hud); font-size:var(--ru-label); letter-spacing:.14em; padding:8px 12px; border-radius:2px; border:1px solid var(--line-2); color:var(--bronze-dim); }
-.rup-badge.on{ border-color:var(--gold); color:var(--gold-bright); background:rgba(201,162,39,.08); }
+.rup-badge.on{ border-color:var(--gold); color:var(--gold-bright); background:color-mix(in srgb, var(--ckp-key) 8%, transparent); }
 .rup-learned{ display:grid; gap:10px; padding-left:18px; margin:16px 0; }
 .rup-learned li{ font-size:14px; line-height:1.6; color:#D6CEC0; font-weight:300; }
 .rup-meta{ display:flex; gap:24px; align-items:center; }

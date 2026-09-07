@@ -57,7 +57,7 @@
   content:""; position:fixed; inset:0; pointer-events:none; z-index:0;
   background:
     radial-gradient(900px 520px at 72% 6%, rgba(78,158,106,.07), transparent 70%),
-    radial-gradient(700px 480px at 8% 94%, rgba(201,162,39,.05), transparent 70%);
+    radial-gradient(700px 480px at 8% 94%, color-mix(in srgb, var(--ckp-key) 5%, transparent), transparent 70%);
 }
 
 /* ------------------------------------------------------------ TOP HEADER -- */
@@ -109,7 +109,7 @@
 .ruc-step-btn:hover{ color:var(--ivory); }
 .ruc-step-btn.is-active{ color:var(--green-bright); background:rgba(78,158,106,.09); }
 .ruc-step-btn.is-terminal{ color:var(--gold); }
-.ruc-step-btn.is-terminal.is-active{ color:var(--gold-bright); background:rgba(201,162,39,.12); }
+.ruc-step-btn.is-terminal.is-active{ color:var(--gold-bright); background:color-mix(in srgb, var(--ckp-key) 12%, transparent); }
 .ruc-step-body{ margin-top:12px; padding:16px 18px; border:1px solid var(--line-2); border-radius:3px; background:rgba(0,0,0,.22); }
 .ruc-step-body p{ margin:0; font-size:14px; line-height:1.66; color:#D6CEC0; font-weight:300; }
 
@@ -212,7 +212,7 @@
 .ruc-artifact-card{ padding:18px 20px; border:1px solid var(--line); border-radius:3px; background:rgba(11,10,16,.9); }
 .ruc-artifact-card h4{ margin:0 0 4px; font-family:var(--f-hud); font-size:var(--ru-label); letter-spacing:.2em; color:var(--green-bright); }
 .ruc-artifact-card small{ display:block; font-size:12px; line-height:1.5; color:var(--bronze-dim); margin-bottom:10px; }
-.ruc-artifact-card.is-lever{ border-color:var(--gold); background:rgba(201,162,39,.05); }
+.ruc-artifact-card.is-lever{ border-color:var(--gold); background:color-mix(in srgb, var(--ckp-key) 5%, transparent); }
 .ruc-artifact-card.is-lever h4{ color:var(--gold-bright); }
 
 /* Generated interpretation is never presented as objective truth: it is
@@ -222,7 +222,7 @@
 .ruc-draft-caveat{ font-size:12px; line-height:1.55; color:var(--bronze); font-style:italic; margin:0 0 12px; }
 .ruc-draft .ruc-area{ background:transparent; border:none; padding:0; font:italic 1.02rem/1.55 var(--f-quote); color:var(--ivory); min-height:70px; }
 .ruc-draft-actions{ margin-top:12px; display:flex; gap:10px; flex-wrap:wrap; }
-.ruc-draft.is-accepted{ border-style:solid; border-color:var(--gold-dim); background:rgba(201,162,39,.05); }
+.ruc-draft.is-accepted{ border-style:solid; border-color:var(--gold-dim); background:color-mix(in srgb, var(--ckp-key) 5%, transparent); }
 .ruc-draft.is-accepted .ruc-draft-label{ color:var(--gold); }
 
 .ruc-gate{ padding:18px 20px; border:1px solid var(--line-2); border-radius:3px; background:rgba(0,0,0,.24); }
@@ -246,7 +246,7 @@
 /* -------------------------------------------------------------- SUMMARY -- */
 .ruc-badges{ display:flex; flex-wrap:wrap; gap:10px; margin:18px 0 8px; }
 .ruc-badge{ font-family:var(--f-hud); font-size:var(--ru-label); letter-spacing:.14em; padding:8px 12px; border-radius:2px; border:1px solid var(--line-2); color:var(--bronze-dim); }
-.ruc-badge.on{ border-color:var(--gold); color:var(--gold-bright); background:rgba(201,162,39,.08); }
+.ruc-badge.on{ border-color:var(--gold); color:var(--gold-bright); background:color-mix(in srgb, var(--ckp-key) 8%, transparent); }
 .ruc-learned{ display:grid; gap:10px; margin:16px 0; padding:0; list-style:none; }
 .ruc-learned li{ font-size:14px; line-height:1.6; color:#D6CEC0; font-weight:300; display:grid; grid-template-columns:30px minmax(0,1fr); gap:12px; }
 .ruc-learned li b{ font-family:var(--f-hud); font-size:var(--ru-label); letter-spacing:.14em; color:var(--green); padding-top:3px; }
@@ -254,7 +254,7 @@
 .ruc-discovered div{ border-left:1px solid var(--green); padding-left:14px; }
 .ruc-discovered b{ display:block; font-family:var(--f-hud); font-size:var(--ru-label); letter-spacing:.2em; color:var(--green); margin-bottom:6px; }
 .ruc-discovered p{ margin:0; font-size:14px; line-height:1.6; color:#D6CEC0; font-weight:300; }
-.ruc-carry{ margin-top:20px; padding:20px; border:1px solid var(--gold-dim); border-radius:3px; background:rgba(201,162,39,.05); }
+.ruc-carry{ margin-top:20px; padding:20px; border:1px solid var(--gold-dim); border-radius:3px; background:color-mix(in srgb, var(--ckp-key) 5%, transparent); }
 .ruc-carry span{ display:block; font-family:var(--f-hud); font-size:var(--ru-label); letter-spacing:.24em; color:var(--gold); margin-bottom:8px; }
 .ruc-carry p{ margin:0; font:italic 1.05rem/1.5 var(--f-quote); color:var(--gold-bright); }
 .ruc-meta{ display:flex; gap:24px; align-items:center; }

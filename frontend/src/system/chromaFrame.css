@@ -1,0 +1,821 @@
+/* ============================================================================
+   THE CHROMA FRAME — THE CHASSIS
+   ----------------------------------------------------------------------------
+   The Protocol's one shared identity. Import once (src/index.css); every
+   screen that mounts in <ChromaFrame> inherits all of it.
+
+   SIX LAYERS. Always these six, always this order, on every screen:
+
+     0  PLATE     the module's own world — art, video, canvas, 3D
+     1  VEIL      the grade: vignette + channel wash. This is what makes a
+                  gothic hall, a red HUD and a purple portal room read as
+                  ONE product instead of three unrelated screens.
+     2  FIELD     the module's own content, on a 16:9 stage
+     3  CHASSIS   corner brackets + hairline edge rules, keyed to the channel
+     4  RAILS     top rail (where am I / what is my state) + dock (who am I /
+                  what are my meters / how do I leave)
+     5  OVERLAY   boot, transition, video, modal
+
+   THREE VOICES. Never a fourth. Eight families were in play across these
+   screens (Cinzel, Cormorant, Inter, JetBrains Mono, Oxanium, Archivo, IBM
+   Plex, Chakra Petch); the Protocol speaks in three registers, and none of
+   them is a default:
+
+     SIGIL   Cinzel        — place names, module titles. Mythic register.
+     SIGNAL  JetBrains Mono — every system label and telemetry. Machine.
+     SCRIPT  Spectral      — prose and instruction. Human.
+
+   RULES THAT ARE NOT NEGOTIABLE
+   • No type below 11px. Anywhere. (Inherited from recUniSystem.css, which
+     already retired the 7–10px HUD tier inside the University.)
+   • --ckp-key is for borders, rules and fills. Accent TEXT uses
+     --ckp-key-bright, which clears 4.5:1 on the obsidian ground.
+   • The corner brackets are the signature. Never removed, never restyled
+     per screen, never rounded.
+   • The frame does not scroll. Modules compose onto the stage; they do not
+     grow it. Below the stage's minimum width the whole frame pans
+     horizontally rather than reflowing — the composition is the product.
+   • A module may change its PLATE and its CHANNEL. It may not change the
+     frame. One chassis, many worlds.
+   ========================================================================= */
+
+:root {
+  /* ------------------------------------------------------------- GROUND -- */
+  --ckp-obsidian: #08080B;      /* the ground everything is measured against */
+  --ckp-ground: #0D0D12;
+  --ckp-panel: #111117;
+  --ckp-panel-lift: #15151C;
+  --ckp-well: #0A0A10;
+
+  /* ---------------------------------------------------------------- INK -- */
+  --ckp-ivory: #F1ECE2;         /* titles                          17.4:1 */
+  --ckp-read: #DCD5C8;          /* long-form body                  11.9:1 */
+  --ckp-quiet: #9D8862;         /* secondary text                   5.8:1 */
+  --ckp-faint: #8A7A5C;         /* micro-labels, placeholders       4.8:1 */
+
+  /* --------------------------------------------------------------- LINE -- */
+  --ckp-rule: rgba(241, 236, 226, 0.10);
+  --ckp-rule-strong: rgba(241, 236, 226, 0.20);
+
+  /* --------------------------------------------------------------- TYPE -- */
+  --ckp-sigil: 'Cinzel', Georgia, serif;
+  --ckp-signal: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
+  /* Spectral, not Inter. Inter is competent and completely anonymous — it is
+     the face every product defaults to, which on a dark, classical, cinematic
+     ground reads as an admin panel bolted to a cathedral. Spectral is a text
+     serif engineered for screens: it holds its detail at 14px on obsidian,
+     carries a full 200–800 range with true italics, and sits under Cinzel as
+     the same civilisation rather than a different one. */
+  --ckp-script: 'Spectral', Georgia, 'Times New Roman', serif;
+  --ckp-quote: 'Cormorant Garamond', Georgia, serif;
+
+  /* Signal is always uppercase and always widely tracked. That tracking is
+     as much the brand as the gold is. */
+  --ckp-track-signal: 0.22em;
+  --ckp-track-sigil: 0.14em;
+
+  /* ----------------------------------------------------------- GEOMETRY -- */
+  --ckp-bracket: 22px;          /* corner bracket arm length */
+  --ckp-hair: 1px;
+  --ckp-rail-h: 44px;
+  --ckp-dock-h: 62px;
+  --ckp-gutter: clamp(16px, 2.4vw, 40px);
+  --ckp-stage-min: 900px;       /* below this the frame pans, never reflows */
+
+  /* ------------------------------------------------------------- MOTION -- */
+  --ckp-ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --ckp-fast: 160ms;
+  --ckp-slow: 420ms;
+
+  /* --------------------------------------------------------- DEFAULT KEY -- */
+  /* Argent. Every <ChromaFrame> overrides these four inline via
+     channelStyle(); a screen that forgets to declare a channel gets the
+     system voice rather than an accidental one. */
+  --ckp-key: #6E7683;
+  --ckp-key-bright: #D7DEE6;
+  --ckp-key-dim: #3A4048;
+  --ckp-key-wash: rgba(155, 166, 180, 0.08);
+
+  /* ------------------------------------------------- THE STANDING PALETTE -- */
+  /* Every channel's key, always addressable by name — because some screens
+     show several channels AT ONCE (the Nexus renders four protocol nodes in
+     four different keys while itself transmitting on aurum; the Mainframe's
+     element balance shows five). Those screens read from here. A screen's
+     OWN channel is still --ckp-key, injected by <ChromaFrame>; these are for
+     depicting channels other than the one you are on.
+
+     Keep in lockstep with CHROMA_CHANNELS in src/system/chromaChannels.js —
+     that file is the source of truth, and channelPalette.test.js fails if
+     these two drift apart. */
+  --ckp-ch-aurum: #C9A227;
+  --ckp-ch-aurum-bright: #E9CE72;
+  --ckp-ch-indigo: #4038C9;
+  --ckp-ch-indigo-bright: #9B8CFF;
+  --ckp-ch-crimson: #D2382C;
+  --ckp-ch-crimson-bright: #FF5545;
+  --ckp-ch-verdant: #3F8F4F;
+  --ckp-ch-verdant-bright: #6FD07F;
+  --ckp-ch-azure: #3FA9D8;
+  --ckp-ch-azure-bright: #7ED4F5;
+  --ckp-ch-ember: #D0431C;
+  --ckp-ch-ember-bright: #FF8352;
+  --ckp-ch-violet: #8D20EF;
+  --ckp-ch-violet-bright: #C48BFF;
+  --ckp-ch-argent: #6E7683;
+  --ckp-ch-argent-bright: #D7DEE6;
+}
+
+/* ==========================================================================
+   DECLARING A CHANNEL
+   Two ways, one contract. A screen either mounts in <ChromaFrame channel="x">
+   (which injects the four keys inline) or sets `data-channel="x"` on its own
+   root and gets them from here. The second form exists for the screens that
+   already own their full-page chrome — the Nexus, the Mainframe, the Hall —
+   so they can inherit the Protocol's identity today without being rebuilt
+   around the component first. Both produce identical values, so a screen can
+   move from one to the other with no visual change at all.
+   ========================================================================== */
+
+[data-channel='aurum'] {
+  --ckp-key: var(--ckp-ch-aurum);
+  --ckp-key-bright: var(--ckp-ch-aurum-bright);
+  --ckp-key-dim: #6E5D2C;
+  --ckp-key-wash: rgba(201, 162, 39, 0.10);
+}
+
+/* Indigo and violet are one family split by shade on purpose — the Hermetic
+   Hall teaches by sight, Sonic Surfaces by sound. See chromaChannels.js. */
+[data-channel='indigo'] {
+  --ckp-key: var(--ckp-ch-indigo);
+  --ckp-key-bright: var(--ckp-ch-indigo-bright);
+  --ckp-key-dim: #211C63;
+  --ckp-key-wash: rgba(64, 56, 201, 0.10);
+}
+
+[data-channel='crimson'] {
+  --ckp-key: var(--ckp-ch-crimson);
+  --ckp-key-bright: var(--ckp-ch-crimson-bright);
+  --ckp-key-dim: #6E241D;
+  --ckp-key-wash: rgba(210, 56, 44, 0.10);
+}
+
+[data-channel='verdant'] {
+  --ckp-key: var(--ckp-ch-verdant);
+  --ckp-key-bright: var(--ckp-ch-verdant-bright);
+  --ckp-key-dim: #24512D;
+  --ckp-key-wash: rgba(63, 143, 79, 0.10);
+}
+
+[data-channel='azure'] {
+  --ckp-key: var(--ckp-ch-azure);
+  --ckp-key-bright: var(--ckp-ch-azure-bright);
+  --ckp-key-dim: #245F79;
+  --ckp-key-wash: rgba(63, 169, 216, 0.10);
+}
+
+[data-channel='ember'] {
+  --ckp-key: var(--ckp-ch-ember);
+  --ckp-key-bright: var(--ckp-ch-ember-bright);
+  --ckp-key-dim: #722410;
+  --ckp-key-wash: rgba(208, 67, 28, 0.10);
+}
+
+[data-channel='violet'] {
+  --ckp-key: var(--ckp-ch-violet);
+  --ckp-key-bright: var(--ckp-ch-violet-bright);
+  --ckp-key-dim: #4B1180;
+  --ckp-key-wash: rgba(141, 32, 239, 0.10);
+}
+
+[data-channel='argent'] {
+  --ckp-key: var(--ckp-ch-argent);
+  --ckp-key-bright: var(--ckp-ch-argent-bright);
+  --ckp-key-dim: #3A4048;
+  --ckp-key-wash: rgba(155, 166, 180, 0.08);
+}
+
+/* ==========================================================================
+   FRAME ROOT
+   ========================================================================== */
+
+.ckp-frame {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+  background: var(--ckp-obsidian);
+  color: var(--ckp-read);
+  font-family: var(--ckp-script);
+  isolation: isolate;
+}
+
+.ckp-frame *,
+.ckp-frame *::before,
+.ckp-frame *::after {
+  box-sizing: border-box;
+}
+
+.ckp-frame button {
+  font-family: inherit;
+  color: inherit;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+/* Focus is never removed — it is keyed to the channel, like everything else. */
+.ckp-frame :focus-visible {
+  outline: 2px solid var(--ckp-key-bright);
+  outline-offset: 2px;
+}
+
+.ckp-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* ==========================================================================
+   LAYER 0 — PLATE
+   The module's world. Always cover, always full-bleed, always behind
+   everything. A plate is decorative by definition: it carries no meaning a
+   Seeker needs, so it is aria-hidden and never focusable.
+   ========================================================================== */
+
+.ckp-plate {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.ckp-plate > img,
+.ckp-plate > video,
+.ckp-plate > canvas {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 42%;
+  display: block;
+  /* The unifying grade. Plates arrive at wildly different exposures; this
+     pulls them all onto the same tonal floor so the frame's own contrast
+     ratios hold no matter what art is behind them. */
+  filter: brightness(0.54) saturate(1.04);
+  transform: scale(1.02);
+}
+
+/* ==========================================================================
+   LAYER 1 — VEIL
+   Two gradients and a channel wash. The single most important element in the
+   system: it is why five unrelated environments read as one product.
+   ========================================================================== */
+
+.ckp-veil {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 72% 62% at 50% 48%, transparent 0%, rgba(8, 8, 11, 0.42) 100%),
+    linear-gradient(
+      180deg,
+      rgba(8, 8, 11, 0.78) 0%,
+      rgba(8, 8, 11, 0.12) 20%,
+      rgba(8, 8, 11, 0.12) 70%,
+      rgba(8, 8, 11, 0.86) 100%
+    ),
+    var(--ckp-key-wash);
+}
+
+/* ==========================================================================
+   LAYER 2 — FIELD
+   The module's content, on a fixed 16:9 stage with container-query units, so
+   a composition scales as one piece instead of reflowing part by part. This
+   is the mechanism UniversityNexus.css proved out (.un-frame) — promoted
+   here so every screen gets it.
+   ========================================================================== */
+
+.ckp-field {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+}
+
+.ckp-stage {
+  position: relative;
+  width: min(100%, 177.8vh);
+  min-width: var(--ckp-stage-min);
+  aspect-ratio: 16 / 9;
+  container-type: inline-size;
+}
+
+/* Below the stage minimum the frame pans horizontally. The composition is
+   preserved and the Seeker scrolls to it; it is never rebuilt as a column. */
+@media (max-width: 900px) {
+  .ckp-field {
+    overflow-x: auto;
+    overflow-y: hidden;
+    place-items: center start;
+    scroll-snap-type: x proximity;
+  }
+
+  .ckp-stage {
+    scroll-snap-align: center;
+  }
+}
+
+/* ==========================================================================
+   LAYER 3 — CHASSIS
+   Corner brackets and hairline edge rules. The signature.
+   ========================================================================== */
+
+.ckp-chassis {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+}
+
+/* Hairline rules just inside the top rail and dock, running the full width.
+   They read as machined edges rather than as borders on a box. */
+.ckp-chassis::before,
+.ckp-chassis::after {
+  content: '';
+  position: absolute;
+  left: calc(var(--ckp-gutter) * 0.5 + var(--ckp-bracket) + 14px);
+  right: calc(var(--ckp-gutter) * 0.5 + var(--ckp-bracket) + 14px);
+  height: var(--ckp-hair);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--ckp-key-dim) 12%,
+    var(--ckp-key-dim) 88%,
+    transparent
+  );
+}
+
+.ckp-chassis::before { top: var(--ckp-rail-h); }
+.ckp-chassis::after { bottom: var(--ckp-dock-h); }
+
+.ckp-bracket {
+  position: absolute;
+  width: var(--ckp-bracket);
+  height: var(--ckp-bracket);
+  border: 0 solid var(--ckp-key);
+  filter: drop-shadow(0 0 6px var(--ckp-key-wash));
+}
+
+.ckp-bracket--tl {
+  top: calc(var(--ckp-gutter) * 0.5);
+  left: calc(var(--ckp-gutter) * 0.5);
+  border-top-width: 2px;
+  border-left-width: 2px;
+}
+.ckp-bracket--tr {
+  top: calc(var(--ckp-gutter) * 0.5);
+  right: calc(var(--ckp-gutter) * 0.5);
+  border-top-width: 2px;
+  border-right-width: 2px;
+}
+.ckp-bracket--bl {
+  bottom: calc(var(--ckp-gutter) * 0.5);
+  left: calc(var(--ckp-gutter) * 0.5);
+  border-bottom-width: 2px;
+  border-left-width: 2px;
+}
+.ckp-bracket--br {
+  bottom: calc(var(--ckp-gutter) * 0.5);
+  right: calc(var(--ckp-gutter) * 0.5);
+  border-bottom-width: 2px;
+  border-right-width: 2px;
+}
+
+/* A bracketed panel — the same signature applied to any box inside the
+   field (a video well, a module card, a terminal). Reused, not reinvented:
+   this is the corner treatment already on the Hall's initiation video and
+   the Mainframe's module cards. */
+.ckp-panel {
+  position: relative;
+  background: rgba(10, 10, 16, 0.72);
+  border: var(--ckp-hair) solid var(--ckp-rule);
+  backdrop-filter: blur(6px);
+}
+
+.ckp-panel::before,
+.ckp-panel::after {
+  content: '';
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border: 0 solid var(--ckp-key);
+  pointer-events: none;
+}
+
+.ckp-panel::before {
+  top: -1px;
+  left: -1px;
+  border-top-width: 2px;
+  border-left-width: 2px;
+}
+
+.ckp-panel::after {
+  bottom: -1px;
+  right: -1px;
+  border-bottom-width: 2px;
+  border-right-width: 2px;
+}
+
+/* ==========================================================================
+   LAYER 4 — RAILS
+   Six slots, identical on every screen, so a Seeker never has to re-learn
+   where to look:
+
+     TOP    system  ·  location  ..........................  readout
+     DOCK   seeker  ·  meters  .............................  actions
+   ========================================================================== */
+
+.ckp-rail {
+  position: absolute;
+  left: 0;
+  right: 0;
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  gap: clamp(12px, 1.6vw, 28px);
+  /* Clears the corner brackets. A rail that runs under its own chassis
+     collides with the signature at every viewport width, so the padding is
+     derived from the bracket geometry rather than guessed at. */
+  padding: 0 calc(var(--ckp-gutter) * 0.5 + var(--ckp-bracket) + 14px);
+  font-family: var(--ckp-signal);
+  font-size: 11px;
+  letter-spacing: var(--ckp-track-signal);
+  text-transform: uppercase;
+  color: var(--ckp-quiet);
+}
+
+.ckp-rail--top {
+  top: 0;
+  height: var(--ckp-rail-h);
+  background: linear-gradient(180deg, rgba(8, 8, 11, 0.88), transparent);
+}
+
+.ckp-rail--dock {
+  bottom: 0;
+  height: var(--ckp-dock-h);
+  background: linear-gradient(0deg, rgba(8, 8, 11, 0.92), transparent);
+}
+
+/* --- slot: system ------------------------------------------------------- */
+/* Constant on every screen in the product. This is the wordmark's slot and
+   nothing else ever occupies it. */
+.ckp-slot-system {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--ckp-key-bright);
+  white-space: nowrap;
+}
+
+.ckp-sigil-mark {
+  width: 11px;
+  height: 11px;
+  flex: none;
+  border: 1.5px solid currentColor;
+  transform: rotate(45deg);
+  box-shadow: inset 0 0 0 2px rgba(8, 8, 11, 0.9), 0 0 8px var(--ckp-key-wash);
+}
+
+/* --- slot: location ----------------------------------------------------- */
+.ckp-slot-location {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  color: var(--ckp-quiet);
+}
+
+.ckp-slot-location::before {
+  content: '·';
+  color: var(--ckp-key-dim);
+}
+
+.ckp-slot-location > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* --- slot: readout ------------------------------------------------------ */
+/* The one number that matters on this screen. Right edge, top rail, every
+   time — so "how am I doing" is always answered in the same place. */
+.ckp-slot-readout {
+  margin-left: auto;
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  white-space: nowrap;
+}
+
+.ckp-readout__value {
+  font-size: 13px;
+  letter-spacing: 0.12em;
+  font-variant-numeric: tabular-nums;
+  color: var(--ckp-key-bright);
+}
+
+.ckp-readout__label {
+  color: var(--ckp-faint);
+}
+
+/* An unresolved readout is dimmed AND says why. Both, always. */
+.ckp-slot-readout[data-resolved='false'] .ckp-readout__value {
+  color: var(--ckp-faint);
+}
+
+.ckp-slot-readout[data-state='error'] .ckp-readout__label {
+  color: var(--ckp-key-bright);
+}
+
+/* --- slot: seeker ------------------------------------------------------- */
+.ckp-slot-seeker {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.ckp-seeker__avatar {
+  width: 30px;
+  height: 30px;
+  flex: none;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border: var(--ckp-hair) solid var(--ckp-key-dim);
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--ckp-panel-lift), var(--ckp-obsidian));
+  color: var(--ckp-key-bright);
+}
+
+.ckp-seeker__avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.ckp-seeker__name {
+  color: var(--ckp-read);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* --- slot: meters ------------------------------------------------------- */
+.ckp-slot-meters {
+  display: flex;
+  align-items: center;
+  gap: clamp(14px, 2vw, 34px);
+  margin: 0 auto;
+  min-width: 0;
+}
+
+.ckp-meter {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.ckp-meter__label {
+  color: var(--ckp-faint);
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.ckp-meter__track {
+  position: relative;
+  width: clamp(52px, 9vw, 132px);
+  height: 3px;
+  background: var(--ckp-rule);
+  overflow: hidden;
+}
+
+.ckp-meter__fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: linear-gradient(90deg, var(--ckp-key), var(--ckp-key-bright));
+  box-shadow: 0 0 8px var(--ckp-key-wash);
+  transition: width var(--ckp-slow) var(--ckp-ease);
+}
+
+.ckp-meter__value {
+  color: var(--ckp-key-bright);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* An unresolved meter gets a hatched rail. An empty track and a broken
+   track must not look the same. */
+.ckp-meter--unresolved .ckp-meter__track {
+  background: repeating-linear-gradient(
+    -45deg,
+    var(--ckp-rule) 0 3px,
+    transparent 3px 6px
+  );
+}
+
+.ckp-meter--unresolved .ckp-meter__value {
+  color: var(--ckp-faint);
+}
+
+/* --- slot: actions ----------------------------------------------------- */
+.ckp-slot-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: auto;
+}
+
+.ckp-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 13px;
+  font-family: var(--ckp-signal);
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ckp-quiet);
+  background: transparent;
+  border: var(--ckp-hair) solid var(--ckp-rule);
+  transition: color var(--ckp-fast) var(--ckp-ease),
+    border-color var(--ckp-fast) var(--ckp-ease),
+    background-color var(--ckp-fast) var(--ckp-ease);
+}
+
+.ckp-action:hover:not(:disabled) {
+  color: var(--ckp-key-bright);
+  border-color: var(--ckp-key);
+  background: var(--ckp-key-wash);
+}
+
+.ckp-action--key {
+  color: var(--ckp-key-bright);
+  border-color: var(--ckp-key);
+}
+
+.ckp-action:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* ==========================================================================
+   NAVIGATION
+   Mounted globally, so it sits at a fixed screen position rather than inside
+   any one frame. Directly under the top rail, on the same gutter, so it
+   reads as part of the chassis on screens that have rails and as the only
+   chrome on screens that do not. Same place either way — that consistency
+   is the entire reason it lives here instead of in seven screens.
+   ========================================================================== */
+
+.ckp-nav {
+  position: fixed;
+  top: var(--ckp-rail-h);
+  left: calc(var(--ckp-gutter) * 0.5 + var(--ckp-bracket) + 14px);
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  pointer-events: auto;
+}
+
+.ckp-nav__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  font-family: var(--ckp-signal);
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ckp-quiet);
+  background: rgba(8, 8, 11, 0.72);
+  border: var(--ckp-hair) solid var(--ckp-rule);
+  backdrop-filter: blur(6px);
+  cursor: pointer;
+  transition: color var(--ckp-fast) var(--ckp-ease),
+    border-color var(--ckp-fast) var(--ckp-ease),
+    background-color var(--ckp-fast) var(--ckp-ease);
+}
+
+.ckp-nav__btn:hover {
+  color: var(--ckp-key-bright);
+  border-color: var(--ckp-key);
+  background: rgba(8, 8, 11, 0.92);
+}
+
+.ckp-nav__btn:focus-visible {
+  outline: 2px solid var(--ckp-key-bright);
+  outline-offset: 2px;
+}
+
+.ckp-nav__btn--home {
+  color: var(--ckp-key-bright);
+  border-color: var(--ckp-key-dim);
+}
+
+/* ==========================================================================
+   LAYER 5 — OVERLAY
+   Boot, transition, video, modal. Nothing lives here permanently.
+   ========================================================================== */
+
+.ckp-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  display: grid;
+  place-items: center;
+  background: rgba(8, 8, 11, 0.72);
+  backdrop-filter: blur(3px);
+}
+
+/* ==========================================================================
+   TYPE SCALE
+   Available to module content, not only to the frame. Nothing under 11px.
+   ========================================================================== */
+
+.ckp-title {
+  margin: 0;
+  font-family: var(--ckp-sigil);
+  font-weight: 600;
+  font-size: clamp(28px, 3.6cqw, 62px);
+  letter-spacing: var(--ckp-track-sigil);
+  text-transform: uppercase;
+  color: var(--ckp-key-bright);
+  text-shadow: 0 0 24px var(--ckp-key-wash);
+}
+
+.ckp-subtitle {
+  margin: 0;
+  font-family: var(--ckp-sigil);
+  font-weight: 500;
+  font-size: clamp(16px, 1.9cqw, 30px);
+  letter-spacing: var(--ckp-track-sigil);
+  text-transform: uppercase;
+  color: var(--ckp-ivory);
+}
+
+.ckp-eyebrow {
+  font-family: var(--ckp-signal);
+  font-size: 11px;
+  letter-spacing: var(--ckp-track-signal);
+  text-transform: uppercase;
+  color: var(--ckp-key-bright);
+}
+
+.ckp-label {
+  font-family: var(--ckp-signal);
+  font-size: 11px;
+  letter-spacing: var(--ckp-track-signal);
+  text-transform: uppercase;
+  color: var(--ckp-faint);
+}
+
+.ckp-body {
+  font-family: var(--ckp-script);
+  font-size: clamp(13px, 1.05cqw, 16px);
+  line-height: 1.65;
+  color: var(--ckp-read);
+}
+
+.ckp-data {
+  font-family: var(--ckp-signal);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.06em;
+  color: var(--ckp-key-bright);
+}
+
+/* ==========================================================================
+   REDUCED MOTION
+   The frame's motion is atmospheric, so all of it is expendable. The
+   composition never depends on it.
+   ========================================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  .ckp-frame *,
+  .ckp-frame *::before,
+  .ckp-frame *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+  }
+}

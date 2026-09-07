@@ -5,20 +5,36 @@
    `cqw` (container query width) units keyed to the stage's own width, so
    every element scales together as the stage grows or shrinks. */
 
+/* Every colour and face below is now DERIVED from the Chroma Frame's token
+   layer (src/system/chromaFrame.css) rather than declared here. The Nexus
+   transmits on the `aurum` channel; its four protocol nodes are the frame's
+   `verdant` / `azure` / `ember` / `aurum` keys. Before this, the Nexus's gold
+   (#d9a441) and the University module system's gold (#C9A227) were two
+   different golds eight percent apart on adjacent screens. There is one gold
+   now. The literal after each var() is the pre-frame value, kept as a
+   fallback so this stylesheet still renders standalone in the e2e harness. */
 .university-nexus {
-  --un-gold: #d9a441;
-  --un-gold-bright: #f5d27a;
-  --un-black: #050403;
-  --un-text: #ece4d3;
+  /* The Nexus declares its channel. `data-channel` on the root element would
+     do the same thing; declaring it here keeps the change to CSS only, so
+     the e2e layout suite's markup contract is untouched. */
+  --ckp-key: var(--ckp-ch-indigo, #4038C9);
+  --ckp-key-bright: var(--ckp-ch-indigo-bright, #9B8CFF);
+  --ckp-key-dim: #211C63;
+  --ckp-key-wash: rgba(64, 56, 201, 0.10);
+
+  --un-gold: var(--ckp-key);
+  --un-gold-bright: var(--ckp-key-bright);
+  --un-black: var(--ckp-obsidian, #050403);
+  --un-text: var(--ckp-ivory, #ece4d3);
   --un-text-muted: rgba(236, 228, 211, 0.7);
 
-  --un-fracture: #3f8f4f;
-  --un-reflection: #3fa9d8;
-  --un-crucible: #d0431c;
-  --un-reclamation: #e0ac2e;
+  --un-fracture: var(--ckp-ch-verdant, #3f8f4f);
+  --un-reflection: var(--ckp-ch-azure, #3fa9d8);
+  --un-crucible: var(--ckp-ch-aurum, #C9A227);
+  --un-reclamation: var(--ckp-ch-ember, #d0431c);
 
-  --un-font-display: var(--font-display, 'Cinzel', 'Oxanium', serif);
-  --un-font-body: var(--font-body, 'Inter', sans-serif);
+  --un-font-display: var(--ckp-sigil, 'Cinzel', serif);
+  --un-font-body: var(--ckp-script, 'Spectral', Georgia, serif);
 
   min-height: 100vh;
   display: grid;

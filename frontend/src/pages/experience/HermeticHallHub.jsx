@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { loadUserFacultyProgress } from '../../lib/supabase/reclamationUniversity';
-import { HERMETIC_HALL_FACULTY } from '../../data/hermeticHallCurriculum';
 import { FrameRail, READOUT_STATE } from '../../system';
 import './hermeticHallHub.css';
 
@@ -14,6 +13,12 @@ import './hermeticHallHub.css';
 // repo (broken before that reorg too); hermetic-hall-environment.png is the
 // real hero art for this scene (the "Hermetic Hall" entrance archway).
 const ASSETS = {
+  // The initiation screen's ground: the fire-lit stone antechamber. This is a
+  // DIFFERENT image from the Hall itself and is not interchangeable with it —
+  // the Seeker stands in the antechamber to receive the directive, and only
+  // enters the Hall proper once the assignment is accepted.
+  antechamber: '/reclamation-university/Hermetic Hall/hermetic-hall-bg.png',
+  // The live Hall: the cracked entrance and its seven failing columns.
   hall: '/reclamation-university/Hermetic Hall/hermetic-hall-environment.png',
   wheel: '/reclamation-university/Hermetic Hall/radial-dial.webp',
   initiationVideo: 'https://media.chromakeyprotocol.com/Hermetic-Hall-Mission.mp4',
@@ -41,16 +46,43 @@ const PRINCIPLES = [
 ];
 const PRINCIPLE_MODULE_IDS = PRINCIPLES.map((p) => p.moduleId);
 
+/**
+ * The seven failing columns, as they actually sit in
+ * hermetic-hall-environment.png — measured off the art, left to right, in
+ * percentages of that image's own 1280x720 frame.
+ *
+ * Four stand to the left of the entrance arch and three to its right. They
+ * map one-to-one onto the wheel's seven wedges in the same left-to-right
+ * order, so wedge I lights column 1 and wedge VII lights column 7. That
+ * pairing is the whole mechanic of this screen: the dial is not a menu
+ * floating over scenery, it is the control surface for the architecture
+ * behind it.
+ *
+ * These live in the art's coordinate space, which is why the plate and these
+ * overlays share one 16:9 stage sized to COVER the viewport (.hh-hall-stage)
+ * rather than being laid out against the viewport directly — otherwise every
+ * aspect ratio but 16:9 would slide the glow off its column.
+ */
+const COLUMNS = [
+  { x: 4.5, y: 34.0, h: 46.5, w: 5.5 },   // I    Mentalism
+  { x: 21.5, y: 45.0, h: 33.5, w: 4.2 },  // II   Correspondence
+  { x: 32.8, y: 50.7, h: 27.8, w: 4.0 },  // III  Vibration
+  { x: 42.2, y: 53.5, h: 25.0, w: 3.8 },  // IV   Polarity
+  { x: 77.1, y: 45.8, h: 33.2, w: 4.2 },  // V    Cause & Effect
+  { x: 85.3, y: 34.0, h: 45.0, w: 4.8 },  // VI   Rhythm
+  { x: 96.9, y: 24.3, h: 54.7, w: 6.0 },  // VII  Gender
+];
+
+/* How long the seismic entry runs before the module route takes over: the
+   quake settles, the gates part, and only then does the Hall hand off. */
+const GATE_SEQUENCE_MS = 2600;
+
 // Wedge hit-areas are triangles (see .hh-wedge's clip-path) pivoting at the
 // wheel's bottom center (radial-dial.png is a flat-bottomed semicircle),
 // each spanning an equal 1/7th slice of the 180 degree arc, ordered left
 // (I) to right (VII) to match the art.
 const WEDGE_SPAN_DEG = 180 / PRINCIPLES.length;
 const WEDGE_ANGLES = PRINCIPLES.map((_, i) => -90 + (i + 0.5) * WEDGE_SPAN_DEG);
-
-const SUBTITLE_BY_KEY = Object.fromEntries(
-  HERMETIC_HALL_FACULTY.modules.map((m) => [m.slug, m.subtitle])
-);
 
 // The briefing types out as an incoming transmission -- a mission directive,
 // not a scripted cutscene.
@@ -130,7 +162,15 @@ const VIDEO_STUCK_HELP_MS = 12000;
 
 export default function HermeticHallHub() {
   const navigate = useNavigate();
-  const [phase, setPhase] = useState('video'); // video -> briefing -> hub
+  // video      the initiation film, in the antechamber
+  // briefing   the mission directive types out, in the antechamber
+  // hall       the live Hall, fullscreen, wheel docked bottom-centre
+  // entering   a column is chosen: the ground quakes, the gates open
+  const [phase, setPhase] = useState('video');
+  // Which wedge the Seeker is currently pointing at. Drives which column
+  // wakes up out in the Hall — this is the hover linkage, and it is separate
+  // from `selected`, which is a committed choice.
+  const [hovered, setHovered] = useState(null);
   const [selected, setSelected] = useState(null);
   const [mended, setMended] = useState(() => new Set());
   const [progressLoaded, setProgressLoaded] = useState(false);
@@ -215,7 +255,7 @@ export default function HermeticHallHub() {
     setHasSeenVideo(true);
     setPhase('briefing');
   }, []);
-  const beginRestoration = useCallback(() => setPhase('hub'), []);
+  const beginRestoration = useCallback(() => setPhase('hall'), []);
 
   // videoReady: has playback started at least once (hides the initial
   // loading state). videoBuffering: playback started but has paused to
@@ -322,7 +362,7 @@ export default function HermeticHallHub() {
   useEffect(() => {
     const el = musicRef.current;
     if (!el) return undefined;
-    if (phase === 'hub') {
+    if (phase === 'hall' || phase === 'entering') {
       el.volume = HALL_MUSIC_VOLUME;
       el.play().catch(() => {});
     } else {
@@ -333,22 +373,72 @@ export default function HermeticHallHub() {
     };
   }, [phase]);
 
+  /* Choosing a column is a commitment, not a preview. There is no
+     intermediate "enter this module?" card any more: the Hall answers the
+     choice itself — the ground goes, the gates part, and the module takes
+     over on the far side of it. */
   const handleSelectWedge = useCallback(
     (principle) => {
-      if (phase !== 'hub') return;
+      if (phase !== 'hall') return;
       setSelected(principle);
+      setPhase('entering');
     },
     [phase]
   );
 
-  const enterSelectedModule = useCallback(() => {
-    if (!selected) return;
-    navigate(`/experiencemode/sovereign/reclamation-university/hermetic-hall/${selected.key}`);
-  }, [navigate, selected]);
+  useEffect(() => {
+    if (phase !== 'entering' || !selected) return undefined;
+    const timer = setTimeout(() => {
+      navigate(`/experiencemode/sovereign/reclamation-university/hermetic-hall/${selected.key}`);
+    }, GATE_SEQUENCE_MS);
+    return () => clearTimeout(timer);
+  }, [phase, selected, navigate]);
+
+  /* Which column is awake. A committed selection outranks a hover, so the
+     chosen column keeps burning while the gates close over it. */
+  const liveColumnKey = selected?.key ?? hovered?.key ?? null;
+  const inHall = phase === 'hall' || phase === 'entering';
 
   return (
-    <div className="hh-scene" data-channel="aurum">
-      <img className="hh-bg" src={ASSETS.hall} alt="Hermetic Hall" />
+    <div
+      className={`hh-scene${inHall ? ' is-hall' : ' is-antechamber'}${phase === 'entering' ? ' is-quaking' : ''}`}
+      data-channel="indigo"
+    >
+      {/* THE ANTECHAMBER — the fire-lit stone the Seeker receives the
+          directive in. Its own art, not the Hall's. */}
+      {!inHall && (
+        <img className="hh-bg" src={ASSETS.antechamber} alt="" aria-hidden="true" />
+      )}
+
+      {/* THE HALL — fullscreen and live the moment the assignment is
+          accepted. The plate and the seven column overlays share one 16:9
+          stage sized to cover the viewport, so each glow stays welded to the
+          column it belongs to at every aspect ratio. */}
+      {inHall && (
+        <div className="hh-hall-stage" aria-hidden="true">
+          <img className="hh-hall-plate" src={ASSETS.hall} alt="" />
+          <div className="hh-columns">
+            {PRINCIPLES.map((principle, i) => {
+              const geometry = COLUMNS[i];
+              const live = liveColumnKey === principle.key;
+              return (
+                <span
+                  key={principle.key}
+                  className={`hh-column${live ? ' is-live' : ''}${mended.has(principle.key) ? ' is-restored' : ''}`}
+                  style={{
+                    '--col-color': principle.color,
+                    left: `${geometry.x}%`,
+                    top: `${geometry.y}%`,
+                    height: `${geometry.h}%`,
+                    width: `${geometry.w}%`,
+                  }}
+                />
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       <div className="hh-bg-veil" aria-hidden="true" />
       <audio ref={musicRef} src={ASSETS.hallMusic} loop preload="auto" />
 
@@ -377,7 +467,10 @@ export default function HermeticHallHub() {
           local, unrotated one. Its seven wedges are the one true way to
           pick a principle; only live once the Seeker has cleared the
           briefing and reached the hub. */}
-      <div className={`hh-wheel${phase === 'hub' ? ' is-live' : ' is-dormant'}`}>
+      <div
+        className={`hh-wheel${inHall ? ' is-docked is-live' : ' is-dormant'}`}
+        data-phase={phase}
+      >
         <div className="hh-wheel-rotator">
           <img className="hh-wheel-art" src={ASSETS.wheel} alt="The Hermetic Wheel" />
           <div className="hh-wheel-dial">
@@ -385,11 +478,15 @@ export default function HermeticHallHub() {
               <button
                 key={p.key}
                 type="button"
-                className={`hh-wedge${mended.has(p.key) ? ' is-mended' : ''}${selected?.key === p.key ? ' is-selected' : ''}`}
+                className={`hh-wedge${mended.has(p.key) ? ' is-mended' : ''}${selected?.key === p.key ? ' is-selected' : ''}${hovered?.key === p.key ? ' is-hovered' : ''}`}
                 style={{ transform: `translateX(-50%) rotate(${WEDGE_ANGLES[i]}deg)`, '--wedge-color': p.color }}
                 onClick={() => handleSelectWedge(p)}
-                disabled={phase !== 'hub'}
-                aria-label={`Principle ${p.n}: ${p.name}`}
+                onMouseEnter={() => phase === 'hall' && setHovered(p)}
+                onMouseLeave={() => phase === 'hall' && setHovered(null)}
+                onFocus={() => phase === 'hall' && setHovered(p)}
+                onBlur={() => phase === 'hall' && setHovered(null)}
+                disabled={phase !== 'hall'}
+                aria-label={`Principle ${p.n}: ${p.name}${mended.has(p.key) ? ' — column restored' : ''}`}
                 aria-pressed={selected?.key === p.key}
               >
                 <span className="hh-wedge-glow" />
@@ -399,9 +496,43 @@ export default function HermeticHallHub() {
         </div>
       </div>
 
-      {/* The 16:9 stage -- one box, three functions: initiation video, then
-          the mission directive terminal, then the interactive environment
-          readout for whichever principle is selected on the wheel. */}
+      {/* The name of whatever column is currently awake — the only readout
+          the live Hall carries, so the scene stays the scene. */}
+      {inHall && (
+        <div className={`hh-hall-caption${liveColumnKey ? ' is-lit' : ''}`} aria-live="polite">
+          {liveColumnKey ? (
+            <>
+              <span className="hh-hall-caption__num">
+                {(selected ?? hovered).n}
+              </span>
+              <span className="hh-hall-caption__name">{(selected ?? hovered).name}</span>
+              <span className="hh-hall-caption__sub">
+                {mended.has(liveColumnKey) ? 'Column restored' : 'Awaiting restoration'}
+              </span>
+            </>
+          ) : (
+            <span className="hh-hall-caption__idle">
+              Choose a column from the Hermetic Wheel
+            </span>
+          )}
+        </div>
+      )}
+
+      {/* THE GATES — a column is chosen, the ground goes, and the Hall's
+          doors close over the scene and part again on the module beyond. */}
+      {phase === 'entering' && (
+        <div className="hh-gates" aria-hidden="true">
+          <span className="hh-gate hh-gate--left" />
+          <span className="hh-gate hh-gate--right" />
+          <span className="hh-gate-seam" />
+        </div>
+      )}
+
+      {/* The antechamber's one framed box: the initiation film, then the
+          mission directive. It does NOT survive into the Hall — once the
+          assignment is accepted the Hall is the whole screen, and nothing is
+          framed inside anything. */}
+      {!inHall && (
       <div className="hh-stage">
         {phase === 'video' && (
           <div className="hh-stage-frame hh-init-frame">
@@ -484,33 +615,8 @@ export default function HermeticHallHub() {
           </div>
         )}
 
-        {phase === 'hub' && (
-          <div className="hh-stage-frame hh-env-frame">
-            {selected ? (
-              <div className="hh-env-card" style={{ '--wedge-color': selected.color }}>
-                <span className="hh-env-eyebrow">Principle {selected.n}</span>
-                <h2 className="hh-env-title">{selected.name}</h2>
-                <p className="hh-env-subtitle">{SUBTITLE_BY_KEY[selected.key]}</p>
-                <div className={`hh-env-status${mended.has(selected.key) ? ' is-restored' : ''}`}>
-                  {mended.has(selected.key) ? 'COLUMN RESTORED' : 'AWAITING RESTORATION'}
-                </div>
-                <button type="button" className="hh-rune-btn hh-env-enter" onClick={enterSelectedModule}>
-                  Enter Module &rarr;
-                </button>
-              </div>
-            ) : (
-              <div className="hh-env-idle">
-                <span className="hh-env-idle-label">HERMETIC HALL // LIVE UPLINK</span>
-                <p>Select a column from the Hermetic Wheel to begin restoration.</p>
-              </div>
-            )}
-            <span className="hh-frame-corner tl" />
-            <span className="hh-frame-corner tr" />
-            <span className="hh-frame-corner bl" />
-            <span className="hh-frame-corner br" />
-          </div>
-        )}
       </div>
+      )}
     </div>
   );
 }

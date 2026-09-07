@@ -6,14 +6,17 @@
   font-family: var(--ckp-script, 'Spectral', Georgia, serif);
 }
 
+/* The antechamber. hermetic-hall-bg.png is authored with its torches burning
+   orange; the hue rotation carries that fire into the University's indigo
+   without repainting the asset — the stone stays stone, the flame turns. */
 .hh-bg {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
-  object-position: center 38%;
-  filter: blur(1.5px) brightness(0.52) saturate(1.05);
+  object-position: center 45%;
+  filter: brightness(0.86) saturate(1.18) hue-rotate(252deg);
   transform: scale(1.02);
 }
 .hh-bg-veil {
@@ -21,9 +24,17 @@
   inset: 0;
   z-index: 1;
   background:
-    radial-gradient(ellipse 70% 60% at 50% 50%, transparent 0%, rgba(6, 5, 10, 0.35) 100%),
-    linear-gradient(180deg, rgba(6, 5, 10, 0.65) 0%, transparent 18%, transparent 72%, rgba(6, 5, 10, 0.75) 100%);
+    radial-gradient(ellipse 70% 60% at 50% 50%, transparent 0%, rgba(6, 5, 10, 0.32) 100%),
+    linear-gradient(180deg, rgba(6, 5, 10, 0.62) 0%, transparent 18%, transparent 72%, rgba(6, 5, 10, 0.72) 100%);
   pointer-events: none;
+}
+
+/* Once the Hall is live the veil pulls back to the edges — the scene is the
+   point now, and nothing sits on top of it. */
+.hh-scene.is-hall .hh-bg-veil {
+  background:
+    radial-gradient(ellipse 86% 78% at 50% 46%, transparent 0%, rgba(6, 5, 10, 0.42) 100%),
+    linear-gradient(180deg, rgba(6, 5, 10, 0.72) 0%, transparent 14%, transparent 62%, rgba(6, 5, 10, 0.88) 100%);
 }
 
 /* ------------------------------------------------------------- TOPBAR - */
@@ -50,34 +61,60 @@
    it, .hh-wheel-rotator holds the actual unrotated art at its natural
    aspect ratio, centered and spun 90 degrees clockwise, so the flat edge
    ends up vertical against the screen edge and the arc bulges right. */
+/* The wheel is ONE box at the dial art's natural proportions, parked at the
+   viewport origin and placed entirely by `transform`. Both of its homes —
+   flush against the left edge for the initiation, bottom-centre once the
+   Hall is live — are expressed as a transform on that same box, which is
+   what lets it TRAVEL between them in a single interpolation instead of
+   being two separately-positioned elements that cut.
+
+   The rotation lives here too (it used to live on an inner .hh-wheel-rotator
+   that spun independently), so the fan turns as it flies: it leaves the left
+   edge standing on its side and arrives at the bottom sitting flat. */
 .hh-wheel {
-  --wheel-w: clamp(340px, 55vh, 620px);
+  --wheel-w: clamp(340px, 64vh, 620px);
   --wheel-h: calc(var(--wheel-w) * 720 / 1449);
   position: fixed;
-  top: 50%;
+  top: 0;
   left: 0;
-  width: var(--wheel-h);
-  height: var(--wheel-w);
-  transform: translateY(-50%);
+  width: var(--wheel-w);
+  height: var(--wheel-h);
+  transform-origin: 50% 100%;
+  /* Left dock: rotated a quarter turn about its own flat edge's midpoint, so
+     the flat edge stands vertical at x=0 and the arc bulges into the scene. */
+  transform:
+    translate(calc(var(--wheel-w) / -2), calc(50vh - var(--wheel-h)))
+    rotate(90deg);
   z-index: 4;
-  transition: opacity 0.5s ease, filter 0.5s ease;
+  transition:
+    transform 1.6s cubic-bezier(0.68, 0.02, 0.24, 1),
+    opacity 0.6s ease,
+    filter 0.6s ease;
 }
+
+/* Bottom dock: no rotation at all — the fan sits flat, centred, its base on
+   the floor of the screen, exactly as the Hall mockup has it. */
+.hh-wheel.is-docked {
+  --wheel-w: clamp(420px, 46vw, 1000px);
+  transform:
+    translate(calc(50vw - var(--wheel-w) / 2), calc(100vh - var(--wheel-h)))
+    rotate(0deg);
+}
+
 .hh-wheel.is-dormant {
-  opacity: 0.55;
-  filter: grayscale(0.35) brightness(0.75);
+  opacity: 0.88;
+  filter: brightness(0.72) saturate(0.92);
 }
 .hh-wheel.is-live {
   opacity: 1;
   filter: none;
+}
+.hh-wheel.is-live .hh-wheel-art {
   animation: hh-wheel-breathe 6s ease-in-out infinite;
 }
 .hh-wheel-rotator {
   position: absolute;
-  top: 50%;
-  left: 50%;
-  width: var(--wheel-w);
-  height: var(--wheel-h);
-  transform: translate(-50%, -50%) rotate(90deg);
+  inset: 0;
 }
 .hh-wheel-art {
   display: block;
@@ -133,16 +170,22 @@
 }
 @keyframes hh-wheel-breathe {
   0%, 100% { filter: drop-shadow(0 20px 40px rgba(0, 0, 0, 0.65)); }
-  50% { filter: drop-shadow(0 20px 55px rgba(243, 212, 136, 0.25)); }
+  50% { filter: drop-shadow(0 -6px 60px color-mix(in srgb, var(--ckp-key-bright) 34%, transparent)); }
 }
 
 /* ------------------------------------------------------------- STAGE --- */
+/* Geometry taken off the initiation mockup and not adjusted: the framed box
+   occupies 67.8% of the width with its right edge 7.8% in from the frame,
+   vertically centred, at the mockup's own 868:567 proportion (which is NOT
+   16:9 — the box is squarer than the screen). The wheel fills the strip to
+   its left. Do not "tidy" these numbers toward round ones; they are the
+   design. */
 .hh-stage {
   position: fixed;
   top: 50%;
-  right: clamp(16px, 6vw, 96px);
+  right: 7.8vw;
   transform: translateY(-50%);
-  width: min(44vw, 760px);
+  width: min(67.8vw, 1240px);
   z-index: 6;
 }
 .hh-stage-frame {
@@ -150,22 +193,25 @@
   display: flex;
   flex-direction: column;
   width: 100%;
-  aspect-ratio: 16 / 9;
-  background: #000;
-  border: 1px solid #7a5d24;
-  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.6), 0 40px 90px -30px rgba(0, 0, 0, 0.9);
+  aspect-ratio: 868 / 567;
+  background: #05050a;
+  border: 2px solid var(--ckp-key, #4038c9);
+  border-radius: 6px;
+  box-shadow:
+    inset 0 0 0 1px rgba(0, 0, 0, 0.6),
+    0 0 60px -12px color-mix(in srgb, var(--ckp-key) 55%, transparent),
+    0 40px 90px -30px rgba(0, 0, 0, 0.9);
 }
+/* The initiation mockup shows a clean rounded border and nothing inside it,
+   so the corner brackets are suppressed on THIS screen only. Everywhere else
+   in the Protocol they are the signature and stay. */
 .hh-frame-corner {
-  position: absolute;
-  width: 26px;
-  height: 26px;
-  pointer-events: none;
-  z-index: 1;
+  display: none;
 }
-.hh-frame-corner.tl { top: 8px; left: 8px; border-top: 1px solid #c9a227; border-left: 1px solid #c9a227; }
-.hh-frame-corner.tr { top: 8px; right: 8px; border-top: 1px solid #c9a227; border-right: 1px solid #c9a227; }
-.hh-frame-corner.bl { bottom: 8px; left: 8px; border-bottom: 1px solid #c9a227; border-left: 1px solid #c9a227; }
-.hh-frame-corner.br { bottom: 8px; right: 8px; border-bottom: 1px solid #c9a227; border-right: 1px solid #c9a227; }
+.hh-frame-corner.tl { top: 8px; left: 8px; border-top: 1px solid var(--ckp-key-bright); border-left: 1px solid var(--ckp-key-bright); }
+.hh-frame-corner.tr { top: 8px; right: 8px; border-top: 1px solid var(--ckp-key-bright); border-right: 1px solid var(--ckp-key-bright); }
+.hh-frame-corner.bl { bottom: 8px; left: 8px; border-bottom: 1px solid var(--ckp-key-bright); border-left: 1px solid var(--ckp-key-bright); }
+.hh-frame-corner.br { bottom: 8px; right: 8px; border-bottom: 1px solid var(--ckp-key-bright); border-right: 1px solid var(--ckp-key-bright); }
 
 /* --------------------------------------------------------- VIDEO STATE - */
 .hh-init-frame video {
@@ -438,13 +484,17 @@
 /* -------------------------------------------------------------- BUTTON - */
 .hh-rune-btn {
   padding: 13px 30px;
-  border: 1px solid #c9a227;
-  background: linear-gradient(180deg, #4a3a1c, #1c150a);
-  color: #f3d488;
-  font-family: 'Archivo', ui-sans-serif, sans-serif;
-  font-weight: 600;
+  border: 1px solid var(--ckp-key);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--ckp-key) 32%, #0a0a12),
+    color-mix(in srgb, var(--ckp-key) 8%, #06060c)
+  );
+  color: var(--ckp-key-bright);
+  font-family: var(--ckp-signal, 'JetBrains Mono', monospace);
+  font-weight: 500;
   font-size: 12px;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
   cursor: pointer;
   clip-path: polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px);
@@ -475,4 +525,309 @@
     transition-duration: 0.01ms !important;
     animation-duration: 0.01ms !important;
   }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   THE LIVE HALL
+   Everything below only exists after "Accept the Assignment". There is no
+   framed box here — the Hall IS the screen.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* One 16:9 box scaled to COVER the viewport. The plate and the seven column
+   overlays both live inside it, so a column's glow is welded to the column
+   in the art at every window shape. Laying the overlays against the viewport
+   instead would slide them off their columns on any non-16:9 screen. */
+.hh-hall-stage {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: max(100vw, 177.78vh);
+  height: max(56.25vw, 100vh);
+  transform: translate(-50%, -50%);
+  z-index: 0;
+  overflow: hidden;
+}
+
+.hh-hall-plate {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: fill;
+  filter: brightness(0.82) saturate(1.08);
+  animation: hh-hall-drift 34s ease-in-out infinite alternate;
+}
+
+/* The Hall breathes. Slow, small, and never enough to break the column
+   alignment — the overlays ride the same transform as the plate. */
+@keyframes hh-hall-drift {
+  0% { transform: scale(1.015) translate3d(0, 0, 0); }
+  100% { transform: scale(1.045) translate3d(-0.7%, -0.5%, 0); }
+}
+
+.hh-columns {
+  position: absolute;
+  inset: 0;
+  animation: hh-hall-drift 34s ease-in-out infinite alternate;
+}
+
+/* A failing column. Dormant it is a faint bruise in its own colour; woken by
+   the wheel it burns and pulses. `plus-lighter` lets it light the painted
+   column underneath rather than paste a rectangle over it. */
+.hh-column {
+  position: absolute;
+  transform: translateX(-50%);
+  border-radius: 46% 46% 12% 12% / 6% 6% 2% 2%;
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--col-color) 88%, transparent) 0%,
+    color-mix(in srgb, var(--col-color) 62%, transparent) 45%,
+    color-mix(in srgb, var(--col-color) 30%, transparent) 100%
+  );
+  mix-blend-mode: plus-lighter;
+  opacity: 0.1;
+  filter: blur(7px);
+  pointer-events: none;
+  transition: opacity 520ms var(--hh-ease, cubic-bezier(0.22, 0.61, 0.36, 1)),
+    filter 520ms ease;
+}
+
+/* A column whose module is already complete keeps a steady low burn, so the
+   Hall reads its own progress without a HUD. */
+.hh-column.is-restored {
+  opacity: 0.3;
+  filter: blur(9px);
+}
+
+.hh-column.is-live {
+  opacity: 0.92;
+  filter: blur(5px);
+  animation: hh-column-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes hh-column-pulse {
+  0%, 100% { opacity: 0.62; filter: blur(6px) brightness(1); }
+  50% { opacity: 1; filter: blur(4px) brightness(1.5); }
+}
+
+/* ------------------------------------------------------------- CAPTION - */
+/* Bottom-left, not centred: the Hall's own "HERMETIC HALL" signage owns the
+   upper middle of this art and the wheel owns the bottom centre, so a
+   centred caption lands on top of one or the other. This corner is the only
+   quiet ground in the composition. */
+.hh-hall-caption {
+  position: fixed;
+  left: clamp(20px, 4vw, 64px);
+  bottom: clamp(24px, 6vh, 64px);
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  text-align: left;
+  pointer-events: none;
+  max-width: 21vw;
+  transition: opacity 300ms ease;
+}
+.hh-hall-caption__idle {
+  font-family: var(--ckp-signal);
+  font-size: 12px;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--ckp-faint);
+}
+.hh-hall-caption__num {
+  font-family: var(--ckp-signal);
+  font-size: 12px;
+  letter-spacing: 0.3em;
+  color: var(--ckp-key-bright);
+}
+.hh-hall-caption__name {
+  font-family: var(--ckp-sigil);
+  font-size: clamp(24px, 2.9vw, 46px);
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ckp-ivory);
+  text-shadow: 0 0 40px rgba(0, 0, 0, 0.9);
+  line-height: 1;
+}
+.hh-hall-caption__sub {
+  font-family: var(--ckp-signal);
+  font-size: 11px;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--ckp-quiet);
+}
+
+/* ───────────────────────────────────── THE SEISMIC ENTRY ─────────────── */
+/* A column is chosen and the Hall answers: the ground goes first, then the
+   gates swing shut over the scene and part again on the module beyond. */
+
+.hh-scene.is-quaking .hh-hall-stage {
+  animation: hh-quake 900ms cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+
+@keyframes hh-quake {
+  0%   { transform: translate(-50%, -50%); }
+  8%   { transform: translate(calc(-50% - 11px), calc(-50% + 7px)) rotate(-0.35deg); }
+  18%  { transform: translate(calc(-50% + 13px), calc(-50% - 6px)) rotate(0.4deg); }
+  28%  { transform: translate(calc(-50% - 9px), calc(-50% - 8px)) rotate(-0.28deg); }
+  40%  { transform: translate(calc(-50% + 8px), calc(-50% + 9px)) rotate(0.25deg); }
+  54%  { transform: translate(calc(-50% - 6px), calc(-50% + 4px)) rotate(-0.16deg); }
+  70%  { transform: translate(calc(-50% + 4px), calc(-50% - 3px)) rotate(0.1deg); }
+  86%  { transform: translate(calc(-50% - 2px), calc(-50% + 1px)); }
+  100% { transform: translate(-50%, -50%); }
+}
+
+/* The wheel rides the same shock. */
+.hh-scene.is-quaking .hh-wheel {
+  animation: hh-quake-wheel 900ms cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+@keyframes hh-quake-wheel {
+  0%, 100% { filter: none; }
+  20% { filter: brightness(1.5) drop-shadow(0 0 40px var(--ckp-key-bright)); }
+  60% { filter: brightness(1.15); }
+}
+
+.hh-gates {
+  position: fixed;
+  inset: 0;
+  z-index: 8;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+/* Two leaves of dark stone, edged and studded in the channel's key. They
+   close over the Hall while the ground is still settling, hold for a beat,
+   then draw apart — the Seeker passes through them into the module. */
+/* Each leaf is built rather than tinted: vertical stone planks, a banded
+   iron frame, rows of studs down the bands, and a lit inner edge in the
+   channel's key. They have to read as the Hall's own doors — a flat panel
+   sliding across just reads as a page transition. */
+.hh-gate {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 51%;
+  background:
+    /* studs: two vertical rows of rivets on the iron bands */
+    radial-gradient(circle at 18% 8%, rgba(210, 205, 225, 0.5) 0 2px, transparent 3px),
+    radial-gradient(circle at 82% 8%, rgba(210, 205, 225, 0.5) 0 2px, transparent 3px),
+    /* iron bands across the leaf */
+    repeating-linear-gradient(
+      180deg,
+      rgba(150, 145, 170, 0.16) 0 5px,
+      rgba(0, 0, 0, 0.34) 5px 9px,
+      transparent 9px 132px
+    ),
+    /* plank seams */
+    repeating-linear-gradient(
+      90deg,
+      rgba(0, 0, 0, 0.55) 0 2px,
+      rgba(255, 255, 255, 0.028) 2px 4px,
+      transparent 4px 84px
+    ),
+    /* the stone itself */
+    linear-gradient(180deg, #1a1826 0%, #0b0a12 48%, #15131f 100%);
+  background-size:
+    100% 132px,
+    100% 132px,
+    100% 132px,
+    84px 100%,
+    100% 100%;
+  box-shadow:
+    inset 0 0 140px rgba(0, 0, 0, 0.95),
+    inset 0 0 0 12px rgba(0, 0, 0, 0.55);
+}
+
+/* The lit inner edge — the join the seam burns along. */
+.hh-gate::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 14px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in srgb, var(--ckp-key) 55%, transparent)
+  );
+}
+.hh-gate--left::after { right: 0; }
+.hh-gate--right::after {
+  left: 0;
+  background: linear-gradient(
+    270deg,
+    transparent,
+    color-mix(in srgb, var(--ckp-key) 55%, transparent)
+  );
+}
+
+.hh-gate--left {
+  left: 0;
+  border-right: 3px solid var(--ckp-key);
+  transform: translateX(-101%);
+  animation: hh-gate-left 2.6s cubic-bezier(0.5, 0, 0.2, 1) both;
+}
+
+.hh-gate--right {
+  right: 0;
+  border-left: 3px solid var(--ckp-key);
+  transform: translateX(101%);
+  animation: hh-gate-right 2.6s cubic-bezier(0.5, 0, 0.2, 1) both;
+}
+
+/* Slam shut by 34%, hold to 58%, then open. */
+@keyframes hh-gate-left {
+  0%   { transform: translateX(-101%); }
+  34%  { transform: translateX(0); }
+  58%  { transform: translateX(0); }
+  100% { transform: translateX(-101%); }
+}
+@keyframes hh-gate-right {
+  0%   { transform: translateX(101%); }
+  34%  { transform: translateX(0); }
+  58%  { transform: translateX(0); }
+  100% { transform: translateX(101%); }
+}
+
+/* The light that burns along the join as the leaves part. */
+.hh-gate-seam {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 3px;
+  transform: translateX(-50%);
+  background: linear-gradient(
+    180deg,
+    transparent,
+    var(--ckp-key-bright) 18%,
+    #fff 50%,
+    var(--ckp-key-bright) 82%,
+    transparent
+  );
+  opacity: 0;
+  animation: hh-gate-seam 2.6s ease-out both;
+}
+@keyframes hh-gate-seam {
+  0%, 30% { opacity: 0; width: 3px; }
+  36% { opacity: 1; width: 5px; }
+  58% { opacity: 0.85; width: 3px; }
+  74% { opacity: 1; width: 22px; filter: blur(6px); }
+  100% { opacity: 0; width: 60vw; filter: blur(30px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hh-hall-plate,
+  .hh-columns,
+  .hh-column.is-live,
+  .hh-scene.is-quaking .hh-hall-stage,
+  .hh-scene.is-quaking .hh-wheel,
+  .hh-wheel.is-live .hh-wheel-art {
+    animation: none !important;
+  }
+  .hh-column.is-live { opacity: 0.92; }
+  .hh-wheel { transition-duration: 1ms; }
 }

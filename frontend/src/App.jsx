@@ -40,6 +40,7 @@ const ChromaFrameReference = lazy(() => import('./pages/experience/ChromaFrameRe
 
 import AppShell from './components/layout/AppShell';
 import VMAChatWidget from './components/sovereign-os/VMAChatWidget';
+import { FrameNav } from './system';
 import { getAuthRedirectPath } from './lib/authRedirects';
 
 const AuthRouteLoading = () => (
@@ -483,6 +484,11 @@ function AppWithBackground() {
       <Suspense fallback={<AuthRouteLoading />}>
         <AppRoutes />
       </Suspense>
+
+      {/* Back + Mainframe, on every route. Mounted here rather than inside
+          any screen so no screen can strand a Seeker with no way out — which
+          is exactly what several Hermetic modules used to do. */}
+      <FrameNav />
     </>
   );
 }

@@ -679,6 +679,61 @@
 }
 
 /* ==========================================================================
+   NAVIGATION
+   Mounted globally, so it sits at a fixed screen position rather than inside
+   any one frame. Directly under the top rail, on the same gutter, so it
+   reads as part of the chassis on screens that have rails and as the only
+   chrome on screens that do not. Same place either way — that consistency
+   is the entire reason it lives here instead of in seven screens.
+   ========================================================================== */
+
+.ckp-nav {
+  position: fixed;
+  top: var(--ckp-rail-h);
+  left: calc(var(--ckp-gutter) * 0.5 + var(--ckp-bracket) + 14px);
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  pointer-events: auto;
+}
+
+.ckp-nav__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  font-family: var(--ckp-signal);
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ckp-quiet);
+  background: rgba(8, 8, 11, 0.72);
+  border: var(--ckp-hair) solid var(--ckp-rule);
+  backdrop-filter: blur(6px);
+  cursor: pointer;
+  transition: color var(--ckp-fast) var(--ckp-ease),
+    border-color var(--ckp-fast) var(--ckp-ease),
+    background-color var(--ckp-fast) var(--ckp-ease);
+}
+
+.ckp-nav__btn:hover {
+  color: var(--ckp-key-bright);
+  border-color: var(--ckp-key);
+  background: rgba(8, 8, 11, 0.92);
+}
+
+.ckp-nav__btn:focus-visible {
+  outline: 2px solid var(--ckp-key-bright);
+  outline-offset: 2px;
+}
+
+.ckp-nav__btn--home {
+  color: var(--ckp-key-bright);
+  border-color: var(--ckp-key-dim);
+}
+
+/* ==========================================================================
    LAYER 5 — OVERLAY
    Boot, transition, video, modal. Nothing lives here permanently.
    ========================================================================== */

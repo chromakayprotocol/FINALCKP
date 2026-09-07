@@ -8,6 +8,7 @@
 
 export { default as ChromaFrame, FramePanel } from './ChromaFrame';
 export { FrameRail, FrameDock, FrameReadout, FrameMeter, FrameAction, FrameExit } from './FrameRail';
+export { default as FrameNav, MAINFRAME_ROUTE } from './FrameNav';
 
 export {
   CHROMA_CHANNELS,

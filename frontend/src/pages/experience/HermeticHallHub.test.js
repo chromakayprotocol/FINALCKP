@@ -38,6 +38,9 @@ function ModuleProbe() {
 // the terminal frame, which instantly completes the typing animation (the
 // same "click to skip typing" affordance a real Seeker has) instead of
 // waiting out the real-time character-by-character reveal.
+/* Renamed in spirit: this now clears the antechamber and lands in the LIVE
+   HALL — the fullscreen scene with the wheel docked bottom-centre — not the
+   old framed "hub" box that used to sit where the video was. */
 async function skipToHub() {
   fireEvent.error(document.querySelector('video'));
   fireEvent.click(await screen.findByText('Continue to Mission Briefing'));
@@ -81,36 +84,112 @@ describe('HermeticHallHub', () => {
       expect(screen.getByTestId('frame-readout')).toHaveTextContent('1 / 7');
     });
 
-    const vibrationWedge = screen.getByLabelText('Principle III: Vibration');
+    /* A restored column says so in its own accessible name now, so these
+       match on the principle rather than the whole label. */
+    const vibrationWedge = screen.getByLabelText(/Principle III: Vibration/);
     expect(vibrationWedge.className).toContain('is-mended');
+    expect(vibrationWedge).toHaveAccessibleName(/column restored/);
 
-    const rhythmWedge = screen.getByLabelText('Principle VI: Rhythm');
+    const rhythmWedge = screen.getByLabelText(/Principle VI: Rhythm/);
     expect(rhythmWedge.className).not.toContain('is-mended');
+    expect(rhythmWedge).not.toHaveAccessibleName(/column restored/);
   });
 
-  test('selecting a wedge and entering navigates into that module, using the real curriculum slug', async () => {
+  /* Choosing a column IS the commitment. There is no intermediate "enter
+     this module?" card any more — the Hall quakes, the gates close over the
+     scene and part again on the module. This asserts the whole handoff,
+     including that it does not fire early: the module must not mount while
+     the gates are still running. */
+  test('choosing a column runs the seismic entry and then enters that module', async () => {
     loadUserFacultyProgress.mockResolvedValue({ data: [], error: null });
     renderHub();
     await skipToHub();
 
-    fireEvent.click(screen.getByLabelText('Principle V: Cause & Effect'));
-    fireEvent.click(screen.getByText('Enter Module →'));
+    fireEvent.click(screen.getByLabelText(/Principle V: Cause & Effect/));
 
-    expect(await screen.findByTestId('module-probe')).toHaveTextContent(
-      'Entered module: cause-and-effect'
+    // The gates are up and the ground is going; the module has NOT taken over.
+    expect(document.querySelector('.hh-gates')).toBeInTheDocument();
+    expect(document.querySelector('.hh-scene.is-quaking')).toBeInTheDocument();
+    expect(screen.queryByTestId('module-probe')).not.toBeInTheDocument();
+
+    expect(
+      await screen.findByTestId('module-probe', {}, { timeout: 5000 })
+    ).toHaveTextContent('Entered module: cause-and-effect');
+  });
+
+  /* The wheel drives the architecture: pointing at a wedge wakes that column
+     out in the Hall, and only that one. This is the hover linkage. */
+  test('hovering a wedge lights its column and dims the one before it', async () => {
+    loadUserFacultyProgress.mockResolvedValue({ data: [], error: null });
+    renderHub();
+    await skipToHub();
+
+    const columns = () => document.querySelectorAll('.hh-column');
+    expect(columns()).toHaveLength(7);
+    expect(document.querySelectorAll('.hh-column.is-live')).toHaveLength(0);
+
+    fireEvent.mouseEnter(screen.getByLabelText(/Principle III: Vibration/));
+    let live = document.querySelectorAll('.hh-column.is-live');
+    expect(live).toHaveLength(1);
+    expect(columns()[2]).toHaveClass('is-live');
+
+    fireEvent.mouseLeave(screen.getByLabelText(/Principle III: Vibration/));
+    fireEvent.mouseEnter(screen.getByLabelText(/Principle V: Cause & Effect/));
+    live = document.querySelectorAll('.hh-column.is-live');
+    expect(live).toHaveLength(1);
+    expect(columns()[4]).toHaveClass('is-live');
+    expect(columns()[2]).not.toHaveClass('is-live');
+  });
+
+  /* The wheel leaves the left edge and docks bottom-centre — one element
+     travelling, not two that cut. */
+  test('the wheel is dormant at the edge in the antechamber and docks once the Hall is live', async () => {
+    loadUserFacultyProgress.mockResolvedValue({ data: [], error: null });
+    renderHub();
+
+    const wheel = () => document.querySelector('.hh-wheel');
+    expect(wheel()).toHaveClass('is-dormant');
+    expect(wheel()).not.toHaveClass('is-docked');
+
+    await skipToHub();
+
+    expect(wheel()).toHaveClass('is-docked', 'is-live');
+    expect(wheel()).not.toHaveClass('is-dormant');
+  });
+
+  /* The antechamber and the Hall are different places on different art, and
+     the framed box does not survive into the Hall. */
+  test('the antechamber gives way to the fullscreen Hall on acceptance', async () => {
+    loadUserFacultyProgress.mockResolvedValue({ data: [], error: null });
+    renderHub();
+
+    expect(document.querySelector('.hh-bg')).toHaveAttribute(
+      'src',
+      expect.stringContaining('hermetic-hall-bg')
+    );
+    expect(document.querySelector('.hh-stage')).toBeInTheDocument();
+    expect(document.querySelector('.hh-hall-stage')).not.toBeInTheDocument();
+
+    await skipToHub();
+
+    expect(document.querySelector('.hh-stage')).not.toBeInTheDocument();
+    expect(document.querySelector('.hh-hall-plate')).toHaveAttribute(
+      'src',
+      expect.stringContaining('hermetic-hall-environment')
     );
   });
 
-  test('clicking a wedge alone does not mark it restored, and shows its status instead', async () => {
+  test('pointing at a wedge does not mark it restored, and shows its status instead', async () => {
     loadUserFacultyProgress.mockResolvedValue({ data: [], error: null });
     renderHub();
     await skipToHub();
 
-    fireEvent.click(screen.getByLabelText('Principle VII: Gender'));
+    fireEvent.mouseEnter(screen.getByLabelText(/Principle VII: Gender/));
 
-    const genderWedge = screen.getByLabelText('Principle VII: Gender');
+    const genderWedge = screen.getByLabelText(/Principle VII: Gender/);
     expect(genderWedge.className).not.toContain('is-mended');
-    expect(screen.getByText('AWAITING RESTORATION')).toBeInTheDocument();
+    // The status reads in the Hall's own caption now, not an interstitial card.
+    expect(screen.getByText('Awaiting restoration')).toBeInTheDocument();
   });
 
   test('a video error never silently skips to the briefing -- it waits for a manual continue', async () => {

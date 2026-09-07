@@ -36,6 +36,7 @@ const ReflectionProtocolPage = lazy(() => import('./pages/ReflectionProtocolPage
 const SovereignOSDemo = lazy(() => import('./pages/experience/SovereignOSDemo'));
 const SovereignOSLive = lazy(() => import('./pages/experience/SovereignOSLive'));
 const HermeticHallHub = lazy(() => import('./pages/experience/HermeticHallHub'));
+const ChromaFrameReference = lazy(() => import('./pages/experience/ChromaFrameReference'));
 
 import AppShell from './components/layout/AppShell';
 import VMAChatWidget from './components/sovereign-os/VMAChatWidget';
@@ -111,6 +112,13 @@ function AppRoutes() {
           anywhere live. See SovereignOSShell.jsx's header comment. */}
       <Route path="/qa/sovereign-os" element={<SovereignOSDemo />} />
       <Route path="/qa/hermetic-hall" element={<HermeticHallHub />} />
+
+      {/* The Chroma Frame's living reference — the Protocol's central
+          architecture, rendered in the frame it documents, using the same
+          components every screen uses. Credential-free and unauthenticated
+          on purpose: it shows the system, never a Seeker's state. Spec:
+          docs/CENTRAL_ARCHITECTURE.md. */}
+      <Route path="/system/chroma-frame" element={<ChromaFrameReference />} />
 
       {/* Phase 15/16/18 live: the real Shell + Concept Graph + VMA chat,
           authenticated, running the real SovereignProvider. Linked from

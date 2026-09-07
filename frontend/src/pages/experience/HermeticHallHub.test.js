@@ -56,10 +56,14 @@ describe('HermeticHallHub', () => {
     renderHub();
     await skipToHub();
 
+    /* The pillar count is reported through the Protocol's shared top rail
+       (src/system FrameRail) rather than a Hall-local header, so it is
+       asserted through the rail's readout slot: value and label are separate
+       elements now, and the value carries its own "/ 7" denominator. */
     await waitFor(() => {
-      expect(screen.getByText('0')).toBeInTheDocument();
+      expect(screen.getByTestId('frame-readout')).toHaveTextContent('0 / 7');
     });
-    expect(screen.getByText(/pillars restored/)).toBeInTheDocument();
+    expect(screen.getByTestId('frame-readout')).toHaveTextContent(/pillars restored/i);
   });
 
   test('marks a wedge restored only when its module is actually completed', async () => {
@@ -74,7 +78,7 @@ describe('HermeticHallHub', () => {
     await skipToHub();
 
     await waitFor(() => {
-      expect(screen.getByText('1')).toBeInTheDocument();
+      expect(screen.getByTestId('frame-readout')).toHaveTextContent('1 / 7');
     });
 
     const vibrationWedge = screen.getByLabelText('Principle III: Vibration');

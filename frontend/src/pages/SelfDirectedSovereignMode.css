@@ -1,23 +1,37 @@
+/* The Reclamation Mainframe transmits on the Chroma Frame's `crimson`
+   channel. Its red, its ink and its elemental swatches are DERIVED from the
+   frame's token layer (src/system/chromaFrame.css) rather than declared
+   here — this screen and the University Nexus next door used to define
+   their own unrelated palettes, which is precisely why they did not read as
+   one product. `--sos-air` was #55bc56 (a green, on the Air element) and
+   is now the frame's aurum key, which is what Air has always been on the
+   Act cards. The literal after each var() is the pre-frame value. */
 .sos-page {
-  --sos-bg-0: #020203;
-  --sos-bg-1: #070709;
+  /* The Mainframe declares its channel: crimson. */
+  --ckp-key: var(--ckp-ch-crimson, #d32020);
+  --ckp-key-bright: var(--ckp-ch-crimson-bright, #ff342d);
+  --ckp-key-dim: #6E241D;
+  --ckp-key-wash: rgba(210, 56, 44, .25);
+
+  --sos-bg-0: var(--ckp-obsidian, #020203);
+  --sos-bg-1: var(--ckp-ground, #070709);
   --sos-panel: rgba(7, 7, 9, .82);
   --sos-panel-strong: rgba(5, 5, 7, .94);
   --sos-metal-dark: #0a0b0e;
   --sos-metal-mid: #17191f;
   --sos-metal-edge: #353943;
-  --sos-red: #d32020;
-  --sos-red-bright: #ff342d;
+  --sos-red: var(--ckp-key);
+  --sos-red-bright: var(--ckp-key-bright);
   --sos-red-hot: #ff5b42;
-  --sos-red-dim: rgba(211, 32, 32, .25);
-  --sos-text-primary: #e4e2df;
-  --sos-text-secondary: #a9a8a5;
-  --sos-text-muted: #696a6f;
-  --sos-success: #36b65f;
-  --sos-water: #249ce6;
-  --sos-earth: #2daf62;
-  --sos-air: #55bc56;
-  --sos-sound: #8d20ef;
+  --sos-red-dim: var(--ckp-key-wash);
+  --sos-text-primary: var(--ckp-ivory, #e4e2df);
+  --sos-text-secondary: var(--ckp-read, #a9a8a5);
+  --sos-text-muted: var(--ckp-faint, #696a6f);
+  --sos-success: var(--ckp-ch-verdant-bright, #36b65f);
+  --sos-water: var(--ckp-ch-azure, #249ce6);
+  --sos-earth: var(--ckp-ch-verdant, #2daf62);
+  --sos-air: var(--ckp-ch-aurum, #55bc56);
+  --sos-sound: var(--ckp-ch-violet, #8d20ef);
   --sos-transition-deck: 620ms;
   --sos-transition-hud: 280ms;
   --sos-transition-core: 420ms;
@@ -28,7 +42,7 @@
   overflow: hidden;
   color: var(--sos-text-primary);
   background: var(--sos-bg-0);
-  font-family: 'Inter', sans-serif;
+  font-family: var(--ckp-script, 'Inter', sans-serif);
   letter-spacing: .08em;
   text-transform: uppercase;
 }

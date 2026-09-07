@@ -3,7 +3,7 @@
   inset: 0;
   overflow: hidden;
   background: #0a0a10;
-  font-family: 'Archivo', ui-sans-serif, system-ui, sans-serif;
+  font-family: var(--ckp-script, 'Inter', ui-sans-serif, system-ui, sans-serif);
 }
 
 .hh-bg {
@@ -27,26 +27,19 @@
 }
 
 /* ------------------------------------------------------------- TOPBAR - */
-.hh-topbar {
+/* The Hall's own topbar is gone; it renders <FrameRail> from src/system now,
+   which brings its slots, its voice (JetBrains Mono at 11px — the old bar
+   was IBM Plex Mono at 10.5px, under the Protocol's type floor) and its
+   colours with it.
+
+   The two lines below are the only Hall-local adjustment: this scene's
+   internal stacking (wheel 4, stage 6) predates the frame's six-layer
+   contract, so the rail is lifted above the stage until the Hall is rebuilt
+   around <ChromaFrame> and inherits the canonical order. Nothing else about
+   the rail is overridden here, and nothing else should be. */
+.hh-scene > .ckp-rail {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: 5;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 18px clamp(18px, 3vw, 40px);
-  font-family: 'IBM Plex Mono', ui-monospace, monospace;
-  font-size: 10.5px;
-  letter-spacing: 0.24em;
-  text-transform: uppercase;
-  color: #a88f5e;
-  background: linear-gradient(180deg, rgba(6, 5, 10, 0.55), transparent);
-}
-.hh-topbar b {
-  color: #f3d488;
-  font-weight: 400;
+  z-index: 7;
 }
 
 /* -------------------------------------------------------- HERMETIC WHEEL - */
@@ -193,7 +186,7 @@
   pointer-events: none;
 }
 .hh-video-loading-label {
-  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-family: var(--ckp-signal, 'JetBrains Mono', ui-monospace, monospace);
   font-size: 11px;
   letter-spacing: 0.3em;
   text-transform: uppercase;
@@ -238,7 +231,7 @@
   padding: 5px 12px;
   background: rgba(6, 5, 10, 0.7);
   border: 1px solid rgba(201, 162, 39, 0.5);
-  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-family: var(--ckp-signal, 'JetBrains Mono', ui-monospace, monospace);
   font-size: 10px;
   letter-spacing: 0.2em;
   text-transform: uppercase;
@@ -262,7 +255,7 @@
 .hh-video-recover p {
   margin: 0;
   max-width: 30ch;
-  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-family: var(--ckp-signal, 'JetBrains Mono', ui-monospace, monospace);
   font-size: 11px;
   letter-spacing: 0.14em;
   text-transform: uppercase;
@@ -303,7 +296,7 @@
 }
 .hh-terminal-bar-label {
   margin-left: 10px;
-  font-family: 'JetBrains Mono', ui-monospace, 'Courier New', monospace;
+  font-family: var(--ckp-signal, 'JetBrains Mono', ui-monospace, monospace);
   font-size: 10px;
   font-weight: 500;
   letter-spacing: 0.24em;
@@ -317,7 +310,7 @@
   margin: 0;
   padding: clamp(12px, 2.4vh, 26px) clamp(14px, 2.4vw, 28px);
   overflow-y: auto;
-  font-family: 'JetBrains Mono', ui-monospace, 'Courier New', monospace;
+  font-family: var(--ckp-signal, 'JetBrains Mono', ui-monospace, monospace);
   font-weight: 500;
   font-size: clamp(10.5px, 1.1vw, 14px);
   line-height: 1.8;
@@ -382,7 +375,7 @@
   color: #a88f5e;
 }
 .hh-env-idle-label {
-  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-family: var(--ckp-signal, 'JetBrains Mono', ui-monospace, monospace);
   font-size: 10.5px;
   letter-spacing: 0.28em;
   text-transform: uppercase;
@@ -402,7 +395,7 @@
   color: #f3d488;
 }
 .hh-env-eyebrow {
-  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-family: var(--ckp-signal, 'JetBrains Mono', ui-monospace, monospace);
   font-size: 10.5px;
   letter-spacing: 0.3em;
   text-transform: uppercase;
@@ -410,7 +403,7 @@
 }
 .hh-env-title {
   margin: 0;
-  font-family: 'Cinzel', 'Archivo', serif;
+  font-family: var(--ckp-sigil, 'Cinzel', Georgia, serif);
   font-size: clamp(22px, 3vw, 34px);
   font-weight: 600;
   letter-spacing: 0.04em;
@@ -427,7 +420,7 @@
 .hh-env-status {
   margin-top: 4px;
   padding: 5px 14px;
-  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-family: var(--ckp-signal, 'JetBrains Mono', ui-monospace, monospace);
   font-size: 10px;
   letter-spacing: 0.2em;
   text-transform: uppercase;

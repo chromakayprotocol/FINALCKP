@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { loadUserFacultyProgress } from '../../lib/supabase/reclamationUniversity';
 import { HERMETIC_HALL_FACULTY } from '../../data/hermeticHallCurriculum';
+import { FrameRail, READOUT_STATE } from '../../system';
 import './hermeticHallHub.css';
 
 // Real production art, shipped locally so it's optimized (WebP) and doesn't
@@ -346,15 +347,25 @@ export default function HermeticHallHub() {
   }, [navigate, selected]);
 
   return (
-    <div className="hh-scene">
+    <div className="hh-scene" data-channel="aurum">
       <img className="hh-bg" src={ASSETS.hall} alt="Hermetic Hall" />
       <div className="hh-bg-veil" aria-hidden="true" />
       <audio ref={musicRef} src={ASSETS.hallMusic} loop preload="auto" />
 
-      <header className="hh-topbar">
-        <span>Reclamation University &middot; Hermetic Hall</span>
-        <span><b>{progressLoaded ? mended.size : '…'}</b> / 7 pillars restored</span>
-      </header>
+      {/* The Protocol's shared top rail, not a Hall-local header. Same slots,
+          same voice, same place as every other screen: system, then where
+          you are, then the one number that matters here. The pillar count is
+          handed over as a value + a state, so the frame — not this screen —
+          decides what an unread count looks like. */}
+      <FrameRail
+        location="University &middot; Hermetic Hall"
+        readout={{
+          label: 'Pillars restored',
+          value: mended.size,
+          unit: ' / 7',
+          state: progressLoaded ? READOUT_STATE.OK : READOUT_STATE.LOADING,
+        }}
+      />
 
       {/* The Hermetic Wheel -- a persistent HUD dial mounted flush against
           the left edge, flat side vertical, arc bulging right toward the

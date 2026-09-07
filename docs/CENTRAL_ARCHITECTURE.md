@@ -13,9 +13,12 @@ There is one chassis now.
 
 ## 1. The idea
 
-Chroma keying works because **the frame is constant and the key is not**. One
-frame, one key colour, and any world at all can be composited behind it. This
-application is named after that idea, so its interface is built on it.
+**One chassis, held constant. One key colour, free to change.**
+
+(An earlier revision of this document claimed the Protocol is *named* after
+chroma keying and derived the architecture from that. That was an invention,
+not a fact about this project, and it has been removed. The mechanism below
+stands on its own merits and does not depend on where the name came from.)
 
 Every module screen supplies exactly two things:
 
@@ -66,22 +69,50 @@ A channel is a *triplet plus a wash*: `key` paints borders, rules and fills;
 
 | Channel | Key | Transmits |
 |---|---|---|
-| `aurum` | `#C9A227` | Reclamation University, Hermetic Hall, Air |
+| `aurum` | `#C9A227` | **Act IV — The Crucible Code, Air.** Reserved; nothing else may claim gold. |
+| `indigo` | `#4038C9` | Reclamation University, Hermetic Hall — *the visual medium* |
+| `violet` | `#8D20EF` | Sonic Surfaces — Immersion, Visualizer Core, Sound — *the auditory medium* |
 | `crimson` | `#D2382C` | Sovereign Mainframe |
 | `verdant` | `#3F8F4F` | Act I — The Fractured Veil, Fracture Protocol, Earth |
 | `azure` | `#3FA9D8` | Act II — The Reflection Chamber, Reflection Protocol, Water |
 | `ember` | `#D0431C` | Act III — Reclamation, Fire |
-| `violet` | `#8D20EF` | Sonic surfaces — Immersion, Visualizer Core |
-| `argent` | `#6E7683` | The system's own voice: chrome, boot, diagnostics, sealed |
+| `argent` | `#6E7683` | The system's own voice: chrome, boot, diagnostics, and the appearance of anything sealed |
 
-None of these are new inventions. They are the colours already on screen,
-promoted to canon — which is why adopting the frame changed nothing about how
-the screens look, only about how many places define it. Before this, the
-Nexus's gold (`#d9a441`) and the University module system's gold (`#C9A227`)
-were two different golds eight percent apart on adjacent screens.
+Most of these are not new inventions — they are the colours already on screen,
+promoted to canon, which is why adopting the frame changed how many places
+define the identity rather than how the screens look. Before this, the Nexus's
+gold (`#d9a441`) and the University module system's gold (`#C9A227`) were two
+different golds eight percent apart on adjacent screens.
 
-A **sealed** module transmits on `argent`, never on a dimmed version of the
-channel it will eventually own. "Sealed" and "quiet" have to look different.
+### Gold is Act IV's
+
+The first revision of this system gave `aurum` to Reclamation University *and*
+to Air/Act IV. That was a collision: **gold belongs to the Crucible Code and
+nothing else.** `chromaChannels.test.js` now asserts it, so no future surface
+can quietly take it back.
+
+### The teaching pair
+
+`indigo` and `violet` are deliberately **the same colour family, split by
+shade** — because the surfaces they key are a pair. The Hermetic Hall teaches
+through the visual medium; Sonic Surfaces teach through the auditory one. A
+Seeker moving between them should feel the kinship and still know which room
+they are in.
+
+Indigo runs blue-cool (contemplative, read). Violet runs hot and electric
+(frequency, heard). **Do not converge them, and do not pull them apart into
+unrelated hues** — a test holds the hue gap between 15° and 60° and asserts
+indigo stays the cooler of the two. Reading their closeness as a defect to be
+fixed would remove the point.
+
+### Sealed is a state, not an identity
+
+`channel` in the registry is canonical identity; `argent` is what a sealed
+surface *renders*. The Crucible Protocol's channel is `aurum` and the
+Reclamation Protocol's is `ember` even while both are shut. Recording them as
+`argent` conflated "this is the system's own voice" with "this is not open
+yet" — two different facts, and collapsing them is the same mistake the
+readout rule exists to prevent one layer down.
 
 ### Declaring a channel
 
@@ -139,9 +170,18 @@ in three registers:
 |---|---|---|
 | **SIGIL** | Cinzel | Place names, module titles. Mythic. |
 | **SIGNAL** | JetBrains Mono, uppercase, `0.22em` | Every system label and telemetry. Machine. |
-| **SCRIPT** | Inter | Prose and instruction. Human. |
+| **SCRIPT** | Spectral | Prose and instruction. Human. |
 
-That tracking is as much the brand as the gold is.
+That tracking is as much the brand as the key colour is.
+
+**Why Spectral and not Inter.** The first revision used Inter for prose. Inter
+is competent and completely anonymous — it is the face every product defaults
+to, and on a dark, classical, cinematic ground it reads as an admin panel
+bolted to a cathedral. Spectral is a text serif engineered for screens: it
+holds its detail at 14px on obsidian, carries a 200–800 range with true
+italics, and sits under Cinzel as the same civilisation rather than a
+different one. The register the Protocol wants from its body copy is
+*considered*, not *neutral*.
 
 (`--ckp-quote`, Cormorant Garamond, is the one sanctioned addition: Cinzel has
 no true italic, and the University's pull-quotes need one.)
@@ -260,10 +300,10 @@ Mainframe's module cards are the same object.
 | Screen | State |
 |---|---|
 | `/system/chroma-frame` | Built **in** the frame. The reference. |
-| Hermetic Hall | Renders the shared `FrameRail`; declares `aurum`; fonts and colours derived. Full `ChromaFrame` adoption pending. |
-| University Nexus | Colours and voices derived from the channel layer. Composition untouched — its 47-test Playwright layout contract still passes unchanged. |
+| Hermetic Hall | Renders the shared `FrameRail`; declares `indigo`; fonts and colours derived. Full `ChromaFrame` adoption pending. |
+| University Nexus | Declares `indigo`; colours and voices derived from the channel layer. Its four protocol nodes were also un-swapped — the file had Crucible on fire-red and Reclamation on gold, contradicting both the Acts and its own orb art. |
 | Sovereign Mainframe | Declares `crimson`; ink, elements and body voice derived. |
-| RU module system (`recUniSystem.css`) | Declares `aurum`; ground, materials and all three voices derived. Every Hermetic module inherits it. |
+| RU module system (`recUniSystem.css`) | Declares `indigo`; ground, materials and all three voices derived. Every Hermetic module inherits it. Its `--ru-gold*` tokens were renamed `--ru-key*` — a variable called `gold` holding indigo is exactly the drift this system exists to end, so the name moved with the colour. |
 | Visualizer Core, Act entries, `AppShell` | Not yet adopted. |
 
 **The path for the rest is the same every time:** declare the channel, replace

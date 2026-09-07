@@ -8,6 +8,11 @@
    Change the channel here and the entire chassis re-keys: brackets, rails,
    meters, focus rings, every panel edge. That is the whole architecture in
    one gesture. One chassis, many worlds.
+
+   Note on the indigo/violet pair: they are close on purpose. The Hermetic
+   Hall teaches through the visual medium and Sonic Surfaces through the
+   auditory one, so they read as kin and are told apart by shade. Anyone
+   "fixing" that closeness would be removing the point.
    ========================================================================= */
 
 import { useState } from 'react';
@@ -40,7 +45,7 @@ const LAYERS = [
 const VOICES = [
   ['Sigil', 'Cinzel', 'Place names and module titles. Mythic register.', 'ckp-subtitle'],
   ['Signal', 'JetBrains Mono', 'Every system label and telemetry. Machine register.', 'ckp-eyebrow'],
-  ['Script', 'Inter', 'Prose and instruction. Human register.', 'ckp-body'],
+  ['Script', 'Spectral', 'Prose and instruction. Human register.', 'ckp-body'],
 ];
 
 /* Every state a value can be in, shown side by side — because the point of
@@ -61,7 +66,7 @@ const STATUS_ICON = {
 
 export default function ChromaFrameReference() {
   const navigate = useNavigate();
-  const [channel, setChannel] = useState('aurum');
+  const [channel, setChannel] = useState('indigo');
   const current = CHROMA_CHANNELS[channel];
 
   return (
@@ -83,15 +88,23 @@ export default function ChromaFrameReference() {
           <span className="ckp-eyebrow">One chassis, many worlds</span>
           <h1 className="ckp-title">The Chroma Frame</h1>
           <p className="ckp-body">
-            Chroma keying works because the frame is constant and the key is not. Every screen
-            supplies a <em>plate</em> and a <em>channel</em>; everything else — brackets, rails,
-            type, and the way a missing number is reported — is supplied once, here. Pick a
-            channel and watch the whole chassis re-key.
+            One chassis, held constant. One key colour, free to change. Every screen
+            supplies a <em>plate</em> — its own world — and declares a <em>channel</em> —
+            its own key. Everything else, brackets to rails to type to the way a missing
+            number is reported, is supplied once, here. Pick a channel and watch the whole
+            chassis re-key.
           </p>
         </header>
 
         {/* ---- the channels ------------------------------------------- */}
-        <section className="cfr-channels" aria-label="Channels">
+        {/* Column count comes from the registry, never a literal — a hardcoded
+            7 is what left argent orphaned on its own row the moment indigo
+            joined. */}
+        <section
+          className="cfr-channels"
+          aria-label="Channels"
+          style={{ '--cfr-channels': CHANNEL_IDS.length }}
+        >
           {CHANNEL_IDS.map((id) => {
             const entry = CHROMA_CHANNELS[id];
             return (

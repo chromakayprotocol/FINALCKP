@@ -42,7 +42,7 @@
   overflow: hidden;
   color: var(--sos-text-primary);
   background: var(--sos-bg-0);
-  font-family: var(--ckp-script, 'Inter', sans-serif);
+  font-family: var(--ckp-script, 'Spectral', Georgia, serif);
   letter-spacing: .08em;
   text-transform: uppercase;
 }

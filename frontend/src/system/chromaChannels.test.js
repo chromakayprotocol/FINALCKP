@@ -180,10 +180,46 @@ describe('the protocol surface map', () => {
   });
 
   test('surfacesForChannel filters by channel', () => {
-    const aurum = surfacesForChannel('aurum');
-    expect(aurum.map((surface) => surface.id)).toContain('university-nexus');
-    expect(aurum.map((surface) => surface.id)).toContain('hermetic-hall');
-    expect(aurum.every((surface) => surface.channel === 'aurum')).toBe(true);
+    const indigo = surfacesForChannel('indigo');
+    expect(indigo.map((surface) => surface.id)).toContain('university-nexus');
+    expect(indigo.map((surface) => surface.id)).toContain('hermetic-hall');
+    expect(indigo.every((surface) => surface.channel === 'indigo')).toBe(true);
+  });
+
+  /* Gold is Act IV's alone. It spent one revision doing double duty as the
+     University's key as well, which is the collision this asserts against:
+     nothing outside the Crucible Code may claim aurum. */
+  test('aurum belongs to the Crucible Code and nothing else', () => {
+    expect(surfacesForChannel('aurum').map((surface) => surface.id)).toEqual([
+      'act-four',
+      'crucible-protocol',
+    ]);
+  });
+
+  /* Indigo and violet are one family split by shade, on purpose — the
+     Hermetic Hall teaches by sight, Sonic Surfaces by sound. Kinship is the
+     intent; the split is what keeps them legible as two places. Converging
+     them (or pulling them apart into unrelated hues) both break it. */
+  test('the teaching pair stays kin but stays distinguishable', () => {
+    const hue = (hex) => {
+      const [r, g, b] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255);
+      const max = Math.max(r, g, b);
+      const min = Math.min(r, g, b);
+      const span = max - min;
+      let h = 0;
+      if (span === 0) h = 0;
+      else if (max === r) h = ((g - b) / span) % 6;
+      else if (max === g) h = (b - r) / span + 2;
+      else h = (r - g) / span + 4;
+      return ((h * 60) % 360 + 360) % 360;
+    };
+
+    const gap = Math.abs(hue(CHROMA_CHANNELS.indigo.key) - hue(CHROMA_CHANNELS.violet.key));
+    expect(gap).toBeGreaterThan(15); // far enough apart to tell which room you are in
+    expect(gap).toBeLessThan(60); // close enough to still read as one family
+
+    // Indigo runs blue-cool, violet runs hot. Do not let them cross over.
+    expect(hue(CHROMA_CHANNELS.indigo.key)).toBeLessThan(hue(CHROMA_CHANNELS.violet.key));
   });
 
   test('findSurface returns null rather than undefined for a miss', () => {

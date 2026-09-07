@@ -3,7 +3,7 @@
   inset: 0;
   overflow: hidden;
   background: #0a0a10;
-  font-family: var(--ckp-script, 'Inter', ui-sans-serif, system-ui, sans-serif);
+  font-family: var(--ckp-script, 'Spectral', Georgia, serif);
 }
 
 .hh-bg {
@@ -196,7 +196,7 @@
 .hh-video-loading-bar {
   width: 160px;
   height: 2px;
-  background: rgba(201, 162, 39, 0.2);
+  background: color-mix(in srgb, var(--ckp-key) 20%, transparent);
   overflow: hidden;
   position: relative;
 }
@@ -230,7 +230,7 @@
   left: 14px;
   padding: 5px 12px;
   background: rgba(6, 5, 10, 0.7);
-  border: 1px solid rgba(201, 162, 39, 0.5);
+  border: 1px solid color-mix(in srgb, var(--ckp-key) 50%, transparent);
   font-family: var(--ckp-signal, 'JetBrains Mono', ui-monospace, monospace);
   font-size: 10px;
   letter-spacing: 0.2em;
@@ -364,7 +364,7 @@
   padding: clamp(20px, 4vh, 40px);
   text-align: center;
   background:
-    radial-gradient(ellipse 90% 120% at 50% 110%, rgba(201, 162, 39, 0.16), transparent 65%),
+    radial-gradient(ellipse 90% 120% at 50% 110%, color-mix(in srgb, var(--ckp-key) 16%, transparent), transparent 65%),
     linear-gradient(180deg, #0c0a06, #000);
 }
 .hh-env-idle {

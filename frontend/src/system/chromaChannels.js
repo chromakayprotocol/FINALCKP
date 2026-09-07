@@ -1,12 +1,8 @@
 /* ============================================================================
    THE CHROMA FRAME — CHANNEL REGISTRY
    ----------------------------------------------------------------------------
-   Chroma keying works because the FRAME is constant and the KEY is not: one
-   chassis, one key colour, and any world at all can be composited behind it.
-   This application is named after that idea, so its interface is built on it.
-
-   Every module screen in the Protocol supplies two things and inherits
-   everything else:
+   One chassis, held constant. One key colour, free to change. Every module
+   screen in the Protocol supplies two things and inherits everything else:
 
      PLATE    its own world  — environment art, video, 3D, whatever it is
      CHANNEL  its own key    — one entry in this file
@@ -42,6 +38,8 @@
  * how the screens already look — only about how many places define it.
  */
 export const CHROMA_CHANNELS = Object.freeze({
+  /* Gold is Act IV's and nothing else's. It briefly did double duty as the
+     University's key as well; the Crucible Code owns it. */
   aurum: {
     id: 'aurum',
     label: 'Aurum',
@@ -50,7 +48,31 @@ export const CHROMA_CHANNELS = Object.freeze({
     keyDim: '#6E5D2C',
     wash: 'rgba(201, 162, 39, 0.10)',
     element: 'Air',
-    domain: 'Reclamation University',
+    domain: 'Act IV — The Crucible Code',
+  },
+
+  /* ------------------------------------------------------------------------
+     THE TEACHING PAIR
+
+     Indigo and violet are deliberately the same colour family, split by
+     shade, because the two surfaces they key ARE a pair: the Hermetic Hall
+     teaches through the visual medium and Sonic Surfaces teach through the
+     auditory one. A Seeker moving between them should feel the kinship and
+     still know which one they are in. Reading them as "too close" misses the
+     point — the closeness is the statement, and the shade is the distinction.
+
+     Indigo runs blue-cool (contemplative, read); violet runs hot and
+     electric (frequency, heard). Do not converge them.
+     --------------------------------------------------------------------- */
+  indigo: {
+    id: 'indigo',
+    label: 'Indigo',
+    key: '#4038C9',
+    keyBright: '#9B8CFF',
+    keyDim: '#211C63',
+    wash: 'rgba(64, 56, 201, 0.10)',
+    element: null,
+    domain: 'Reclamation University — the visual medium',
   },
   crimson: {
     id: 'crimson',
@@ -100,12 +122,13 @@ export const CHROMA_CHANNELS = Object.freeze({
     keyDim: '#4B1180',
     wash: 'rgba(141, 32, 239, 0.10)',
     element: 'Sound',
-    domain: 'Sonic surfaces',
+    domain: 'Sonic surfaces — the auditory medium',
   },
-  /* The system's own voice: chrome, boot, diagnostics, and every sealed or
-     not-yet-authored surface. A locked module transmits on argent, never on
-     a dimmed version of the channel it will eventually own — "sealed" and
-     "quiet" have to look different. */
+  /* The system's own voice: chrome, boot, diagnostics, and the rendered
+     appearance of anything sealed. A sealed surface RENDERS argent rather
+     than a dimmed version of its own key, so "sealed" and "quiet" never look
+     alike — but it keeps its canonical channel in the registry, because what
+     a surface IS and what it currently looks like are two different facts. */
   argent: {
     id: 'argent',
     label: 'Argent',
@@ -192,6 +215,24 @@ export const PROTOCOL_SURFACES = Object.freeze([
     summary: 'Five pillars of governed feeling, scored to the visualizer.',
   },
   {
+    id: 'act-three',
+    title: 'Reclamation',
+    location: 'Act III · Fire',
+    channel: 'ember',
+    route: '/experiencemode/sovereign/module/audio-visualizer-core',
+    status: SURFACE_STATUS.LIVE,
+    summary: 'The fire Act. Reclaiming what the fracture took.',
+  },
+  {
+    id: 'act-four',
+    title: 'The Crucible Code',
+    location: 'Act IV · Air',
+    channel: 'aurum',
+    route: null,
+    status: SURFACE_STATUS.SEALED,
+    summary: 'Gold is reserved here. Sealed until the Protocol opens it.',
+  },
+  {
     id: 'immersion',
     title: 'Immersion Protocol',
     location: 'Protocol · Guided Audio',
@@ -222,7 +263,7 @@ export const PROTOCOL_SURFACES = Object.freeze([
     id: 'university-nexus',
     title: 'Reclamation University',
     location: 'University · Nexus',
-    channel: 'aurum',
+    channel: 'indigo',
     route: '/experiencemode/sovereign/reclamation-university/nexus',
     status: SURFACE_STATUS.LIVE,
     summary: 'A synthesized framework for the Sovereign Self.',
@@ -231,7 +272,7 @@ export const PROTOCOL_SURFACES = Object.freeze([
     id: 'hermetic-hall',
     title: 'Hermetic Hall',
     location: 'University · Hermetic Hall',
-    channel: 'aurum',
+    channel: 'indigo',
     route: '/experiencemode/sovereign/reclamation-university/hermetic-hall',
     status: SURFACE_STATUS.LIVE,
     summary: 'Seven principles on the Hermetic Wheel. Seven pillars to restore.',
@@ -254,23 +295,30 @@ export const PROTOCOL_SURFACES = Object.freeze([
     status: SURFACE_STATUS.LIVE,
     summary: 'The foundations faculty. Where academic mastery is measured.',
   },
+  /* `channel` is canonical IDENTITY, not current appearance. These two are
+     sealed, so their chrome renders argent while they stay shut — but the
+     Crucible faculty is Act IV's and the Reclamation faculty is Act III's,
+     and the registry says so. Recording them as argent conflated "this is
+     the system's own voice" with "this is not open yet", which are two
+     different facts; collapsing them is the same mistake the readout rule
+     exists to prevent one layer down. */
   {
     id: 'crucible-protocol',
     title: 'The Crucible Protocol',
     location: 'University · Crucible',
-    channel: 'argent',
+    channel: 'aurum',
     route: null,
     status: SURFACE_STATUS.SEALED,
-    summary: 'Authored, sealed. No production modules yet.',
+    summary: 'Act IV’s faculty. Authored, sealed, no production modules yet.',
   },
   {
     id: 'reclamation-protocol',
     title: 'The Reclamation Protocol',
     location: 'University · Reclamation',
-    channel: 'argent',
+    channel: 'ember',
     route: null,
     status: SURFACE_STATUS.SEALED,
-    summary: 'Authored, sealed. No production modules yet.',
+    summary: 'Act III’s faculty. Authored, sealed, no production modules yet.',
   },
   {
     id: 'paywall',

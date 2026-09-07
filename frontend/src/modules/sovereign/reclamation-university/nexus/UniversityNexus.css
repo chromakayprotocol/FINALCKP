@@ -17,10 +17,10 @@
   /* The Nexus declares its channel. `data-channel` on the root element would
      do the same thing; declaring it here keeps the change to CSS only, so
      the e2e layout suite's markup contract is untouched. */
-  --ckp-key: var(--ckp-ch-aurum, #C9A227);
-  --ckp-key-bright: var(--ckp-ch-aurum-bright, #E9CE72);
-  --ckp-key-dim: #6E5D2C;
-  --ckp-key-wash: rgba(201, 162, 39, 0.10);
+  --ckp-key: var(--ckp-ch-indigo, #4038C9);
+  --ckp-key-bright: var(--ckp-ch-indigo-bright, #9B8CFF);
+  --ckp-key-dim: #211C63;
+  --ckp-key-wash: rgba(64, 56, 201, 0.10);
 
   --un-gold: var(--ckp-key);
   --un-gold-bright: var(--ckp-key-bright);
@@ -30,11 +30,11 @@
 
   --un-fracture: var(--ckp-ch-verdant, #3f8f4f);
   --un-reflection: var(--ckp-ch-azure, #3fa9d8);
-  --un-crucible: var(--ckp-ch-ember, #d0431c);
-  --un-reclamation: var(--ckp-ch-aurum, #e0ac2e);
+  --un-crucible: var(--ckp-ch-aurum, #C9A227);
+  --un-reclamation: var(--ckp-ch-ember, #d0431c);
 
   --un-font-display: var(--ckp-sigil, 'Cinzel', serif);
-  --un-font-body: var(--ckp-script, 'Inter', sans-serif);
+  --un-font-body: var(--ckp-script, 'Spectral', Georgia, serif);
 
   min-height: 100vh;
   display: grid;

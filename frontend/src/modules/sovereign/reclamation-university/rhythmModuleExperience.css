@@ -54,7 +54,7 @@
   content:""; position:fixed; inset:0; pointer-events:none; z-index:0;
   background:
     radial-gradient(900px 520px at 72% 6%, rgba(217,142,43,.09), transparent 70%),
-    radial-gradient(700px 480px at 8% 94%, rgba(201,162,39,.05), transparent 70%);
+    radial-gradient(700px 480px at 8% 94%, color-mix(in srgb, var(--ckp-key) 5%, transparent), transparent 70%);
 }
 
 /* ------------------------------------------------------------ TOP HEADER -- */
@@ -199,7 +199,7 @@
 .rur-chain-tab:last-child{ border-right:none; }
 .rur-chain-tab.is-active{ color:var(--amber-bright); background:rgba(217,142,43,.09); }
 .rur-chain-tab.is-terminal{ color:var(--gold); }
-.rur-chain-tab.is-terminal.is-active{ color:var(--gold-bright); background:rgba(201,162,39,.12); }
+.rur-chain-tab.is-terminal.is-active{ color:var(--gold-bright); background:color-mix(in srgb, var(--ckp-key) 12%, transparent); }
 .rur-chain-body{ margin-top:12px; padding:16px 18px; border:1px solid var(--line-2); border-radius:3px; background:rgba(0,0,0,.22); }
 .rur-chain-body p{ margin:0; font-size:14px; line-height:1.66; color:#D6CEC0; font-weight:300; }
 
@@ -240,7 +240,7 @@
   cursor:pointer; transition:all .2s; display:flex; align-items:center; justify-content:center;
 }
 .rur-overlay-seg:hover{ border-color:var(--line-2); color:var(--ivory); }
-.rur-overlay-seg.is-selected{ border-color:var(--gold-bright); color:var(--gold-bright); background:rgba(201,162,39,.14); }
+.rur-overlay-seg.is-selected{ border-color:var(--gold-bright); color:var(--gold-bright); background:color-mix(in srgb, var(--ckp-key) 14%, transparent); }
 .rur-overlay-note{ margin-top:12px; font-size:12.5px; line-height:1.6; color:var(--bronze); }
 
 /* ------------------------------------------------------------- ARTIFACT -- */
@@ -251,9 +251,9 @@
 .rur-artifact-card{ padding:18px 20px; border:1px solid var(--line); border-radius:3px; background:rgba(11,10,16,.9); }
 .rur-artifact-card h4{ margin:0 0 4px; font-family:var(--f-hud); font-size:var(--ru-label); letter-spacing:.2em; color:var(--amber-bright); }
 .rur-artifact-card small{ display:block; font-size:12px; line-height:1.5; color:var(--bronze-dim); margin-bottom:10px; }
-.rur-artifact-card.is-intervention{ border-color:var(--gold); background:rgba(201,162,39,.05); }
+.rur-artifact-card.is-intervention{ border-color:var(--gold); background:color-mix(in srgb, var(--ckp-key) 5%, transparent); }
 .rur-artifact-card.is-intervention h4{ color:var(--gold-bright); }
-.rur-carry{ margin-top:20px; padding:20px; border:1px solid var(--gold-dim); border-radius:3px; background:rgba(201,162,39,.05); }
+.rur-carry{ margin-top:20px; padding:20px; border:1px solid var(--gold-dim); border-radius:3px; background:color-mix(in srgb, var(--ckp-key) 5%, transparent); }
 .rur-carry span{ display:block; font-family:var(--f-hud); font-size:var(--ru-label); letter-spacing:.24em; color:var(--gold); margin-bottom:8px; }
 .rur-carry p{ margin:0; font:italic 1.05rem/1.5 var(--f-quote); color:var(--gold-bright); }
 
@@ -279,7 +279,7 @@
 /* -------------------------------------------------------------- SUMMARY -- */
 .rur-badges{ display:flex; flex-wrap:wrap; gap:10px; margin:18px 0 8px; }
 .rur-badge{ font-family:var(--f-hud); font-size:var(--ru-label); letter-spacing:.14em; padding:8px 12px; border-radius:2px; border:1px solid var(--line-2); color:var(--bronze-dim); }
-.rur-badge.on{ border-color:var(--gold); color:var(--gold-bright); background:rgba(201,162,39,.08); }
+.rur-badge.on{ border-color:var(--gold); color:var(--gold-bright); background:color-mix(in srgb, var(--ckp-key) 8%, transparent); }
 .rur-learned{ display:grid; gap:10px; padding-left:18px; margin:16px 0; }
 .rur-learned li{ font-size:14px; line-height:1.6; color:#D6CEC0; font-weight:300; }
 .rur-discovered{ display:grid; gap:12px; margin:18px 0; }

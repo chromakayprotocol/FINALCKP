@@ -41,7 +41,7 @@
 .cfr-channels {
   grid-column: 1 / -1;
   display: grid;
-  grid-template-columns: repeat(7, minmax(0, 1fr));
+  grid-template-columns: repeat(var(--cfr-channels, 8), minmax(0, 1fr));
   gap: 0.5cqw;
 }
 

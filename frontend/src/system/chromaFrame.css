@@ -18,11 +18,12 @@
 
    THREE VOICES. Never a fourth. Eight families were in play across these
    screens (Cinzel, Cormorant, Inter, JetBrains Mono, Oxanium, Archivo, IBM
-   Plex, Chakra Petch); the Protocol speaks in three registers:
+   Plex, Chakra Petch); the Protocol speaks in three registers, and none of
+   them is a default:
 
      SIGIL   Cinzel        — place names, module titles. Mythic register.
      SIGNAL  JetBrains Mono — every system label and telemetry. Machine.
-     SCRIPT  Inter         — prose and instruction. Human.
+     SCRIPT  Spectral      — prose and instruction. Human.
 
    RULES THAT ARE NOT NEGOTIABLE
    • No type below 11px. Anywhere. (Inherited from recUniSystem.css, which
@@ -59,7 +60,13 @@
   /* --------------------------------------------------------------- TYPE -- */
   --ckp-sigil: 'Cinzel', Georgia, serif;
   --ckp-signal: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
-  --ckp-script: 'Inter', system-ui, -apple-system, sans-serif;
+  /* Spectral, not Inter. Inter is competent and completely anonymous — it is
+     the face every product defaults to, which on a dark, classical, cinematic
+     ground reads as an admin panel bolted to a cathedral. Spectral is a text
+     serif engineered for screens: it holds its detail at 14px on obsidian,
+     carries a full 200–800 range with true italics, and sits under Cinzel as
+     the same civilisation rather than a different one. */
+  --ckp-script: 'Spectral', Georgia, 'Times New Roman', serif;
   --ckp-quote: 'Cormorant Garamond', Georgia, serif;
 
   /* Signal is always uppercase and always widely tracked. That tracking is
@@ -102,6 +109,8 @@
      these two drift apart. */
   --ckp-ch-aurum: #C9A227;
   --ckp-ch-aurum-bright: #E9CE72;
+  --ckp-ch-indigo: #4038C9;
+  --ckp-ch-indigo-bright: #9B8CFF;
   --ckp-ch-crimson: #D2382C;
   --ckp-ch-crimson-bright: #FF5545;
   --ckp-ch-verdant: #3F8F4F;
@@ -132,6 +141,15 @@
   --ckp-key-bright: var(--ckp-ch-aurum-bright);
   --ckp-key-dim: #6E5D2C;
   --ckp-key-wash: rgba(201, 162, 39, 0.10);
+}
+
+/* Indigo and violet are one family split by shade on purpose — the Hermetic
+   Hall teaches by sight, Sonic Surfaces by sound. See chromaChannels.js. */
+[data-channel='indigo'] {
+  --ckp-key: var(--ckp-ch-indigo);
+  --ckp-key-bright: var(--ckp-ch-indigo-bright);
+  --ckp-key-dim: #211C63;
+  --ckp-key-wash: rgba(64, 56, 201, 0.10);
 }
 
 [data-channel='crimson'] {

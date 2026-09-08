@@ -13,9 +13,7 @@
   },
   "dependencies": {
     "@supabase/ssr": "^0.10.2",
-    "@supabase/supabase-js": "^2.104.1",
-    "build": "^0.1.4",
-    "scoop": "^0.0.2"
+    "@supabase/supabase-js": "^2.104.1"
   },
   "allowScripts": {
     "core-js@3.50.0": true,

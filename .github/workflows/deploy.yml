@@ -56,6 +56,12 @@ jobs:
           # secret, so hardcoded here rather than requiring a new repo
           # secret just to unblock the live VMA chat widget.
           VITE_APP_VMA_WORKER_URL: https://chroma-key-vma.matrixmediamoguls.workers.dev
+          # Same reasoning, for frontend/shadow-twin-worker (Act II Shadow
+          # Twin generation) -- public, not secret. Without this the frontend
+          # bundle ships with no worker URL at all and ShadowTwinInitialization
+          # reports the Chamber as unconfigured, even though the migration is
+          # applied and the Worker is deployed and reachable.
+          VITE_APP_SHADOW_TWIN_WORKER_URL: https://chroma-key-shadow-twin.matrixmediamoguls.workers.dev
 
       - name: Static route smoke checks
         working-directory: frontend

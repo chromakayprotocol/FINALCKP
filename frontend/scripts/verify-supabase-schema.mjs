@@ -41,6 +41,14 @@ export const REQUIRED_TABLES = [
   // derived from this one, so a check that only covers rec_uni_* is not
   // actually checking the Nexus's own data path.
   'sovereign_module_state',
+  // Act II's Shadow Twin (supabase/migrations/20260909132000_create_shadow_twin_schema.sql).
+  // Added after a real gap: the migration file existed and the frontend
+  // code merged and deployed, but the migration itself was never applied
+  // to the live project, so the feature was silently non-functional in
+  // production with nothing catching it. This is exactly the class of
+  // failure this whole script exists to catch.
+  'shadow_twins',
+  'shadow_twin_fragments',
 ];
 
 export const SCHEMA_CACHE_MISS = 'PGRST205';

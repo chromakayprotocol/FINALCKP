@@ -1,0 +1,24 @@
+/* Portal Three / Pillar Three — Sacred Restraint & Reflection's own theme.
+ *
+ * Same shape as forgedWitness.css: re-themes the shared Chamber chrome and
+ * the shared `.fw-*` track/synthesis rules (styles/trackSynthesis.css) by
+ * redefining accent tokens — no structural CSS lives here. `--track-secondary`
+ * is this pillar's own already-canonical hue (the silver/argent tone
+ * ReflectionChamberEnvironment.jsx already uses for this portal's hotspot),
+ * not a new invention.
+ */
+
+.pooi.sacred-restraint-pillar {
+  --h20-sky: #38bdf8;
+  --h20-royal: #2563eb;
+  --track-secondary: #c8d0d8;
+  --track-secondary-deep: #6b747c;
+
+  --pooi-purple: var(--h20-sky);
+  --pooi-purple-dim: var(--h20-royal);
+  --pooi-bg: #060a12;
+  --pooi-surface: #0d141f;
+  --pooi-border: rgba(200, 208, 216, 0.22);
+
+  background: radial-gradient(ellipse at 50% 0%, #10151d 0%, var(--pooi-bg) 55%);
+}

@@ -23,6 +23,9 @@ import { SovereignProvider, useSovereign } from '../sovereign/runtime';
 import ReflectionChamberEnvironment from './experience/ReflectionChamberEnvironment';
 import PortalOneOwnedInterior from './experience/reflection-chamber/PortalOneOwnedInterior';
 import PortalTwoForgedWitness from './experience/reflection-chamber/PortalTwoForgedWitness';
+import PortalThreeSacredRestraint from './experience/reflection-chamber/PortalThreeSacredRestraint';
+import PortalFourOpenFrequency from './experience/reflection-chamber/PortalFourOpenFrequency';
+import PortalFiveMirrorWalkerBoundary from './experience/reflection-chamber/PortalFiveMirrorWalkerBoundary';
 import ShadowTwinInitialization from './experience/reflection-chamber/ShadowTwinInitialization';
 import ShadowTwinIntegration from './experience/reflection-chamber/components/ShadowTwinIntegration';
 import { useShadowTwinSync } from './experience/reflection-chamber/shadowTwin/useShadowTwinSync';
@@ -31,13 +34,17 @@ import './ReflectionProtocolPage.css';
 
 const NEXUS_PATH = '/experiencemode/sovereign/reclamation-university/nexus';
 
-/* Pillars with an interactive portal built. Selecting one of these in the
-   Chamber launches its experience; the rest still open as reference. Each
-   entry is a thin wrapper around the shared PillarExperience engine, so
-   adding Pillar Three here is one line, not a new route. */
+/* Every pillar now has an interactive portal built. Selecting one in the
+   Chamber launches its experience. Each entry is a thin wrapper around the
+   shared PillarExperience engine — Portals Two through Five all run on the
+   same config-driven ScreenSequence engine (components/track-synthesis/),
+   only Portal One keeps its own fixed stage machine (PortalOneStages.jsx). */
 const INTERACTIVE_PILLARS = {
   'owned-interior': PortalOneOwnedInterior,
   'forged-witness': PortalTwoForgedWitness,
+  'sacred-restraint': PortalThreeSacredRestraint,
+  'open-frequency': PortalFourOpenFrequency,
+  'mirror-walker-boundary': PortalFiveMirrorWalkerBoundary,
 };
 
 /**

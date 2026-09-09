@@ -12,6 +12,7 @@ import ShadowTwinViewport from './components/ShadowTwinViewport';
 
 import './portalOneOwnedInterior.css';
 import './styles/reflectionChamber.css';
+import './styles/trackSynthesis.css';
 import './styles/shadowTwin.css';
 
 /**

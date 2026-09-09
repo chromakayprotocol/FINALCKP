@@ -1,0 +1,23 @@
+/* Portal Four / Pillar Four — Open Frequency's own theme.
+ *
+ * Same shape as forgedWitness.css / sacredRestraint.css: only accent
+ * tokens live here, no structural CSS (see styles/trackSynthesis.css).
+ * `--track-secondary` is this pillar's own already-canonical hue (the
+ * amber/orange tone ReflectionChamberEnvironment.jsx already uses for
+ * this portal's hotspot).
+ */
+
+.pooi.open-frequency-pillar {
+  --h20-sky: #38bdf8;
+  --h20-royal: #2563eb;
+  --track-secondary: #e08030;
+  --track-secondary-deep: #8a4d15;
+
+  --pooi-purple: var(--h20-sky);
+  --pooi-purple-dim: var(--h20-royal);
+  --pooi-bg: #0a0a08;
+  --pooi-surface: #171208;
+  --pooi-border: rgba(224, 128, 48, 0.22);
+
+  background: radial-gradient(ellipse at 50% 0%, #1c150a 0%, var(--pooi-bg) 55%);
+}

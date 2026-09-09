@@ -1,0 +1,25 @@
+/* Portal Five / Pillar Five — The Mirror-Walker's Boundary's own theme.
+ *
+ * Same shape as the other pillar theme files — only accent tokens, no
+ * structural CSS (see styles/trackSynthesis.css). The culminating pillar:
+ * its secondary IS Act II's own canonical colour
+ * (reflectionChamberModuleData.js's REFLECTION_META.color/.dim, the same
+ * value ReflectionChamberEnvironment.jsx already uses for this portal's
+ * central hotspot) rather than a distinct hue — Pillar Five converging
+ * with the Chamber's own system colour is the point, not an oversight.
+ */
+
+.pooi.mirror-walker-boundary-pillar {
+  --h20-sky: #38bdf8;
+  --h20-royal: #2563eb;
+  --track-secondary: #50a0e0;
+  --track-secondary-deep: #2a6090;
+
+  --pooi-purple: var(--h20-sky);
+  --pooi-purple-dim: var(--h20-royal);
+  --pooi-bg: #04070d;
+  --pooi-surface: #0a1520;
+  --pooi-border: rgba(80, 160, 224, 0.28);
+
+  background: radial-gradient(ellipse at 50% 0%, #0d1c2e 0%, var(--pooi-bg) 55%);
+}

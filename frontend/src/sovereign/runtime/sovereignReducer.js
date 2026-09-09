@@ -1,5 +1,5 @@
 import { SOVEREIGN_ACTION_TYPES } from './sovereignActions';
-import { createModuleState } from './sovereignState';
+import { createModuleState, derivePortalProgression } from './sovereignState';
 import { isValidDomain, isValidDomainRole } from './sovereignDomains';
 import { createArtifactRevision } from '../artifact/artifactSchema';
 
@@ -36,6 +36,10 @@ function creditConceptSelection(state, conceptId, moduleId) {
       ? existing.selectedConcepts
       : [...existing.selectedConcepts, conceptId],
   }));
+}
+
+function updateShadowTwin(state, updater) {
+  return { ...state, shadowTwin: updater(state.shadowTwin) };
 }
 
 function getOrCreateReflectionEntry(entries, moduleId, promptId) {
@@ -303,6 +307,91 @@ export function sovereignReducer(state, action) {
         (nextState, conceptId) => creditConceptSelection(nextState, conceptId, moduleId),
         withEntry,
       );
+    }
+
+    case SOVEREIGN_ACTION_TYPES.START_SHADOW_TWIN_UPLOAD: {
+      return updateShadowTwin(state, (existing) => ({ ...existing, status: 'uploading', error: null }));
+    }
+
+    case SOVEREIGN_ACTION_TYPES.SET_SHADOW_TWIN_SOURCE_IMAGE: {
+      const { path } = action.payload;
+      return updateShadowTwin(state, (existing) => ({
+        ...existing,
+        sourceImage: { path, uploadedAt: action.meta.timestamp },
+      }));
+    }
+
+    case SOVEREIGN_ACTION_TYPES.START_SHADOW_TWIN_GENERATION: {
+      return updateShadowTwin(state, (existing) => ({
+        ...existing,
+        status: 'generating',
+        generationPromptVersion: action.payload.promptVersion ?? existing.generationPromptVersion,
+        error: null,
+      }));
+    }
+
+    case SOVEREIGN_ACTION_TYPES.COMPLETE_SHADOW_TWIN_GENERATION: {
+      const { canonicalImagePath, promptVersion, visualIdentitySeed } = action.payload;
+      return updateShadowTwin(state, (existing) => ({
+        ...existing,
+        status: 'ready',
+        canonicalImage: { path: canonicalImagePath, generatedAt: action.meta.timestamp },
+        generationPromptVersion: promptVersion ?? existing.generationPromptVersion,
+        generatedAt: action.meta.timestamp,
+        materializationState: 'INITIALIZED',
+        visualIdentitySeed: visualIdentitySeed ?? existing.visualIdentitySeed,
+        error: null,
+      }));
+    }
+
+    case SOVEREIGN_ACTION_TYPES.FAIL_SHADOW_TWIN_GENERATION: {
+      return updateShadowTwin(state, (existing) => ({
+        ...existing,
+        status: 'failed',
+        error: action.payload.reason ?? 'The Chamber could not complete the initialization.',
+      }));
+    }
+
+    case SOVEREIGN_ACTION_TYPES.UNLOCK_SHADOW_TWIN_FRAGMENT: {
+      const { fragment } = action.payload;
+      return updateShadowTwin(state, (existing) => {
+        if (existing.recoveredFragments.some((existingFragment) => existingFragment.id === fragment.id)) {
+          return existing;
+        }
+        return {
+          ...existing,
+          recoveredFragments: [
+            ...existing.recoveredFragments,
+            { ...fragment, unlockedAt: fragment.unlockedAt ?? action.meta.timestamp },
+          ],
+        };
+      });
+    }
+
+    case SOVEREIGN_ACTION_TYPES.UPDATE_SHADOW_TWIN_MATERIALIZATION: {
+      const { materializationState, visualCoherence } = action.payload;
+      return updateShadowTwin(state, (existing) => ({
+        ...existing,
+        materializationState: materializationState ?? existing.materializationState,
+        visualCoherence: visualCoherence ?? existing.visualCoherence,
+        portalProgression: derivePortalProgression(existing.portalProgression, materializationState),
+      }));
+    }
+
+    case SOVEREIGN_ACTION_TYPES.INTEGRATE_SHADOW_TWIN: {
+      if (state.shadowTwin.integrationState === 'integrated') return state;
+      return updateShadowTwin(state, (existing) => ({
+        ...existing,
+        integrationState: 'integrated',
+        materializationState: 'INTEGRATED',
+        portalProgression: {
+          recognition: true,
+          confrontation: true,
+          dialogue: true,
+          integration: true,
+          transformation: true,
+        },
+      }));
     }
 
     default:

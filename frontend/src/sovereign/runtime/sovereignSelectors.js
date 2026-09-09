@@ -17,3 +17,4 @@ export const selectReflectionEntry = (state, moduleId, promptId) =>
 export const selectConcepts = (state) => state.concepts;
 export const selectSynthesis = (state) => state.synthesis;
 export const selectArtifact = (state) => state.artifact;
+export const selectShadowTwin = (state) => state.shadowTwin;

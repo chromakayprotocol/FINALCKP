@@ -32,6 +32,15 @@ export const SOVEREIGN_ACTION_TYPES = Object.freeze({
   UPDATE_REFLECTION: 'sovereign/updateReflection',
   EXTRACT_CONCEPTS: 'sovereign/extractConcepts',
   COMMIT_REFLECTION: 'sovereign/commitReflection',
+  // Shadow Twin domain (Act II) — see sovereignState.js's ShadowTwinState.
+  START_SHADOW_TWIN_UPLOAD: 'sovereign/startShadowTwinUpload',
+  SET_SHADOW_TWIN_SOURCE_IMAGE: 'sovereign/setShadowTwinSourceImage',
+  START_SHADOW_TWIN_GENERATION: 'sovereign/startShadowTwinGeneration',
+  COMPLETE_SHADOW_TWIN_GENERATION: 'sovereign/completeShadowTwinGeneration',
+  FAIL_SHADOW_TWIN_GENERATION: 'sovereign/failShadowTwinGeneration',
+  UNLOCK_SHADOW_TWIN_FRAGMENT: 'sovereign/unlockShadowTwinFragment',
+  UPDATE_SHADOW_TWIN_MATERIALIZATION: 'sovereign/updateShadowTwinMaterialization',
+  INTEGRATE_SHADOW_TWIN: 'sovereign/integrateShadowTwin',
 });
 
 function withMeta(type, payload = {}) {
@@ -165,3 +174,41 @@ export const commitReflection = (moduleId, promptId, response, retainedConcepts 
     response,
     retainedConcepts,
   });
+
+/* Shadow Twin domain (Act II Reflection Chamber). One canonical Twin per
+   user — see docs/ACT_II_REFLECTION_CHAMBER_ARCHITECTURE.md's "do not
+   regenerate the character at every portal." The pipeline is:
+   startShadowTwinUpload() -> setShadowTwinSourceImage() (source stored) ->
+   startShadowTwinGeneration() -> completeShadowTwinGeneration() (or
+   failShadowTwinGeneration()). After that, unlockShadowTwinFragment() and
+   updateShadowTwinMaterialization() report progression exactly the way
+   advanceStep()/completeStep() do for a curriculum module — visible state
+   mutations, not a second engine deriving its own truth. */
+export const startShadowTwinUpload = () => withMeta(SOVEREIGN_ACTION_TYPES.START_SHADOW_TWIN_UPLOAD);
+
+export const setShadowTwinSourceImage = (path) =>
+  withMeta(SOVEREIGN_ACTION_TYPES.SET_SHADOW_TWIN_SOURCE_IMAGE, { path });
+
+export const startShadowTwinGeneration = (promptVersion) =>
+  withMeta(SOVEREIGN_ACTION_TYPES.START_SHADOW_TWIN_GENERATION, { promptVersion });
+
+export const completeShadowTwinGeneration = ({ canonicalImagePath, promptVersion, visualIdentitySeed }) =>
+  withMeta(SOVEREIGN_ACTION_TYPES.COMPLETE_SHADOW_TWIN_GENERATION, {
+    canonicalImagePath,
+    promptVersion,
+    visualIdentitySeed,
+  });
+
+export const failShadowTwinGeneration = (reason) =>
+  withMeta(SOVEREIGN_ACTION_TYPES.FAIL_SHADOW_TWIN_GENERATION, { reason });
+
+export const unlockShadowTwinFragment = (fragment) =>
+  withMeta(SOVEREIGN_ACTION_TYPES.UNLOCK_SHADOW_TWIN_FRAGMENT, { fragment });
+
+export const updateShadowTwinMaterialization = (materializationState, visualCoherence) =>
+  withMeta(SOVEREIGN_ACTION_TYPES.UPDATE_SHADOW_TWIN_MATERIALIZATION, {
+    materializationState,
+    visualCoherence,
+  });
+
+export const integrateShadowTwin = () => withMeta(SOVEREIGN_ACTION_TYPES.INTEGRATE_SHADOW_TWIN);

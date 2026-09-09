@@ -1,0 +1,273 @@
+/* Shadow Twin — the Reflection Chamber's persistent visual spine.
+ *
+ * Design guide §30-31: a shared CSS namespace, driven entirely by
+ * `--shadow-twin-*` custom properties React sets from the pure derivation
+ * (sovereign/reflectionChamber/shadowTwin.js), never portal-specific class
+ * names. Colour/type inherit from whichever Chamber surface this mounts
+ * inside (.pooi's --pooi-accent / --h20-sky family when inside a launched
+ * portal, or the bare fallbacks below at the Chamber hub level) — this
+ * file introduces no independent palette, per §5 and §31's own instruction
+ * to extend the Chamber's existing primitives.
+ */
+
+.shadow-twin {
+  --st-accent: var(--pooi-accent, #38bdf8);
+  --st-accent-strong: var(--pooi-accent-strong, #2563eb);
+  --st-border: var(--pooi-border, rgba(148, 197, 255, 0.28));
+  --st-ivory: var(--pooi-ivory, #f5f7fa);
+
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+}
+
+.shadow-twin__viewport {
+  position: relative;
+  width: 100%;
+  max-width: 420px;
+  aspect-ratio: 9 / 16;
+  border-radius: 18px;
+  overflow: hidden;
+  background: radial-gradient(ellipse at 50% 20%, rgba(56, 189, 248, 0.08), transparent 60%),
+    linear-gradient(180deg, rgba(8, 12, 22, 0.6), rgba(4, 6, 12, 0.9));
+  border: 1px solid var(--st-border);
+  box-shadow:
+    0 0 calc(24px + var(--shadow-twin-convergence, 0) * 40px)
+      rgba(56, 189, 248, calc(0.12 + var(--shadow-twin-coherence, 0) * 0.28)),
+    inset 0 0 60px rgba(0, 0, 0, 0.5);
+  transition: box-shadow 0.6s ease;
+}
+
+/* A faint moving sheen across the whole glass surface — "reflective
+   distortion" (§5), always present at low intensity so the viewport
+   itself reads as a mirror even before a Twin exists. */
+.shadow-twin__reflection-field {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    115deg,
+    transparent 20%,
+    rgba(255, 255, 255, 0.06) 45%,
+    rgba(255, 255, 255, 0.12) 50%,
+    rgba(255, 255, 255, 0.06) 55%,
+    transparent 80%
+  );
+  background-size: 240% 240%;
+  animation: shadow-twin-sheen 9s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 3;
+}
+
+@keyframes shadow-twin-sheen {
+  0%, 100% { background-position: 0% 0%; }
+  50% { background-position: 100% 100%; }
+}
+
+.shadow-twin__figure-stack {
+  position: absolute;
+  inset: 0;
+}
+
+.shadow-twin__figure {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center bottom;
+  opacity: var(--shadow-twin-coherence, 0);
+  filter: saturate(calc(0.5 + var(--shadow-twin-coherence, 0) * 0.5))
+    contrast(calc(1 + var(--shadow-twin-distortion, 0) * 0.15))
+    blur(calc(var(--shadow-twin-distortion, 0) * 3px))
+    drop-shadow(0 0 calc(var(--shadow-twin-convergence, 0) * 22px) rgba(56, 189, 248, 0.55));
+  transform: scale(calc(0.94 + var(--shadow-twin-spatial-presence, 0) * 0.06));
+  transition: opacity 0.8s ease, filter 0.8s ease, transform 0.8s ease;
+}
+
+/* ── Shards — the "fragmented apparition" reconstruction system (§10) ──
+   Nine clipped copies of the same asset, each nudged toward a different
+   corner and given a slight rotation. As --shadow-twin-fragmentation falls
+   (mirror clarity rising), every shard's offset collapses toward zero and
+   its own opacity fades out, leaving only the coherent .shadow-twin__figure
+   beneath — geometric segmentation resolving into a whole image, not an
+   opacity fade of one static picture. */
+.shadow-twin__shard {
+  position: absolute;
+  inset: 0;
+  background-size: 100% 100%;
+  background-position: center bottom;
+  background-repeat: no-repeat;
+  opacity: calc(var(--shadow-twin-fragmentation, 1) * 0.85);
+  transition: opacity 0.8s ease, transform 0.8s ease, clip-path 0.8s ease;
+  will-change: transform, opacity;
+}
+
+.shadow-twin__shard:nth-child(1) { clip-path: polygon(0 0, 34% 0, 34% 34%, 0 34%); transform: translate(calc(var(--shadow-twin-fragmentation, 1) * -14%), calc(var(--shadow-twin-fragmentation, 1) * -10%)) rotate(calc(var(--shadow-twin-fragmentation, 1) * -6deg)); }
+.shadow-twin__shard:nth-child(2) { clip-path: polygon(34% 0, 68% 0, 68% 32%, 34% 32%); transform: translate(0, calc(var(--shadow-twin-fragmentation, 1) * -16%)) rotate(calc(var(--shadow-twin-fragmentation, 1) * 4deg)); }
+.shadow-twin__shard:nth-child(3) { clip-path: polygon(68% 0, 100% 0, 100% 34%, 68% 34%); transform: translate(calc(var(--shadow-twin-fragmentation, 1) * 15%), calc(var(--shadow-twin-fragmentation, 1) * -9%)) rotate(calc(var(--shadow-twin-fragmentation, 1) * 7deg)); }
+.shadow-twin__shard:nth-child(4) { clip-path: polygon(0 34%, 34% 34%, 34% 66%, 0 66%); transform: translate(calc(var(--shadow-twin-fragmentation, 1) * -18%), 0) rotate(calc(var(--shadow-twin-fragmentation, 1) * 5deg)); }
+.shadow-twin__shard:nth-child(5) { clip-path: polygon(34% 32%, 68% 32%, 68% 68%, 34% 68%); transform: translate(0, 0) scale(calc(1 + var(--shadow-twin-fragmentation, 1) * 0.08)); }
+.shadow-twin__shard:nth-child(6) { clip-path: polygon(68% 34%, 100% 34%, 100% 66%, 68% 66%); transform: translate(calc(var(--shadow-twin-fragmentation, 1) * 17%), 0) rotate(calc(var(--shadow-twin-fragmentation, 1) * -5deg)); }
+.shadow-twin__shard:nth-child(7) { clip-path: polygon(0 66%, 34% 66%, 34% 100%, 0 100%); transform: translate(calc(var(--shadow-twin-fragmentation, 1) * -13%), calc(var(--shadow-twin-fragmentation, 1) * 12%)) rotate(calc(var(--shadow-twin-fragmentation, 1) * 8deg)); }
+.shadow-twin__shard:nth-child(8) { clip-path: polygon(34% 68%, 68% 68%, 68% 100%, 34% 100%); transform: translate(0, calc(var(--shadow-twin-fragmentation, 1) * 18%)) rotate(calc(var(--shadow-twin-fragmentation, 1) * -4deg)); }
+.shadow-twin__shard:nth-child(9) { clip-path: polygon(68% 66%, 100% 66%, 100% 100%, 68% 100%); transform: translate(calc(var(--shadow-twin-fragmentation, 1) * 16%), calc(var(--shadow-twin-fragmentation, 1) * 11%)) rotate(calc(var(--shadow-twin-fragmentation, 1) * 6deg)); }
+
+/* Real <img> in the stack (index 0) is never a shard — the browser paints
+   it once for the base, and JS marks the rest aria-hidden. */
+.shadow-twin__figure-stack > .shadow-twin__figure {
+  opacity: var(--shadow-twin-coherence, 0);
+}
+
+/* ── Recovered fragment markers (ShadowTwinFragments.jsx) ── */
+.shadow-twin__fragments {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+}
+
+.shadow-twin__fragment {
+  position: absolute;
+  border-radius: 6px;
+  border: 1px solid rgba(56, 189, 248, calc(0.25 + var(--fragment-weight, 0.5) * 0.35));
+  background: radial-gradient(circle, rgba(56, 189, 248, calc(0.05 + var(--fragment-weight, 0.5) * 0.1)), transparent 70%);
+  animation: shadow-twin-fragment-in 1.1s ease both;
+}
+
+@keyframes shadow-twin-fragment-in {
+  from { opacity: 0; transform: scale(0.7); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+/* ── Convergence / Integration (Portals IV-V, §19-20) ──
+   A soft shared-light glow that intensifies with convergence, and — once
+   fully integrated — settles into a steady inner light rather than an
+   external effect, echoing "the capacity now belongs to me" rather than
+   "a second figure standing beside you." */
+/* Integration's glow intensifies the SAME blue/indigo family the rest of
+   the Chamber (and Act II's own canonical color, REFLECTION_META.color)
+   already uses — never gold. Gold (`aurum`) is the Crucible Code's alone
+   (Act IV) per the Chroma Frame's channel reservation
+   (src/system/chromaChannels.js) — Act II's "fully realized" state reads
+   as brighter, clearer blue-white, not a borrowed Act IV color. */
+.shadow-twin__convergence-glow {
+  position: absolute;
+  inset: -20%;
+  z-index: 2;
+  pointer-events: none;
+  background: radial-gradient(
+    circle at 50% 60%,
+    rgba(238, 246, 255, calc(var(--shadow-twin-integration, 0) * 0.28)),
+    rgba(56, 189, 248, calc(var(--shadow-twin-convergence, 0) * 0.22)),
+    transparent 65%
+  );
+  filter: blur(30px);
+  transition: background 1s ease;
+}
+
+.shadow-twin[data-materialization='INTEGRATED'] .shadow-twin__viewport {
+  border-color: rgba(224, 240, 255, 0.55);
+}
+
+/* ── Audio response (§34) — a subtle pulse while a track is playing, and
+   the track's own progress lightly quickens the reflective sheen. Never
+   more than a nudge: the Twin's real state still comes from mirror
+   clarity, not from what's currently playing. */
+.shadow-twin[data-audio-active] .shadow-twin__viewport {
+  animation: shadow-twin-audio-pulse 2.4s ease-in-out infinite;
+}
+
+@keyframes shadow-twin-audio-pulse {
+  0%, 100% { box-shadow: 0 0 calc(24px + var(--shadow-twin-convergence, 0) * 40px) rgba(56, 189, 248, calc(0.12 + var(--shadow-twin-coherence, 0) * 0.28)), inset 0 0 60px rgba(0, 0, 0, 0.5); }
+  50% { box-shadow: 0 0 calc(34px + var(--shadow-twin-convergence, 0) * 40px) rgba(56, 189, 248, calc(0.2 + var(--shadow-twin-coherence, 0) * 0.32)), inset 0 0 60px rgba(0, 0, 0, 0.5); }
+}
+
+.shadow-twin[data-audio-active] .shadow-twin__reflection-field {
+  animation-duration: calc(9s - var(--shadow-twin-track-progress, 0) * 3s);
+}
+
+/* ── Mobile vs desktop real estate (§44) — the Twin gets more room on
+   desktop; on narrow viewports it shrinks to a companion column rather
+   than dominating the screen the curriculum content needs. ── */
+@media (max-width: 900px) {
+  .shadow-twin__viewport {
+    max-width: 240px;
+  }
+}
+
+/* ── ShadowTwinIntegration — Portal Five's closing composition ── */
+.shadow-twin-integration {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2rem;
+  padding: 2rem;
+  background: radial-gradient(ellipse at 50% 30%, rgba(80, 160, 224, 0.18), transparent 60%),
+    rgba(4, 6, 12, 0.96);
+  color: #f5f7fa;
+  text-align: center;
+  backdrop-filter: blur(6px);
+}
+
+.shadow-twin-integration__figure-wrap {
+  width: min(50vw, 260px);
+  aspect-ratio: 9 / 16;
+  filter: drop-shadow(0 0 40px rgba(224, 240, 255, 0.45));
+}
+
+.shadow-twin-integration__figure {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.shadow-twin-integration__copy {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.9rem;
+  max-width: 30rem;
+}
+
+.shadow-twin-integration__copy p {
+  margin: 0;
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 1.05rem;
+  line-height: 1.5;
+}
+
+.shadow-twin-integration__pause {
+  color: #cbd5e1;
+}
+
+.shadow-twin-integration__final {
+  color: #9fd6ff;
+}
+
+.shadow-twin-integration__chamber {
+  font-family: 'Oxanium', system-ui, sans-serif;
+  font-size: 0.75rem;
+  letter-spacing: 0.28em;
+}
+
+.shadow-twin-integration__cta {
+  margin-top: 0.75rem;
+  padding: 0.85rem 1.75rem;
+  border-radius: 999px;
+  border: 1px solid rgba(224, 240, 255, 0.7);
+  background: linear-gradient(135deg, #2563eb, #38bdf8);
+  color: #04101c;
+  font-family: 'Oxanium', system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 0.78rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+}

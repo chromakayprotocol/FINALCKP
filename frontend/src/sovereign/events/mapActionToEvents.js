@@ -214,6 +214,68 @@ export function mapActionToEvents(action, { prevState, nextState }) {
       break;
     }
 
+    case SOVEREIGN_ACTION_TYPES.START_SHADOW_TWIN_GENERATION: {
+      push(SOVEREIGN_EVENT_TYPES.SHADOW_TWIN_GENERATION_STARTED, {
+        promptVersion: action.payload.promptVersion,
+      });
+      break;
+    }
+
+    case SOVEREIGN_ACTION_TYPES.FAIL_SHADOW_TWIN_GENERATION: {
+      push(SOVEREIGN_EVENT_TYPES.SHADOW_TWIN_GENERATION_FAILED, { reason: action.payload.reason });
+      break;
+    }
+
+    case SOVEREIGN_ACTION_TYPES.COMPLETE_SHADOW_TWIN_GENERATION: {
+      push(SOVEREIGN_EVENT_TYPES.SHADOW_TWIN_INITIALIZED, {
+        canonicalImagePath: action.payload.canonicalImagePath,
+        promptVersion: action.payload.promptVersion,
+      });
+      break;
+    }
+
+    case SOVEREIGN_ACTION_TYPES.UNLOCK_SHADOW_TWIN_FRAGMENT: {
+      // unlockShadowTwinFragment() no-ops in the reducer for a repeat
+      // fragment id — only emit when a fragment actually landed.
+      if (nextState.shadowTwin.recoveredFragments.length > prevState.shadowTwin.recoveredFragments.length) {
+        push(SOVEREIGN_EVENT_TYPES.SHADOW_TWIN_FRAGMENT_UNLOCKED, { fragment: action.payload.fragment });
+      }
+      break;
+    }
+
+    case SOVEREIGN_ACTION_TYPES.UPDATE_SHADOW_TWIN_MATERIALIZATION: {
+      push(SOVEREIGN_EVENT_TYPES.SHADOW_TWIN_MATERIALIZATION_UPDATED, {
+        materializationState: nextState.shadowTwin.materializationState,
+        visualCoherence: nextState.shadowTwin.visualCoherence,
+      });
+      if (
+        nextState.shadowTwin.materializationState === 'PRESENCE' &&
+        prevState.shadowTwin.materializationState !== 'PRESENCE'
+      ) {
+        push(SOVEREIGN_EVENT_TYPES.SHADOW_TWIN_PRESENCE_ESTABLISHED, {});
+      }
+      if (
+        nextState.shadowTwin.materializationState === 'CONVERGENCE' &&
+        prevState.shadowTwin.materializationState !== 'CONVERGENCE'
+      ) {
+        push(SOVEREIGN_EVENT_TYPES.SHADOW_TWIN_CONVERGENCE_STARTED, {});
+      }
+      if (
+        nextState.shadowTwin.materializationState === 'INTEGRATED' &&
+        prevState.shadowTwin.materializationState !== 'INTEGRATED'
+      ) {
+        push(SOVEREIGN_EVENT_TYPES.SHADOW_TWIN_INTEGRATED, {});
+      }
+      break;
+    }
+
+    case SOVEREIGN_ACTION_TYPES.INTEGRATE_SHADOW_TWIN: {
+      if (nextState.shadowTwin.integrationState === 'integrated' && prevState.shadowTwin.integrationState !== 'integrated') {
+        push(SOVEREIGN_EVENT_TYPES.SHADOW_TWIN_INTEGRATED, {});
+      }
+      break;
+    }
+
     default:
       break;
   }

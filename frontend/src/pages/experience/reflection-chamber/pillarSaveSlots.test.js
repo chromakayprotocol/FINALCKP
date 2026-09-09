@@ -12,6 +12,7 @@ vi.mock('../../../context/audioprovider', () => ({
   useAudio: () => null,
 }));
 
+import { SovereignProvider } from '../../../sovereign/runtime';
 import PortalOneOwnedInterior from './PortalOneOwnedInterior';
 import PortalTwoForgedWitness from './PortalTwoForgedWitness';
 import { TRACKS, ACTIVE_IMAGINATION_PROMPTS } from './data/forgedWitnessConfig';
@@ -22,6 +23,22 @@ const TWO_KEY = 'ckp:reflection-chamber:forged-witness:seeker-1';
 const read = (key) => JSON.parse(window.localStorage.getItem(key));
 const click = (name) => fireEvent.click(screen.getByRole('button', { name }));
 const type = (label, value) => fireEvent.change(screen.getByLabelText(label), { target: { value } });
+
+/* PillarExperience now reads the Shadow Twin domain (useSovereign()) to
+   render ShadowTwinViewport as persistent chrome (design guide §32-33), so
+   every portal needs a SovereignProvider ancestor — the production app
+   provides one at ReflectionProtocolPage.jsx, lifted there from
+   PortalOneOwnedInterior specifically so it could be shared Chamber-wide.
+   These tests only exercise each pillar's own local save-slot state, not
+   Sovereign persistence, so an unconfigured provider (no namespace/userId)
+   is enough. */
+function renderPortal(Portal) {
+  return render(
+    <SovereignProvider>
+      <Portal />
+    </SovereignProvider>,
+  );
+}
 
 /** Portal One mid-session, saved by an earlier visit. */
 const PORTAL_ONE_SAVED = {
@@ -54,7 +71,7 @@ function completeFirstTrack() {
 
 describe('Reflection Chamber pillar save slots', () => {
   it('gives Pillar Two its own slot and resumes the exact beat after a reload', () => {
-    const { unmount } = render(<PortalTwoForgedWitness />);
+    const { unmount } = renderPortal(PortalTwoForgedWitness);
 
     enterFirstEncounter();
     type(TRACKS[0].encounterQuestion, 'I recognised the reading-the-room part.');
@@ -67,7 +84,7 @@ describe('Reflection Chamber pillar save slots', () => {
 
     // A reload must land back on the same beat, not the top of the track.
     unmount();
-    render(<PortalTwoForgedWitness />);
+    renderPortal(PortalTwoForgedWitness);
 
     expect(screen.getByLabelText(TRACKS[0].encounterQuestion)).toHaveValue(
       'I recognised the reading-the-room part.'
@@ -78,7 +95,7 @@ describe('Reflection Chamber pillar save slots', () => {
     window.localStorage.setItem(ONE_KEY, JSON.stringify(PORTAL_ONE_SAVED));
     const before = window.localStorage.getItem(ONE_KEY);
 
-    render(<PortalTwoForgedWitness />);
+    renderPortal(PortalTwoForgedWitness);
     enterFirstEncounter();
     type(TRACKS[0].encounterQuestion, 'something of my own');
 
@@ -89,7 +106,7 @@ describe('Reflection Chamber pillar save slots', () => {
   it('still restores Portal One’s own saved stage, unchanged by the generic namespace', () => {
     window.localStorage.setItem(ONE_KEY, JSON.stringify(PORTAL_ONE_SAVED));
 
-    render(<PortalOneOwnedInterior />);
+    renderPortal(PortalOneOwnedInterior);
 
     // Portal One resumes at its saved stage (Instruct is now the Owned
     // Interior definition, not a Light Code reveal — see PortalOneStages).
@@ -104,7 +121,7 @@ describe('Reflection Chamber pillar save slots', () => {
   });
 
   it('records a completed Pillar Two encounter under completedTracks', () => {
-    render(<PortalTwoForgedWitness />);
+    renderPortal(PortalTwoForgedWitness);
     enterFirstEncounter();
     completeFirstTrack();
 
@@ -117,7 +134,7 @@ describe('Reflection Chamber pillar save slots', () => {
   });
 
   it('runs Portal One’s original stage machine through the shared shell', () => {
-    render(<PortalOneOwnedInterior />);
+    renderPortal(PortalOneOwnedInterior);
 
     // Fresh session opens on Portal One's intro, not on any screen list.
     expect(read(ONE_KEY).currentStage).toBe('intro');

@@ -23,6 +23,12 @@ import {
   updateReflection,
   extractConcepts,
   commitReflection,
+  startShadowTwinGeneration,
+  failShadowTwinGeneration,
+  completeShadowTwinGeneration,
+  unlockShadowTwinFragment,
+  updateShadowTwinMaterialization,
+  integrateShadowTwin,
 } from '../runtime/sovereignActions';
 import { SOVEREIGN_STEP_IDS } from '../runtime/sovereignSteps';
 import { mapActionToEvents } from './mapActionToEvents';
@@ -329,5 +335,69 @@ describe('mapActionToEvents', () => {
       SOVEREIGN_EVENT_TYPES.REFLECTION_COMMITTED,
       SOVEREIGN_EVENT_TYPES.STEP_COMPLETED,
     ]);
+  });
+});
+
+describe('Shadow Twin domain events', () => {
+  it('startShadowTwinGeneration() emits SHADOW_TWIN_GENERATION_STARTED', () => {
+    const { events } = dispatchAndMap(createInitialState(), startShadowTwinGeneration('shadow-twin-v1'));
+    expect(types(events)).toEqual([SOVEREIGN_EVENT_TYPES.SHADOW_TWIN_GENERATION_STARTED]);
+  });
+
+  it('failShadowTwinGeneration() emits SHADOW_TWIN_GENERATION_FAILED', () => {
+    const { events } = dispatchAndMap(createInitialState(), failShadowTwinGeneration('failed'));
+    expect(types(events)).toEqual([SOVEREIGN_EVENT_TYPES.SHADOW_TWIN_GENERATION_FAILED]);
+  });
+
+  it('completeShadowTwinGeneration() emits SHADOW_TWIN_INITIALIZED', () => {
+    const { events } = dispatchAndMap(
+      createInitialState(),
+      completeShadowTwinGeneration({ canonicalImagePath: 'p', promptVersion: 'v1' }),
+    );
+    expect(types(events)).toEqual([SOVEREIGN_EVENT_TYPES.SHADOW_TWIN_INITIALIZED]);
+  });
+
+  it('unlockShadowTwinFragment() emits SHADOW_TWIN_FRAGMENT_UNLOCKED only on a genuinely new fragment', () => {
+    const fragment = { id: 'f1', type: 'facial', sourceRegion: {}, portalId: 'recognition', visualWeight: 1 };
+    const first = dispatchAndMap(createInitialState(), unlockShadowTwinFragment(fragment));
+    expect(types(first.events)).toEqual([SOVEREIGN_EVENT_TYPES.SHADOW_TWIN_FRAGMENT_UNLOCKED]);
+
+    const repeat = dispatchAndMap(first.nextState, unlockShadowTwinFragment(fragment));
+    expect(types(repeat.events)).toEqual([]);
+  });
+
+  it('updateShadowTwinMaterialization() emits MATERIALIZATION_UPDATED plus the threshold event on each real transition', () => {
+    let state = createInitialState();
+    let result = dispatchAndMap(state, updateShadowTwinMaterialization('FRAGMENTED_APPARITION', 0.2));
+    expect(types(result.events)).toEqual([SOVEREIGN_EVENT_TYPES.SHADOW_TWIN_MATERIALIZATION_UPDATED]);
+    state = result.nextState;
+
+    result = dispatchAndMap(state, updateShadowTwinMaterialization('PRESENCE', 0.6));
+    expect(types(result.events)).toEqual([
+      SOVEREIGN_EVENT_TYPES.SHADOW_TWIN_MATERIALIZATION_UPDATED,
+      SOVEREIGN_EVENT_TYPES.SHADOW_TWIN_PRESENCE_ESTABLISHED,
+    ]);
+    state = result.nextState;
+
+    result = dispatchAndMap(state, updateShadowTwinMaterialization('CONVERGENCE', 0.8));
+    expect(types(result.events)).toEqual([
+      SOVEREIGN_EVENT_TYPES.SHADOW_TWIN_MATERIALIZATION_UPDATED,
+      SOVEREIGN_EVENT_TYPES.SHADOW_TWIN_CONVERGENCE_STARTED,
+    ]);
+    state = result.nextState;
+
+    result = dispatchAndMap(state, updateShadowTwinMaterialization('INTEGRATED', 1));
+    expect(types(result.events)).toEqual([
+      SOVEREIGN_EVENT_TYPES.SHADOW_TWIN_MATERIALIZATION_UPDATED,
+      SOVEREIGN_EVENT_TYPES.SHADOW_TWIN_INTEGRATED,
+    ]);
+  });
+
+  it('integrateShadowTwin() emits SHADOW_TWIN_INTEGRATED only on the real transition', () => {
+    const first = dispatchAndMap(createInitialState(), integrateShadowTwin());
+    expect(types(first.events)).toEqual([SOVEREIGN_EVENT_TYPES.SHADOW_TWIN_INTEGRATED]);
+
+    const repeat = dispatchAndMap(first.nextState, integrateShadowTwin());
+    expect(types(repeat.events)).toEqual([]);
   });
 });

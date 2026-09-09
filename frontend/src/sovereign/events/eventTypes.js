@@ -46,4 +46,15 @@ export const SOVEREIGN_EVENT_TYPES = Object.freeze({
   ARTIFACT_STARTED: 'ARTIFACT_STARTED', // wired: generateArtifact(), first draft (status was 'empty')
   ARTIFACT_EDITED: 'ARTIFACT_EDITED', // wired: generateArtifact(), redraft (status was already draft/sealed)
   ARTIFACT_SEALED: 'ARTIFACT_SEALED', // wired: sealArtifact(), only when it actually transitions to 'sealed'
+
+  // Shadow Twin domain (Act II Reflection Chamber) — see sovereignState.js's
+  // ShadowTwinState and sovereign/reflectionChamber/shadowTwin.js.
+  SHADOW_TWIN_GENERATION_STARTED: 'SHADOW_TWIN_GENERATION_STARTED', // wired: startShadowTwinGeneration()
+  SHADOW_TWIN_GENERATION_FAILED: 'SHADOW_TWIN_GENERATION_FAILED', // wired: failShadowTwinGeneration()
+  SHADOW_TWIN_INITIALIZED: 'SHADOW_TWIN_INITIALIZED', // wired: completeShadowTwinGeneration()
+  SHADOW_TWIN_FRAGMENT_UNLOCKED: 'SHADOW_TWIN_FRAGMENT_UNLOCKED', // wired: unlockShadowTwinFragment(), only on a genuinely new fragment id
+  SHADOW_TWIN_MATERIALIZATION_UPDATED: 'SHADOW_TWIN_MATERIALIZATION_UPDATED', // wired: updateShadowTwinMaterialization()
+  SHADOW_TWIN_PRESENCE_ESTABLISHED: 'SHADOW_TWIN_PRESENCE_ESTABLISHED', // wired: updateShadowTwinMaterialization(), only on the transition into PRESENCE
+  SHADOW_TWIN_CONVERGENCE_STARTED: 'SHADOW_TWIN_CONVERGENCE_STARTED', // wired: updateShadowTwinMaterialization(), only on the transition into CONVERGENCE
+  SHADOW_TWIN_INTEGRATED: 'SHADOW_TWIN_INTEGRATED', // wired: updateShadowTwinMaterialization() reaching INTEGRATED, or integrateShadowTwin()
 });

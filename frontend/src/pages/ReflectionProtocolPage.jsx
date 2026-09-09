@@ -18,9 +18,15 @@ import {
   CADENCE,
   CLOSING,
 } from '../data/reflectionChamberModuleData';
+import { useAuth } from '../context/AuthContext';
+import { SovereignProvider, useSovereign } from '../sovereign/runtime';
 import ReflectionChamberEnvironment from './experience/ReflectionChamberEnvironment';
 import PortalOneOwnedInterior from './experience/reflection-chamber/PortalOneOwnedInterior';
 import PortalTwoForgedWitness from './experience/reflection-chamber/PortalTwoForgedWitness';
+import ShadowTwinInitialization from './experience/reflection-chamber/ShadowTwinInitialization';
+import ShadowTwinIntegration from './experience/reflection-chamber/components/ShadowTwinIntegration';
+import { useShadowTwinSync } from './experience/reflection-chamber/shadowTwin/useShadowTwinSync';
+import { useShadowTwinArchive } from './experience/reflection-chamber/shadowTwin/useShadowTwinArchive';
 import './ReflectionProtocolPage.css';
 
 const NEXUS_PATH = '/experiencemode/sovereign/reclamation-university/nexus';
@@ -34,12 +40,36 @@ const INTERACTIVE_PILLARS = {
   'forged-witness': PortalTwoForgedWitness,
 };
 
+/**
+ * Hoists ONE SovereignProvider over the whole Act II experience — the
+ * Chamber hub, every launched portal, and the Shadow Twin initialization
+ * screen all share it, per PortalOneOwnedInterior.jsx's own migration note
+ * ("lifting this to ReflectionProtocolPage.jsx... gets every pillar
+ * sharing one instance, with no change needed here beyond removing the
+ * wrap"). This is what lets mirrorClarity and the Shadow Twin survive
+ * navigating between portals within one session, and lets the Chamber hub
+ * itself render the Twin (ReflectionChamberEnvironment) rather than only
+ * a launched portal.
+ */
 export default function ReflectionProtocolPage() {
+  const { user } = useAuth();
+  return (
+    <SovereignProvider namespace={user?.id || 'anonymous'} userId={user?.id}>
+      <ReflectionProtocolPageInner />
+    </SovereignProvider>
+  );
+}
+
+function ReflectionProtocolPageInner() {
   const navigate = useNavigate();
+  const { session, shadowTwin } = useSovereign();
+  useShadowTwinSync();
+  useShadowTwinArchive();
   const [activePillarId, setActivePillarId] = useState(PILLARS[0]?.id ?? null);
   const [expandedCode, setExpandedCode] = useState(null);
   const [launchedPillarId, setLaunchedPillarId] = useState(null);
   const [completedPillarIds, setCompletedPillarIds] = useState([]);
+  const [enteredChamber, setEnteredChamber] = useState(false);
 
   const activePillar = useMemo(
     () => PILLARS.find((p) => p.id === activePillarId) ?? PILLARS[0],
@@ -60,6 +90,44 @@ export default function ReflectionProtocolPage() {
   };
 
   const LaunchedPortal = launchedPillarId ? INTERACTIVE_PILLARS[launchedPillarId] : null;
+
+  // §42 "Returning users": don't decide between the entry screen and the
+  // Chamber hub until the Shadow Twin's own remote fetch has had a chance
+  // to land — otherwise a returning user with a real Twin would flash
+  // ShadowTwinInitialization before their Twin loads. `session.syncStatus`
+  // covers the main Sovereign sync, which starts in the same mount cycle
+  // as the Shadow Twin's — 'local' only ever persists forever when there's
+  // no signed-in user, and this route is already behind ProtectedRoute.
+  const isSyncing = session.syncStatus === 'local' || session.syncStatus === 'syncing';
+  const hasNoTwinYet = shadowTwin.status === 'empty';
+
+  if (isSyncing) {
+    return <div className="rpp-loading" aria-busy="true" />;
+  }
+
+  // Anything short of a generated Twin ('empty', mid-upload/generation, or
+  // a failed attempt awaiting retry) keeps the Seeker on the entry screen —
+  // it owns its own upload/generate/retry flow (ShadowTwinInitialization.jsx).
+  // Once `status` reaches 'ready', `enteredChamber` (set by its own
+  // ShadowTwinReveal -> onComplete) is what actually admits the Seeker to
+  // the Chamber hub below, not `status` alone — so a returning user with an
+  // already-ready Twin still passes straight through.
+  if (!enteredChamber && (hasNoTwinYet || ['uploading', 'generating', 'failed'].includes(shadowTwin.status))) {
+    return <ShadowTwinInitialization onComplete={() => setEnteredChamber(true)} />;
+  }
+
+  if (
+    shadowTwin.visualState.exists &&
+    shadowTwin.visualState.liveMaterializationState === 'INTEGRATED' &&
+    shadowTwin.integrationState !== 'integrated'
+  ) {
+    return (
+      <ShadowTwinIntegration
+        canonicalImagePath={shadowTwin.canonicalImage?.path}
+        onIntegrate={() => shadowTwin.integrate()}
+      />
+    );
+  }
 
   if (LaunchedPortal) {
     return (

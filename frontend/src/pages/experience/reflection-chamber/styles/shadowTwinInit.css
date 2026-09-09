@@ -1,0 +1,312 @@
+/* Shadow Twin Initialization — Act II's actual entry screen (design guide
+ * §4-7, §40). Full-screen, no dashboard chrome, no progress bar, no
+ * five-pillar nav — "the chamber should feel like the user has entered a
+ * system that is waiting for an identity signal." Uses the same blue/
+ * indigo "the system" palette portalOneOwnedInterior.css documents
+ * (--h20-sky / --h20-royal), defined locally with literal fallbacks since
+ * this screen can render before any `.pooi` ancestor exists.
+ */
+
+.shadow-twin-init {
+  --sti-accent: #38bdf8;
+  --sti-accent-strong: #2563eb;
+  --sti-bg: #05070d;
+  --sti-ivory: #f5f7fa;
+  --sti-muted: #aab4c3;
+  --sti-border: rgba(148, 197, 255, 0.28);
+
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2.5rem;
+  padding: 2rem;
+  background: radial-gradient(ellipse at 50% 15%, rgba(56, 189, 248, 0.1), transparent 55%), var(--sti-bg);
+  color: var(--sti-ivory);
+  font-family: 'Inter', system-ui, sans-serif;
+  text-align: center;
+  overflow-y: auto;
+}
+
+.shadow-twin-init__chrome {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.shadow-twin-init__eyebrow {
+  font-family: 'Oxanium', system-ui, sans-serif;
+  font-size: 0.7rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--sti-accent);
+}
+
+.shadow-twin-init__title {
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: clamp(1.4rem, 3vw, 2.1rem);
+  letter-spacing: 0.08em;
+  margin: 0;
+  text-shadow: 0 0 30px rgba(56, 189, 248, 0.35);
+}
+
+.shadow-twin-init__panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+  max-width: 30rem;
+  width: 100%;
+  padding: 2rem 1.75rem;
+  border-radius: 20px;
+  border: 1px solid var(--sti-border);
+  background: linear-gradient(180deg, rgba(18, 26, 44, 0.55), rgba(8, 12, 20, 0.75));
+  backdrop-filter: blur(14px);
+  box-shadow: 0 0 60px rgba(56, 189, 248, 0.08);
+}
+
+.shadow-twin-init__reveal {
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 1.1rem;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.shadow-twin-init__secondary {
+  font-size: 0.9rem;
+  line-height: 1.55;
+  color: var(--sti-muted);
+  margin: 0;
+}
+
+.shadow-twin-init__cta {
+  width: 100%;
+  padding: 0.9rem 1.5rem;
+  border-radius: 999px;
+  border: 1px solid var(--sti-accent);
+  background: linear-gradient(135deg, var(--sti-accent-strong), var(--sti-accent));
+  color: #04101c;
+  font-family: 'Oxanium', system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 0.8rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+}
+
+.shadow-twin-init__cta:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 30px rgba(56, 189, 248, 0.35);
+}
+
+.shadow-twin-init__cta:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.shadow-twin-init__failure {
+  width: 100%;
+  padding: 0.85rem 1rem;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 120, 120, 0.35);
+  background: rgba(255, 80, 80, 0.08);
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
+.shadow-twin-init__failure p {
+  margin: 0.15rem 0;
+}
+
+.shadow-twin-init__footer {
+  font-family: 'Oxanium', system-ui, sans-serif;
+  font-size: 0.7rem;
+  letter-spacing: 0.3em;
+  color: var(--sti-muted);
+}
+
+/* ── ShadowTwinUploader ── */
+.shadow-twin-uploader {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1.75rem 1rem;
+  border-radius: 16px;
+  border: 1px dashed var(--sti-border);
+  background: rgba(255, 255, 255, 0.02);
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.shadow-twin-uploader.is-drag-over {
+  border-color: var(--sti-accent);
+  background: rgba(56, 189, 248, 0.08);
+}
+
+.shadow-twin-uploader.has-error {
+  border-color: rgba(255, 120, 120, 0.5);
+}
+
+.shadow-twin-uploader__glyph {
+  color: var(--sti-accent);
+  opacity: 0.85;
+}
+
+.shadow-twin-uploader__preview {
+  width: 100%;
+  max-width: 160px;
+  aspect-ratio: 9 / 16;
+  object-fit: cover;
+  border-radius: 10px;
+  border: 1px solid var(--sti-border);
+}
+
+.shadow-twin-uploader__button {
+  padding: 0.6rem 1.1rem;
+  border-radius: 999px;
+  border: 1px solid var(--sti-border);
+  background: transparent;
+  color: var(--sti-ivory);
+  font-family: 'Oxanium', system-ui, sans-serif;
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.shadow-twin-uploader__button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.shadow-twin-uploader__hint {
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--sti-muted);
+}
+
+.shadow-twin-uploader__error {
+  margin: 0;
+  font-size: 0.8rem;
+  color: #ff9b9b;
+}
+
+.shadow-twin-uploader__input {
+  display: none;
+}
+
+/* ── ShadowTwinReveal — the post-generation transition sequence (§40) ── */
+.shadow-twin-reveal {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2rem;
+  background: #f5f7fa;
+  color: #0a0d16;
+  cursor: pointer;
+}
+
+.shadow-twin-reveal__field {
+  position: relative;
+  width: min(70vw, 320px);
+  aspect-ratio: 9 / 16;
+}
+
+.shadow-twin-reveal__shard,
+.shadow-twin-reveal__figure {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background-size: cover;
+  background-position: center;
+  opacity: 0;
+  transition: opacity 1.4s ease, transform 1.4s ease;
+}
+
+.shadow-twin-reveal__shard--a { clip-path: polygon(0 0, 45% 0, 45% 100%, 0 100%); transform: translateX(-6%); }
+.shadow-twin-reveal__shard--b { clip-path: polygon(55% 0, 100% 0, 100% 100%, 55% 100%); transform: translateX(6%); }
+
+.shadow-twin-reveal__field[data-stage='1'] .shadow-twin-reveal__shard--a,
+.shadow-twin-reveal__field[data-stage='2'] .shadow-twin-reveal__shard--a,
+.shadow-twin-reveal__field[data-stage='3'] .shadow-twin-reveal__shard--a,
+.shadow-twin-reveal__field[data-stage='4'] .shadow-twin-reveal__shard--a,
+.shadow-twin-reveal__field[data-stage='5'] .shadow-twin-reveal__shard--a {
+  opacity: 0.5;
+  transform: translateX(0);
+}
+
+.shadow-twin-reveal__field[data-stage='2'] .shadow-twin-reveal__shard--b,
+.shadow-twin-reveal__field[data-stage='3'] .shadow-twin-reveal__shard--b,
+.shadow-twin-reveal__field[data-stage='4'] .shadow-twin-reveal__shard--b,
+.shadow-twin-reveal__field[data-stage='5'] .shadow-twin-reveal__shard--b {
+  opacity: 0.5;
+  transform: translateX(0);
+}
+
+.shadow-twin-reveal__field[data-stage='3'] .shadow-twin-reveal__figure {
+  opacity: 0.25;
+  filter: blur(6px) grayscale(0.6);
+}
+
+.shadow-twin-reveal__field[data-stage='4'] .shadow-twin-reveal__figure,
+.shadow-twin-reveal__field[data-stage='5'] .shadow-twin-reveal__figure {
+  opacity: 0.9;
+  filter: blur(0) grayscale(0);
+}
+
+.shadow-twin-reveal__field[data-stage='4'] .shadow-twin-reveal__shard--a,
+.shadow-twin-reveal__field[data-stage='4'] .shadow-twin-reveal__shard--b,
+.shadow-twin-reveal__field[data-stage='5'] .shadow-twin-reveal__shard--a,
+.shadow-twin-reveal__field[data-stage='5'] .shadow-twin-reveal__shard--b {
+  opacity: 0;
+}
+
+.shadow-twin-reveal__copy {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 0.8s ease, transform 0.8s ease;
+}
+
+.shadow-twin-reveal__copy.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.shadow-twin-reveal__copy p {
+  margin: 0;
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 1.1rem;
+}
+
+.shadow-twin-reveal__pause {
+  color: #4a5568;
+}
+
+.shadow-twin-reveal__enter {
+  margin-top: 0.5rem;
+  padding: 0.8rem 1.75rem;
+  border-radius: 999px;
+  border: none;
+  background: #0a0d16;
+  color: #f5f7fa;
+  font-family: 'Oxanium', system-ui, sans-serif;
+  font-size: 0.75rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  cursor: pointer;
+}

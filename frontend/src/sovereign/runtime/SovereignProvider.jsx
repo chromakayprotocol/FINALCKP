@@ -7,6 +7,8 @@ import { createSovereignEventBus } from '../events/SovereignEventBus';
 import { mapActionToEvents } from '../events/mapActionToEvents';
 import { fetchRemoteState, createRemoteAutosave } from '../persistence/sovereignSupabaseSync';
 import { reconcileSovereignState } from '../persistence/sovereignReconciliation';
+import { fetchRemoteShadowTwin, createShadowTwinRemoteAutosave } from '../persistence/shadowTwinSupabaseSync';
+import { reconcileShadowTwinState } from '../persistence/shadowTwinReconciliation';
 
 export const SovereignContext = createContext(null);
 
@@ -185,6 +187,50 @@ export function SovereignProvider({
     remoteAutosaveRef.current?.schedule(state);
   }, [state, userId]);
 
+  // Shadow Twin sync (Act II Reflection Chamber): a second, independent
+  // fetch/push cycle against shadow_twins/shadow_twin_fragments — separate
+  // tables from the rest of the Sovereign Runtime's own persistence (see
+  // shadowTwinSupabaseSync.js's header for why), but reusing this same
+  // provider's dispatch/hydrate mechanism so it is still one runtime, not a
+  // second engine. Runs independently of the sync above: a Twin can exist
+  // for a user whose curriculum sync failed, and vice versa.
+  const shadowTwinAutosaveRef = useRef(null);
+  const shadowTwinReadyRef = useRef(false);
+
+  useEffect(() => {
+    if (!userId) return undefined;
+    shadowTwinReadyRef.current = false;
+    let cancelled = false;
+
+    async function runShadowTwinSync() {
+      const { data, error } = await fetchRemoteShadowTwin(userId, remoteClient);
+      if (cancelled || error) return;
+      dispatchAction(
+        actions.hydrate({
+          shadowTwin: reconcileShadowTwinState(stateRef.current.shadowTwin, data?.shadowTwin ?? null),
+        }),
+      );
+      shadowTwinReadyRef.current = true;
+    }
+
+    runShadowTwinSync();
+    shadowTwinAutosaveRef.current = createShadowTwinRemoteAutosave(userId, remoteClient, {
+      delayMs: remoteSyncDelayMs,
+    });
+
+    return () => {
+      cancelled = true;
+      shadowTwinAutosaveRef.current?.flush(stateRef.current.shadowTwin);
+      shadowTwinAutosaveRef.current = null;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId, remoteClient, remoteSyncDelayMs]);
+
+  useEffect(() => {
+    if (!userId || !shadowTwinReadyRef.current) return;
+    shadowTwinAutosaveRef.current?.schedule(state.shadowTwin);
+  }, [state.shadowTwin, userId]);
+
   const boundActions = useMemo(() => {
     return {
       hydrate: (nextState) => dispatchAction(actions.hydrate(nextState)),
@@ -222,6 +268,17 @@ export function SovereignProvider({
       setVolume: (volume) => dispatchAction(actions.setVolume(volume)),
       selectAnchor: (anchorKey) => dispatchAction(actions.selectAnchor(anchorKey)),
       selectMediaConcept: (conceptId) => dispatchAction(actions.selectMediaConcept(conceptId)),
+      startShadowTwinUpload: () => dispatchAction(actions.startShadowTwinUpload()),
+      setShadowTwinSourceImage: (path) => dispatchAction(actions.setShadowTwinSourceImage(path)),
+      startShadowTwinGeneration: (promptVersion) =>
+        dispatchAction(actions.startShadowTwinGeneration(promptVersion)),
+      completeShadowTwinGeneration: (payload) =>
+        dispatchAction(actions.completeShadowTwinGeneration(payload)),
+      failShadowTwinGeneration: (reason) => dispatchAction(actions.failShadowTwinGeneration(reason)),
+      unlockShadowTwinFragment: (fragment) => dispatchAction(actions.unlockShadowTwinFragment(fragment)),
+      updateShadowTwinMaterialization: (materializationState, visualCoherence) =>
+        dispatchAction(actions.updateShadowTwinMaterialization(materializationState, visualCoherence)),
+      integrateShadowTwin: () => dispatchAction(actions.integrateShadowTwin()),
     };
   }, [dispatchAction]);
 

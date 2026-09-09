@@ -1,0 +1,21 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "chroma-key-shadow-twin",
+  "main": "src/index.js",
+  "compatibility_date": "2026-07-01",
+  // No `routes`: not wired to any live domain yet, matches
+  // frontend/vma-worker's staging-only approach.
+  "vars": {
+    "SUPABASE_URL": "https://jmlqrqrikpukxxbstuoe.supabase.co",
+    // Public/non-secret — the same value already shipped to the frontend
+    // as VITE_SUPABASE_PUBLISHABLE_KEY.
+    "SUPABASE_ANON_KEY": "sb_publishable_8DEj5ynJmj7Aj2CbfghWNQ_4XmX9-wA",
+    // "mock" until a real provider key is provisioned — see providers/index.js.
+    // Switch to "openai" once OPENAI_API_KEY is set as a secret:
+    //   npx wrangler secret put OPENAI_API_KEY
+    "IMAGE_PROVIDER": "mock"
+  },
+  "observability": {
+    "enabled": true
+  }
+}

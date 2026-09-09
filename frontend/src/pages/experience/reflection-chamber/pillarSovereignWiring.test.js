@@ -140,9 +140,31 @@ describe('Pillar One — real Sovereign Runtime wiring', () => {
 });
 
 describe('PortalOneOwnedInterior — the actual production entry point', () => {
-  test('mounts without a SovereignProvider already in its tree', async () => {
+  /* Used to self-provide its own SovereignProvider. Now that the Shadow
+     Twin needs to survive navigating between portals and render at the
+     Chamber hub itself (not just inside a launched portal — see
+     PillarExperience.jsx and ReflectionChamberEnvironment.jsx), the
+     provider moved up to ReflectionProtocolPage.jsx, which wraps the
+     whole Act II experience (hub + every portal) in exactly one instance —
+     this file's own prior comment anticipated this exact move. So the real
+     production entry point now requires an ancestor SovereignProvider,
+     supplied one level up. */
+  test('mounts once wrapped in an ancestor SovereignProvider, same as ReflectionProtocolPage.jsx provides it', async () => {
     const { default: PortalOneOwnedInterior } = await import('./PortalOneOwnedInterior');
-    const { container } = render(<PortalOneOwnedInterior />);
+    const { container } = render(
+      <SovereignProvider>
+        <PortalOneOwnedInterior />
+      </SovereignProvider>,
+    );
     expect(container.querySelector('.pooi')).toBeTruthy();
+  });
+
+  test('throws without an ancestor SovereignProvider — useSovereign() no longer has a fallback', async () => {
+    const { default: PortalOneOwnedInterior } = await import('./PortalOneOwnedInterior');
+    // React logs the thrown error to console.error even when the test
+    // catches it via expect().toThrow() — suppress that expected noise.
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
+    expect(() => render(<PortalOneOwnedInterior />)).toThrow(/SovereignProvider/);
+    consoleError.mockRestore();
   });
 });

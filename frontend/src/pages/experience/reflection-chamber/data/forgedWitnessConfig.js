@@ -10,6 +10,8 @@
  * learned, noticed, or chose; the Chamber records, it does not diagnose.
  */
 
+import { ACTIVE_IMAGINATION_PROMPTS } from './activeImaginationPrompts';
+
 export const TRACKS = [
   {
     id: 'version-of-me',
@@ -107,16 +109,12 @@ export const TRACKS = [
 /**
  * Active Imagination's script (§10 of the scope-control directive):
  * deliberately generic and shared — the same four prompts for every
- * track, not custom content per encounter. The system doesn't generate,
- * analyze, or classify the figure; the Seeker supplies the experience,
- * the Chamber provides the container.
+ * track, not custom content per encounter. Now lives in its own file
+ * (data/activeImaginationPrompts.js) since Pillars Three through Five
+ * reuse it too; re-exported here so existing imports of
+ * `ACTIVE_IMAGINATION_PROMPTS` from this file keep working unchanged.
  */
-export const ACTIVE_IMAGINATION_PROMPTS = [
-  { key: 'figure', label: 'Who or what appears?' },
-  { key: 'understand', label: 'What does this part of you want you to understand?' },
-  { key: 'protecting', label: 'What was it protecting?' },
-  { key: 'sayBack', label: 'What do you want to say back?' },
-];
+export { ACTIVE_IMAGINATION_PROMPTS };
 
 /** The closing synthesis, after all six tracks (§18). */
 export const SYNTHESIS_PROMPTS = [
@@ -168,6 +166,15 @@ export const FORGED_WITNESS_CONFIG = {
 
   screens: SCREENS,
   buildRecord,
+
+  // Read by components/track-synthesis/{TrackScreen,SynthesisScreen}.jsx —
+  // see that directory's header for why these are config-driven rather
+  // than imported directly the way this file's own named exports
+  // (TRACKS, ACTIVE_IMAGINATION_PROMPTS, SYNTHESIS_PROMPTS) used to be
+  // read. The named exports stay, unchanged, for existing test imports.
+  tracks: TRACKS,
+  activeImaginationPrompts: ACTIVE_IMAGINATION_PROMPTS,
+  synthesisPrompts: SYNTHESIS_PROMPTS,
 
   seal: {
     eyebrow: 'Pillar Two Complete',

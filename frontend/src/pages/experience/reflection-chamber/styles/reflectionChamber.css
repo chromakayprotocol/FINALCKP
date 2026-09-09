@@ -81,3 +81,46 @@
   color: var(--pooi-muted);
   font-size: 0.9rem;
 }
+
+/* ── Shadow Twin stage layout (design guide §33, §44) ─────────────────
+   Desktop: the Twin gets its own column beside the curriculum content
+   ("TWIN FIELD | CURRICULUM CONTENT"). Mobile: the Twin compresses to a
+   companion strip above the content rather than competing with it for
+   the whole viewport. Grid row 3 of .pooi (minmax(0, 1fr)) is the only
+   row meant to scroll — .pooi-stage-layout__content preserves that by
+   staying min-height: 0 so PillarStage's own internal scroll still owns
+   overflow, not this wrapper. */
+.pooi-stage-layout {
+  display: flex;
+  flex-direction: row;
+  gap: 1.5rem;
+  min-height: 0;
+  height: 100%;
+}
+
+.pooi-stage-layout__twin {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  width: clamp(180px, 22vw, 280px);
+}
+
+.pooi-stage-layout__content {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+@media (max-width: 900px) {
+  .pooi-stage-layout {
+    flex-direction: column;
+  }
+
+  .pooi-stage-layout__twin {
+    width: 100%;
+    max-height: 22vh;
+  }
+}

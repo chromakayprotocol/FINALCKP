@@ -4,6 +4,8 @@ import {
   whatDidIReclaim,
   whatProtocolDidIChoose,
 } from '../synthesis/sovereignSynthesis';
+import { mirrorClarity } from '../reflectionChamber/mirrorClarity';
+import { deriveShadowTwinVisualState } from '../reflectionChamber/shadowTwin';
 
 /**
  * Phase 18 (AI/VMA) of the Sovereign OS migration. The target
@@ -32,6 +34,15 @@ export function buildVMAContext(state) {
     .filter((module) => module.status !== 'completed')
     .map((module) => module.moduleId);
 
+  // Act II (Reflection Chamber) — design guide §35: "Add Shadow Twin state
+  // to [VMA] context... The VMA can now understand: 'The user is currently
+  // encountering a partially materialized Shadow Twin.'" Compact for the
+  // same cost reason as the rest of this file: `recoveredFragmentCount`
+  // rather than the fragments themselves (their sourceRegion/portalId
+  // metadata is render detail VMA never needs to reference in a reply).
+  const clarity = mirrorClarity(state);
+  const visualState = deriveShadowTwinVisualState(state.shadowTwin, clarity);
+
   return {
     activeModuleId: state.curriculum.activeModuleId,
     completedModuleIds,
@@ -41,5 +52,12 @@ export function buildVMAContext(state) {
     recurringPatterns: whatPatternsDidIFind(state).map((pattern) => pattern.conceptId),
     protocolsChosen: whatProtocolDidIChoose(state).map((execution) => execution.protocolId),
     artifactStatus: state.artifact.status,
+    shadowTwin: {
+      exists: visualState.exists,
+      materializationState: visualState.liveMaterializationState,
+      mirrorClarityScore: Math.round(clarity.score * 100) / 100,
+      recoveredFragmentCount: state.shadowTwin.recoveredFragments.length,
+      integrationState: state.shadowTwin.integrationState,
+    },
   };
 }

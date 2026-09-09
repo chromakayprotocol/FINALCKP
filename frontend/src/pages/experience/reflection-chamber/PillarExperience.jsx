@@ -1,4 +1,5 @@
 import { useAuth } from '../../../context/AuthContext';
+import { useSovereign } from '../../../sovereign/runtime';
 import { PILLARS } from '../../../data/reflectionChamberModuleData';
 import { usePillarExperience } from './state/usePillarExperience';
 import { useLockBodyScroll } from './hooks/useLockBodyScroll';
@@ -7,9 +8,12 @@ import PillarHeader from './components/PillarHeader';
 import PillarProgress from './components/PillarProgress';
 import PortalOneStages from './stages/PortalOneStages';
 import ScreenSequence from './screens/ScreenSequence';
+import ShadowTwinViewport from './components/ShadowTwinViewport';
 
 import './portalOneOwnedInterior.css';
 import './styles/reflectionChamber.css';
+import './styles/trackSynthesis.css';
+import './styles/shadowTwin.css';
 
 /**
  * PillarExperience — the shared engine behind every Reflection Chamber
@@ -55,6 +59,7 @@ export default function PillarExperience({
   renderers,
 }) {
   const { user } = useAuth();
+  const { shadowTwin } = useSovereign();
   const pillar = PILLARS.find((p) => p.id === config.pillarId);
   const experience = usePillarExperience(config.pillarId, user?.id);
   useLockBodyScroll();
@@ -81,13 +86,30 @@ export default function PillarExperience({
         completedPillarIds={completedPillarIds}
       />
 
-      <Body
-        config={config}
-        pillar={pillar}
-        experience={experience}
-        onReturn={handleReturn}
-        renderers={renderers}
-      />
+      {/* §33: the Shadow Twin is persistent Chamber chrome sitting beside
+          (not replacing) each pillar's own stage machine — PortalOneStages'
+          curriculum logic and ScreenSequence's config-driven flow are both
+          untouched by its presence. Renders nothing until a Twin exists. */}
+      <div className="pooi-stage-layout">
+        {shadowTwin.visualState.exists && (
+          <div className="pooi-stage-layout__twin">
+            <ShadowTwinViewport
+              canonicalImagePath={shadowTwin.canonicalImage?.path}
+              visualState={shadowTwin.visualState}
+              fragments={shadowTwin.recoveredFragments}
+            />
+          </div>
+        )}
+        <div className="pooi-stage-layout__content">
+          <Body
+            config={config}
+            pillar={pillar}
+            experience={experience}
+            onReturn={handleReturn}
+            renderers={renderers}
+          />
+        </div>
+      </div>
     </div>
   );
 }

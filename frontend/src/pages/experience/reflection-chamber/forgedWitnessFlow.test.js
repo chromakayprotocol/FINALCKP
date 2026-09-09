@@ -8,11 +8,24 @@ vi.mock('../../../context/audioprovider', () => ({
   useAudio: () => null,
 }));
 
+import { SovereignProvider } from '../../../sovereign/runtime';
 import PortalTwoForgedWitness from './PortalTwoForgedWitness';
 import { TRACKS, ACTIVE_IMAGINATION_PROMPTS, SYNTHESIS_PROMPTS } from './data/forgedWitnessConfig';
 
 const KEY = 'ckp:reflection-chamber:forged-witness:seeker-2';
 const read = () => JSON.parse(window.localStorage.getItem(KEY));
+
+/* PillarExperience (the shared shell every pillar renders through) now
+   reads the Shadow Twin domain to render ShadowTwinViewport as persistent
+   chrome (design guide §32-33), so it throws without an ancestor
+   SovereignProvider — see shadowCodeArc.test.js's identical note. */
+function renderPortalTwo(props) {
+  return render(
+    <SovereignProvider>
+      <PortalTwoForgedWitness {...props} />
+    </SovereignProvider>,
+  );
+}
 
 const click = (name) => fireEvent.click(screen.getByRole('button', { name }));
 const type = (label, value) => fireEvent.change(screen.getByLabelText(label), { target: { value } });
@@ -42,7 +55,7 @@ beforeEach(() => {
 describe('The Forged Witness — full pillar flow', () => {
   it('carries the Seeker from the intro through six encounters to the seal', () => {
     const onReturnToChamber = vi.fn();
-    render(<PortalTwoForgedWitness onReturnToChamber={onReturnToChamber} />);
+    renderPortalTwo({ onReturnToChamber });
 
     click(/^Enter$/i);
 
@@ -75,7 +88,7 @@ describe('The Forged Witness — full pillar flow', () => {
   });
 
   it('will not advance the encounter beat until the Seeker answers it', () => {
-    render(<PortalTwoForgedWitness />);
+    renderPortalTwo();
     click(/^Enter$/i);
 
     expect(screen.getByRole('button', { name: 'Continue' })).toBeDisabled();
@@ -84,7 +97,7 @@ describe('The Forged Witness — full pillar flow', () => {
   });
 
   it('reveals the Light Code only once every recode prompt is answered', () => {
-    render(<PortalTwoForgedWitness />);
+    renderPortalTwo();
     click(/^Enter$/i);
 
     type(TRACKS[0].encounterQuestion, 'noticed it');

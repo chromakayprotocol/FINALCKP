@@ -50,6 +50,128 @@ export function createModuleState(moduleId) {
   };
 }
 
+/**
+ * Shadow Twin domain (Act II Reflection Chamber — see
+ * docs/ACT_II_REFLECTION_CHAMBER_ARCHITECTURE.md's Shadow Twin
+ * specification). A sibling of `curriculum`/`reflection`/`concepts`, not a
+ * child of any one module: the generated Twin is one persistent visual
+ * projection of the Seeker's overall progress across all five Reflection
+ * Chamber pillars, not state owned by a single pillar's module row. See
+ * sovereign/reflectionChamber/shadowTwin.js for the pure derivation that
+ * turns this (plus mirrorClarity) into actual render parameters — nothing
+ * in this shape is itself a rendering value.
+ *
+ * @typedef {Object} ShadowTwinFragment
+ * @property {string} id
+ * @property {string} type - e.g. 'facial' | 'torso' | 'limb' | 'silhouette' | 'core'
+ * @property {{x:number,y:number,width:number,height:number}} sourceRegion - percentages of the canonical asset
+ * @property {string} portalId - one of SHADOW_TWIN_PORTAL_IDS
+ * @property {number} visualWeight - 0..1, how prominently this fragment renders
+ * @property {string} unlockedAt
+ *
+ * @typedef {Object} ShadowTwinState
+ * @property {'empty'|'uploading'|'generating'|'ready'|'failed'} status
+ * @property {{path: string, uploadedAt: string}|null} sourceImage
+ * @property {{path: string, generatedAt: string}|null} canonicalImage
+ * @property {string|null} generationPromptVersion
+ * @property {string|null} generatedAt
+ * @property {string|null} materializationState - null until generated, then one of MATERIALIZATION_STATES
+ * @property {number} visualCoherence - 0..1, cached snapshot of mirrorClarity's score at last update
+ * @property {ShadowTwinFragment[]} recoveredFragments
+ * @property {{recognition:boolean, confrontation:boolean, dialogue:boolean, integration:boolean, transformation:boolean}} portalProgression
+ * @property {'unresolved'|'integrated'} integrationState
+ * @property {string|null} visualIdentitySeed - stable seed so per-portal visual treatments stay consistent for one Twin
+ * @property {string|null} error - user-safe failure message, never a raw provider/API error
+ */
+
+/**
+ * The Shadow Twin's six materialization states (design guide §3), in
+ * canonical order. INITIALIZED is the moment generation completes, before
+ * any portal work has begun; the remaining five map 1:1 to the five
+ * Reflection Chamber pillars in pillar-index order (owned-interior=1 ..
+ * mirror-walker-boundary=5) — see sovereign/reflectionChamber/shadowTwin.js,
+ * which is the pure derivation consuming this order, and
+ * reflectionChamberModuleData.js for pillar indices.
+ */
+export const MATERIALIZATION_STATES = Object.freeze({
+  INITIALIZED: 'INITIALIZED',
+  FRAGMENTED_APPARITION: 'FRAGMENTED_APPARITION',
+  MANIFESTATION: 'MANIFESTATION',
+  PRESENCE: 'PRESENCE',
+  CONVERGENCE: 'CONVERGENCE',
+  INTEGRATED: 'INTEGRATED',
+});
+
+export const MATERIALIZATION_ORDER = Object.freeze([
+  MATERIALIZATION_STATES.INITIALIZED,
+  MATERIALIZATION_STATES.FRAGMENTED_APPARITION,
+  MATERIALIZATION_STATES.MANIFESTATION,
+  MATERIALIZATION_STATES.PRESENCE,
+  MATERIALIZATION_STATES.CONVERGENCE,
+  MATERIALIZATION_STATES.INTEGRATED,
+]);
+
+/**
+ * Portal id -> the materialization state reaching that portal establishes
+ * (design guide §3's table: Recognition/Confrontation/Dialogue/Integration/
+ * Transformation -> Fragmented Apparition/Manifestation/Presence/
+ * Convergence/Integrated). "Portal" here is the Shadow Twin's own narrative
+ * frame for the same five pillars PILLARS already defines in
+ * reflectionChamberModuleData.js, index-aligned — it is not a second
+ * curriculum. See derivePortalProgression() below.
+ */
+export const SHADOW_TWIN_PORTAL_MATERIALIZATION = Object.freeze({
+  recognition: MATERIALIZATION_STATES.FRAGMENTED_APPARITION,
+  confrontation: MATERIALIZATION_STATES.MANIFESTATION,
+  dialogue: MATERIALIZATION_STATES.PRESENCE,
+  integration: MATERIALIZATION_STATES.CONVERGENCE,
+  transformation: MATERIALIZATION_STATES.INTEGRATED,
+});
+
+/**
+ * Given the previous portalProgression flags and a newly-reached
+ * materializationState, marks every portal at or before that state's rung
+ * on MATERIALIZATION_ORDER as reached. Monotonic: a portal already marked
+ * true never flips back to false (mirrors completedSteps' append-only
+ * semantics elsewhere in this reducer) — the Twin can display an
+ * intermediate visual regression, but the record of "the Seeker reached
+ * this portal" doesn't un-happen.
+ */
+export function derivePortalProgression(previous, materializationState) {
+  const reachedIndex = MATERIALIZATION_ORDER.indexOf(materializationState);
+  if (reachedIndex < 0) return previous;
+  const next = { ...previous };
+  for (const [portalId, state] of Object.entries(SHADOW_TWIN_PORTAL_MATERIALIZATION)) {
+    const portalIndex = MATERIALIZATION_ORDER.indexOf(state);
+    next[portalId] = previous[portalId] || (portalIndex >= 0 && portalIndex <= reachedIndex);
+  }
+  return next;
+}
+
+/** @returns {ShadowTwinState} */
+export function createShadowTwinState() {
+  return {
+    status: 'empty',
+    sourceImage: null,
+    canonicalImage: null,
+    generationPromptVersion: null,
+    generatedAt: null,
+    materializationState: null,
+    visualCoherence: 0,
+    recoveredFragments: [],
+    portalProgression: {
+      recognition: false,
+      confrontation: false,
+      dialogue: false,
+      integration: false,
+      transformation: false,
+    },
+    integrationState: 'unresolved',
+    visualIdentitySeed: null,
+    error: null,
+  };
+}
+
 export function createInitialState() {
   return {
     session: {
@@ -102,5 +224,6 @@ export function createInitialState() {
       revisions: [],
       sealedAt: null,
     },
+    shadowTwin: createShadowTwinState(),
   };
 }

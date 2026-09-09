@@ -1,5 +1,8 @@
 import { PILLARS, REFLECTION_META } from '../../data/reflectionChamberModuleData';
+import { useSovereign } from '../../sovereign/runtime';
+import ShadowTwinViewport from './reflection-chamber/components/ShadowTwinViewport';
 import './reflectionChamberEnvironment.css';
+import './reflection-chamber/styles/shadowTwin.css';
 
 /**
  * The Reflection Chamber's visual hub — "Camera Reflectionis | Speculum
@@ -46,10 +49,26 @@ const PORTALS = [
 const PILLAR_BY_ID = Object.fromEntries(PILLARS.map((pillar) => [pillar.id, pillar]));
 
 export default function ReflectionChamberEnvironment({ activePillarId, onSelectPillar, pillarStatus = {} }) {
+  const { shadowTwin } = useSovereign();
+
   return (
     <div className="rce-scene">
       <img className="rce-bg" src={CHAMBER_BG} alt="" aria-hidden="true" />
       <div className="rce-veil" aria-hidden="true" />
+
+      {/* Persistent at the Chamber hub too, not only inside a launched
+          portal (§32: "the Twin should be persistent Chamber chrome, not a
+          separate page") — a small companion presence the Seeker sees
+          every time they return to survey the five portals. */}
+      {shadowTwin.visualState.exists && (
+        <div className="rce-twin">
+          <ShadowTwinViewport
+            canonicalImagePath={shadowTwin.canonicalImage?.path}
+            visualState={shadowTwin.visualState}
+            fragments={shadowTwin.recoveredFragments}
+          />
+        </div>
+      )}
 
       <div className="rce-heading">
         <span className="rce-heading-eyebrow">Reclamation University &middot; Act II</span>

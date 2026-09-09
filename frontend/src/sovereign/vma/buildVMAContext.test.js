@@ -8,6 +8,8 @@ import {
   extractConcepts,
   commitReflection,
   executeProtocol,
+  completeShadowTwinGeneration,
+  unlockShadowTwinFragment,
 } from '../runtime/sovereignActions';
 import { SOVEREIGN_STEP_IDS } from '../runtime/sovereignSteps';
 import { buildVMAContext } from './buildVMAContext';
@@ -42,7 +44,31 @@ describe('buildVMAContext', () => {
       recurringPatterns: [],
       protocolsChosen: [],
       artifactStatus: 'empty',
+      shadowTwin: {
+        exists: false,
+        materializationState: null,
+        mirrorClarityScore: 0,
+        recoveredFragmentCount: 0,
+        integrationState: 'unresolved',
+      },
     });
+  });
+
+  it('projects real Shadow Twin progress compactly — no fragment detail, just a count', () => {
+    let state = sovereignReducer(
+      createInitialState(),
+      completeShadowTwinGeneration({ canonicalImagePath: 'p', promptVersion: 'shadow-twin-v1' }),
+    );
+    state = sovereignReducer(
+      state,
+      unlockShadowTwinFragment({ id: 'f1', type: 'facial', sourceRegion: {}, portalId: 'recognition', visualWeight: 0.5 }),
+    );
+
+    const context = buildVMAContext(state);
+    expect(context.shadowTwin.exists).toBe(true);
+    expect(context.shadowTwin.materializationState).toBe('INITIALIZED');
+    expect(context.shadowTwin.recoveredFragmentCount).toBe(1);
+    expect(JSON.stringify(context)).not.toContain('sourceRegion');
   });
 
   it('reflects real journey progress — not a full state dump', () => {

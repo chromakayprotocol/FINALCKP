@@ -13,6 +13,14 @@ import {
   sealArtifact,
   setIdentity,
   hydrate,
+  startShadowTwinUpload,
+  setShadowTwinSourceImage,
+  startShadowTwinGeneration,
+  completeShadowTwinGeneration,
+  failShadowTwinGeneration,
+  unlockShadowTwinFragment,
+  updateShadowTwinMaterialization,
+  integrateShadowTwin,
   loadTrack,
   play,
   pause,
@@ -367,6 +375,79 @@ describe('sovereignReducer', () => {
       expect(entry.response).toEqual({ reflect: { primary: 'x' } });
       expect(entry.status).toBeUndefined();
       expect(entry.candidateConcepts).toBeUndefined();
+    });
+  });
+
+  describe('Shadow Twin domain', () => {
+    it('walks the upload -> generate -> ready pipeline', () => {
+      let state = sovereignReducer(createInitialState(), startShadowTwinUpload());
+      expect(state.shadowTwin.status).toBe('uploading');
+
+      state = sovereignReducer(state, setShadowTwinSourceImage('shadow-twins/u1/source/a.png'));
+      expect(state.shadowTwin.sourceImage.path).toBe('shadow-twins/u1/source/a.png');
+
+      state = sovereignReducer(state, startShadowTwinGeneration('shadow-twin-v1'));
+      expect(state.shadowTwin.status).toBe('generating');
+      expect(state.shadowTwin.generationPromptVersion).toBe('shadow-twin-v1');
+
+      state = sovereignReducer(
+        state,
+        completeShadowTwinGeneration({
+          canonicalImagePath: 'shadow-twins/u1/canonical/a.png',
+          promptVersion: 'shadow-twin-v1',
+          visualIdentitySeed: 'seed-a',
+        }),
+      );
+      expect(state.shadowTwin.status).toBe('ready');
+      expect(state.shadowTwin.canonicalImage.path).toBe('shadow-twins/u1/canonical/a.png');
+      expect(state.shadowTwin.materializationState).toBe('INITIALIZED');
+      expect(state.shadowTwin.visualIdentitySeed).toBe('seed-a');
+
+      // The original source is never overwritten by generation.
+      expect(state.shadowTwin.sourceImage.path).toBe('shadow-twins/u1/source/a.png');
+    });
+
+    it('failShadowTwinGeneration records a user-safe reason without touching the source image', () => {
+      let state = sovereignReducer(createInitialState(), setShadowTwinSourceImage('shadow-twins/u1/source/a.png'));
+      state = sovereignReducer(state, failShadowTwinGeneration('The Chamber could not complete the initialization.'));
+
+      expect(state.shadowTwin.status).toBe('failed');
+      expect(state.shadowTwin.error).toBe('The Chamber could not complete the initialization.');
+      expect(state.shadowTwin.sourceImage.path).toBe('shadow-twins/u1/source/a.png');
+    });
+
+    it('unlockShadowTwinFragment appends new fragments and ignores a repeat id', () => {
+      const fragment = { id: 'owned-interior:02-diagnose', type: 'facial', sourceRegion: {}, portalId: 'recognition', visualWeight: 0.5 };
+      let state = sovereignReducer(createInitialState(), unlockShadowTwinFragment(fragment));
+      expect(state.shadowTwin.recoveredFragments).toHaveLength(1);
+      expect(state.shadowTwin.recoveredFragments[0].unlockedAt).not.toBeNull();
+
+      state = sovereignReducer(state, unlockShadowTwinFragment(fragment));
+      expect(state.shadowTwin.recoveredFragments).toHaveLength(1);
+    });
+
+    it('updateShadowTwinMaterialization marks every portal at or before the reached rung, monotonically', () => {
+      let state = sovereignReducer(createInitialState(), updateShadowTwinMaterialization('PRESENCE', 0.6));
+      expect(state.shadowTwin.materializationState).toBe('PRESENCE');
+      expect(state.shadowTwin.portalProgression).toEqual({
+        recognition: true,
+        confrontation: true,
+        dialogue: true,
+        integration: false,
+        transformation: false,
+      });
+
+      // A later, earlier-rung update (e.g. a stale re-sync) never un-marks
+      // a portal already reached.
+      state = sovereignReducer(state, updateShadowTwinMaterialization('FRAGMENTED_APPARITION', 0.2));
+      expect(state.shadowTwin.portalProgression.dialogue).toBe(true);
+    });
+
+    it('integrateShadowTwin marks every portal complete and sets INTEGRATED', () => {
+      const state = sovereignReducer(createInitialState(), integrateShadowTwin());
+      expect(state.shadowTwin.integrationState).toBe('integrated');
+      expect(state.shadowTwin.materializationState).toBe('INTEGRATED');
+      expect(Object.values(state.shadowTwin.portalProgression).every(Boolean)).toBe(true);
     });
   });
 });

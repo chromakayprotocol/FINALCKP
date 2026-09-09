@@ -1,4 +1,8 @@
+import { useEffect } from 'react';
 import { indexInSequence, nextInSequence, previousInSequence, screenIds } from '../utils/stageTransitions';
+import { useSovereign } from '../../../../sovereign/runtime';
+import { reflectionChamberModuleId } from '../../../../sovereign/reflectionChamber/mirrorClarity';
+import { reportScreenAdvance } from './screenSequenceReporting';
 
 import PillarStage from '../components/PillarStage';
 import PillarNavigation from '../components/PillarNavigation';
@@ -77,6 +81,19 @@ const SHARED_RENDERERS = {
 export default function ScreenSequence({ config, pillar, experience, onReturn, renderers = {} }) {
   const { state, setScreen, completeScreen } = experience;
 
+  // Sovereign Runtime reporting (see screenSequenceReporting.js) — the same
+  // "started the pillar the moment it's entered" mount-once dispatch
+  // PortalOneStages.jsx uses, generalized here so every ScreenSequence
+  // pillar gets it for free rather than each needing its own copy.
+  const sovereign = useSovereign();
+  const pillarModuleId = reflectionChamberModuleId(config.pillarId);
+  useEffect(() => {
+    sovereign.curriculum.startModule(pillarModuleId);
+    // Mount-once, same reasoning as PortalOneStages.jsx's identical effect:
+    // sovereign.curriculum changes identity every render (see useSovereign.js).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pillarModuleId]);
+
   const screens = config.screens ?? [];
   const sequence = screenIds(screens);
 
@@ -87,8 +104,10 @@ export default function ScreenSequence({ config, pillar, experience, onReturn, r
   if (!screen) return null;
 
   const isLast = index === sequence.length - 1;
+  const isLastTrack = screen.type === 'track' && screens.slice(index + 1).every((s) => s.type !== 'track');
 
   const onAdvance = () => {
+    reportScreenAdvance({ screen, isLastTrack, pillarModuleId, sovereign, state });
     completeScreen(currentId);
     if (isLast) {
       onReturn();

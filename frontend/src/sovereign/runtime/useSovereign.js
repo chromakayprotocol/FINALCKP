@@ -10,7 +10,10 @@ import {
   selectConcepts,
   selectSynthesis,
   selectArtifact,
+  selectShadowTwin,
 } from './sovereignSelectors';
+import { mirrorClarity } from '../reflectionChamber/mirrorClarity';
+import { deriveShadowTwinVisualState, shadowTwinPortalReadiness } from '../reflectionChamber/shadowTwin';
 import { evaluateModuleSteps } from './sovereignSteps';
 import { buildDomainMatrix } from './sovereignDomains';
 import {
@@ -135,6 +138,25 @@ export function useSovereign() {
         subscribe: eventBus.subscribe,
         subscribeAll: eventBus.subscribeAll,
         recentEvents: eventBus.getHistory(20),
+      },
+      // Shadow Twin domain (Act II Reflection Chamber) — the one canonical
+      // Twin, its derived visual state (never a mutation, see
+      // sovereign/reflectionChamber/shadowTwin.js), and mirrorClarity
+      // (already the Chamber's own environmental signal, reused here rather
+      // than duplicated).
+      shadowTwin: {
+        ...selectShadowTwin(state),
+        mirrorClarity: mirrorClarity(state),
+        visualState: deriveShadowTwinVisualState(selectShadowTwin(state), mirrorClarity(state)),
+        portals: shadowTwinPortalReadiness(state),
+        startUpload: actions.startShadowTwinUpload,
+        setSourceImage: actions.setShadowTwinSourceImage,
+        startGeneration: actions.startShadowTwinGeneration,
+        completeGeneration: actions.completeShadowTwinGeneration,
+        failGeneration: actions.failShadowTwinGeneration,
+        unlockFragment: actions.unlockShadowTwinFragment,
+        updateMaterialization: actions.updateShadowTwinMaterialization,
+        integrate: actions.integrateShadowTwin,
       },
       // Phase 18 (AI/VMA): the compact, cost-conscious projection of state
       // frontend/vma-worker's /chat endpoint expects as `context` — see

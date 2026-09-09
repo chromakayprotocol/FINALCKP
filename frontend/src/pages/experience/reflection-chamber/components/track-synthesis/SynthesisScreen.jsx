@@ -1,16 +1,16 @@
 import { useState } from 'react';
 import PromptGroup from '../PromptGroup';
-import { SYNTHESIS_PROMPTS } from '../../data/forgedWitnessConfig';
 
 /**
- * The Forged Witness's closing synthesis — one screen, after all six
- * tracks. Four short prompts, then the Carry Code: the one sentence the
- * Seeker keeps outside the Chamber (§18 of the scope-control directive).
+ * The closing synthesis, after every track — one screen, config-driven
+ * (see TrackScreen.jsx's header for why `config.synthesisPrompts` rather
+ * than a pillar-specific import). Its own short prompts, then the Carry
+ * Code: the one sentence the Seeker keeps outside the Chamber.
  *
  * Matches the renderer contract screens/ScreenSequence.jsx hands every
- * screen type: { screen, pillar, state, actions, onAdvance }.
+ * screen type: { screen, config, pillar, state, actions, onAdvance }.
  */
-export default function SynthesisScreen({ state, actions, onAdvance }) {
+export default function SynthesisScreen({ config, state, actions, onAdvance }) {
   const integration = state.experience.integration || {};
   const [showCarryCode, setShowCarryCode] = useState(Boolean((integration.newRule || '').trim()));
 
@@ -19,9 +19,9 @@ export default function SynthesisScreen({ state, actions, onAdvance }) {
   if (!showCarryCode) {
     return (
       <div className="fw-integration">
-        <span className="fw-question-kicker">The Forged Witness</span>
+        <span className="fw-question-kicker">{config.intro?.word}</span>
         <PromptGroup
-          prompts={SYNTHESIS_PROMPTS}
+          prompts={config.synthesisPrompts}
           values={integration}
           onChange={patch}
           onContinue={() => setShowCarryCode(true)}

@@ -1,0 +1,187 @@
+/* The track/synthesis engine — shared structural styling for every pillar
+ * built on components/track-synthesis/{TrackScreen,SynthesisScreen}.jsx
+ * (originally Pillar Two's own `.fw-*` classes, extracted here so Pillars
+ * Three through Five can reuse the exact same components and markup
+ * instead of forking them — see components/track-synthesis/'s own header
+ * for why the components themselves are config-driven, not pillar-coded).
+ *
+ * Scoped to `.pooi .fw-*` (every pillar root carries `.pooi`) rather than
+ * a per-pillar theme class, so this is genuinely shared, not duplicated
+ * per pillar. Two accent variables are the only thing a pillar's own
+ * theme file (forgedWitness.css, sacredRestraint.css, ...) still needs to
+ * define: `--track-secondary` (the territory kicker + Shadow Code edge)
+ * and `--track-secondary-deep` (a darker variant for the Shadow Code
+ * border). Everything else here reads the Chamber's already-shared
+ * `--pooi-*`/`--h20-*` tokens, exactly like every other shared Chamber rule.
+ *
+ * Colour contract, unchanged from Pillar Two's original: H20 blue stays
+ * primary — borders, active controls, current, progress, focus, glow. The
+ * pillar's secondary marks only the Shadow Code edge and the territory
+ * kicker; it is never a background, so no pillar built on this engine
+ * reads as Fire.
+ */
+
+/* ── Song / encounter ──────────────────────────────────────────────── */
+.pooi .fw-song {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.75rem;
+  padding: 2.5rem 0;
+}
+
+.pooi .fw-song-territory {
+  font-family: 'Oxanium', system-ui, sans-serif;
+  font-size: 0.7rem;
+  letter-spacing: 0.32em;
+  color: var(--track-secondary, var(--pooi-accent));
+}
+
+.pooi .fw-song-title {
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: clamp(2rem, 6vw, 3rem);
+  margin: 0;
+  color: var(--pooi-ivory);
+}
+
+.pooi .fw-song-lead {
+  max-width: 30rem;
+  color: var(--pooi-muted);
+  line-height: 1.6;
+}
+
+.pooi .fw-song-play {
+  margin-top: 0.5rem;
+  padding: 0.7rem 1.6rem;
+  border-radius: 999px;
+  border: 1px solid var(--h20-sky);
+  background: rgba(56, 189, 248, 0.1);
+  color: var(--pooi-ivory);
+  font-family: 'Oxanium', system-ui, sans-serif;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+}
+
+.pooi .fw-song-play:hover:not(:disabled) {
+  background: rgba(56, 189, 248, 0.2);
+}
+
+.pooi .fw-song-play:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+/* ── Shared prompt pattern (recognition, recode, application, synthesis) ── */
+.pooi .fw-question-kicker {
+  font-family: 'Oxanium', system-ui, sans-serif;
+  font-size: 0.65rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--pooi-muted);
+}
+
+.pooi .fw-question {
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 1.4rem;
+  line-height: 1.4;
+  margin: 0;
+  color: var(--pooi-ivory);
+}
+
+.pooi .fw-prompt-group,
+.pooi .fw-imagination,
+.pooi .fw-recode,
+.pooi .fw-integration {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.pooi .fw-imagination-instruction {
+  color: var(--pooi-muted);
+  line-height: 1.65;
+  margin: 0;
+}
+
+.pooi .fw-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.pooi .fw-field-label {
+  font-family: 'Oxanium', system-ui, sans-serif;
+  font-size: 0.7rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--h20-sky);
+}
+
+.pooi .fw-field-input {
+  width: 100%;
+  padding: 0.7rem 0.85rem;
+  border-radius: 0.45rem;
+  border: 1px solid var(--pooi-border);
+  background: var(--pooi-surface);
+  color: var(--pooi-ivory);
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 0.95rem;
+  line-height: 1.55;
+  resize: vertical;
+}
+
+.pooi .fw-field-input:focus-visible {
+  outline: 2px solid var(--h20-sky);
+  outline-offset: 2px;
+}
+
+/* ── Shadow / Light Code reveals ───────────────────────────────────── */
+.pooi .fw-code {
+  padding: 1.25rem;
+  border-radius: 0.5rem;
+  border: 1px solid var(--pooi-border);
+  background: var(--pooi-surface);
+}
+
+.pooi .fw-code--shadow {
+  border-left: 3px solid var(--track-secondary-deep, var(--pooi-accent-strong));
+}
+
+.pooi .fw-code--light {
+  border-left: 3px solid var(--h20-sky);
+  box-shadow: 0 0 24px rgba(56, 189, 248, 0.12);
+}
+
+.pooi .fw-code-label {
+  font-family: 'Oxanium', system-ui, sans-serif;
+  font-size: 0.65rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--pooi-muted);
+}
+
+.pooi .fw-code-body {
+  margin: 0.5rem 0 0;
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 1.35rem;
+  line-height: 1.45;
+  color: var(--pooi-ivory);
+}
+
+.pooi .fw-code--light .fw-code-body {
+  margin-bottom: 1rem;
+}
+
+/* ── Carry Code ────────────────────────────────────────────────────── */
+.pooi .fw-carry-quote {
+  margin: 0;
+  padding: 1rem 1.25rem;
+  border-left: 3px solid var(--h20-sky);
+  background: var(--pooi-surface);
+  border-radius: 0 0.45rem 0.45rem 0;
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 1.15rem;
+  line-height: 1.45;
+  color: var(--pooi-ivory);
+}

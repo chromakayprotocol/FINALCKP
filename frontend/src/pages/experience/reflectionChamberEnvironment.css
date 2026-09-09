@@ -78,6 +78,27 @@
   z-index: 3;
 }
 
+/* A small companion presence, tucked into the scene's lower corner rather
+   than competing with the five archway hotspots for attention — the hub's
+   real estate is the portals' to own; the Twin is a persistent reminder
+   it exists, not the hub's focal point. */
+.rce-twin {
+  position: absolute;
+  left: 2%;
+  bottom: 3%;
+  width: clamp(64px, 8vw, 110px);
+  aspect-ratio: 9 / 16;
+  z-index: 4;
+  filter: drop-shadow(0 4px 18px rgba(0, 0, 0, 0.6));
+  pointer-events: none;
+}
+
+@media (max-width: 720px) {
+  .rce-twin {
+    display: none;
+  }
+}
+
 .rce-portal {
   /* left/top/width/height are set inline per portal, matched to that
      archway's lit opening in the art. */

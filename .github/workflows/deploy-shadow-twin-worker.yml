@@ -1,0 +1,53 @@
+name: Deploy Shadow Twin Worker (manual)
+
+# Manual-only, same reasoning as deploy-vma-worker.yml: this Worker
+# (frontend/shadow-twin-worker) isn't wired into any live route until Act
+# II's Shadow Twin initialization ships. Only deploy on an explicit
+# decision, never automatically on a push.
+on:
+  workflow_dispatch: {}
+
+jobs:
+  deploy-shadow-twin-worker:
+    runs-on: ubuntu-latest
+    name: Worker → chroma-key-shadow-twin
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          # wrangler 4.x requires Node >=22 — see deploy-vma-worker.yml.
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: frontend/shadow-twin-worker/package-lock.json
+
+      - name: Install dependencies
+        working-directory: frontend/shadow-twin-worker
+        run: npm ci
+
+      - name: Run tests
+        working-directory: frontend/shadow-twin-worker
+        run: npx vitest run
+
+      # Unlike the VMA Worker, OPENAI_API_KEY is NOT required to deploy —
+      # wrangler.jsonc defaults IMAGE_PROVIDER to "mock" (a dependency-free
+      # placeholder provider), so this Worker deploys and serves the full
+      # pipeline correctly with no secret at all. Set the real provider key
+      # only if it's been provisioned, and only then is switching
+      # IMAGE_PROVIDER to "openai" in wrangler.jsonc meaningful.
+      - name: Set OPENAI_API_KEY Worker secret (if provisioned)
+        if: ${{ env.OPENAI_API_KEY != '' }}
+        working-directory: frontend/shadow-twin-worker
+        run: echo "$OPENAI_API_KEY" | npx wrangler secret put OPENAI_API_KEY
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFARE_ACCOUNT_ID }}
+
+      - name: Deploy Worker
+        working-directory: frontend/shadow-twin-worker
+        run: npx wrangler deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFARE_ACCOUNT_ID }}

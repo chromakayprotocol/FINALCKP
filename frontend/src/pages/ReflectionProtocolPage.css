@@ -407,3 +407,9 @@
 .rpp-cta:hover {
   background: rgba(80, 160, 224, 0.28);
 }
+
+.rpp-loading {
+  position: fixed;
+  inset: 0;
+  background: #05070d;
+}

@@ -98,7 +98,7 @@ function ReflectionProtocolPageInner() {
 
   const LaunchedPortal = launchedPillarId ? INTERACTIVE_PILLARS[launchedPillarId] : null;
 
-  // §42 "Returning users": don't decide between the entry screen and the
+  // "Returning users": don't decide between the entry screen and the
   // Chamber hub until the Shadow Twin's own remote fetch has had a chance
   // to land — otherwise a returning user with a real Twin would flash
   // ShadowTwinInitialization before their Twin loads. `session.syncStatus`
@@ -112,13 +112,16 @@ function ReflectionProtocolPageInner() {
     return <div className="rpp-loading" aria-busy="true" />;
   }
 
-  // Anything short of a generated Twin ('empty', mid-upload/generation, or
-  // a failed attempt awaiting retry) keeps the Seeker on the entry screen —
-  // it owns its own upload/generate/retry flow (ShadowTwinInitialization.jsx).
-  // Once `status` reaches 'ready', `enteredChamber` (set by its own
-  // ShadowTwinReveal -> onComplete) is what actually admits the Seeker to
-  // the Chamber hub below, not `status` alone — so a returning user with an
-  // already-ready Twin still passes straight through.
+  // A Seeker with no Twin yet (or one mid-upload/generation/retry) still
+  // sees the entry screen first, but it no longer gates the Chamber:
+  // ShadowTwinInitialization calls `onComplete` immediately once
+  // generation lands (no reveal in between — the Twin stays hidden until
+  // fragment unlocks surface it during real pillar progress) or the
+  // moment the Seeker taps "Skip for now," which is a real, immediate way
+  // in with no Twin at all. `enteredChamber` is what actually admits them
+  // below, not `shadowTwin.status` — so a returning user with an
+  // already-ready Twin still passes straight through without seeing this
+  // screen again.
   if (!enteredChamber && (hasNoTwinYet || ['uploading', 'generating', 'failed'].includes(shadowTwin.status))) {
     return <ShadowTwinInitialization onComplete={() => setEnteredChamber(true)} />;
   }

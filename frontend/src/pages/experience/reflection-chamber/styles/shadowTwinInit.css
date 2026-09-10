@@ -109,6 +109,22 @@
   cursor: not-allowed;
 }
 
+.shadow-twin-init__skip {
+  background: transparent;
+  border: none;
+  color: var(--sti-muted);
+  font-family: 'Oxanium', system-ui, sans-serif;
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+  padding: 0.4rem;
+}
+
+.shadow-twin-init__skip:hover {
+  color: var(--sti-ivory);
+}
+
 .shadow-twin-init__failure {
   width: 100%;
   padding: 0.85rem 1rem;
@@ -201,112 +217,3 @@
   display: none;
 }
 
-/* ── ShadowTwinReveal — the post-generation transition sequence (§40) ── */
-.shadow-twin-reveal {
-  position: fixed;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 2rem;
-  background: #f5f7fa;
-  color: #0a0d16;
-  cursor: pointer;
-}
-
-.shadow-twin-reveal__field {
-  position: relative;
-  width: min(70vw, 320px);
-  aspect-ratio: 9 / 16;
-}
-
-.shadow-twin-reveal__shard,
-.shadow-twin-reveal__figure {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  background-size: cover;
-  background-position: center;
-  opacity: 0;
-  transition: opacity 1.4s ease, transform 1.4s ease;
-}
-
-.shadow-twin-reveal__shard--a { clip-path: polygon(0 0, 45% 0, 45% 100%, 0 100%); transform: translateX(-6%); }
-.shadow-twin-reveal__shard--b { clip-path: polygon(55% 0, 100% 0, 100% 100%, 55% 100%); transform: translateX(6%); }
-
-.shadow-twin-reveal__field[data-stage='1'] .shadow-twin-reveal__shard--a,
-.shadow-twin-reveal__field[data-stage='2'] .shadow-twin-reveal__shard--a,
-.shadow-twin-reveal__field[data-stage='3'] .shadow-twin-reveal__shard--a,
-.shadow-twin-reveal__field[data-stage='4'] .shadow-twin-reveal__shard--a,
-.shadow-twin-reveal__field[data-stage='5'] .shadow-twin-reveal__shard--a {
-  opacity: 0.5;
-  transform: translateX(0);
-}
-
-.shadow-twin-reveal__field[data-stage='2'] .shadow-twin-reveal__shard--b,
-.shadow-twin-reveal__field[data-stage='3'] .shadow-twin-reveal__shard--b,
-.shadow-twin-reveal__field[data-stage='4'] .shadow-twin-reveal__shard--b,
-.shadow-twin-reveal__field[data-stage='5'] .shadow-twin-reveal__shard--b {
-  opacity: 0.5;
-  transform: translateX(0);
-}
-
-.shadow-twin-reveal__field[data-stage='3'] .shadow-twin-reveal__figure {
-  opacity: 0.25;
-  filter: blur(6px) grayscale(0.6);
-}
-
-.shadow-twin-reveal__field[data-stage='4'] .shadow-twin-reveal__figure,
-.shadow-twin-reveal__field[data-stage='5'] .shadow-twin-reveal__figure {
-  opacity: 0.9;
-  filter: blur(0) grayscale(0);
-}
-
-.shadow-twin-reveal__field[data-stage='4'] .shadow-twin-reveal__shard--a,
-.shadow-twin-reveal__field[data-stage='4'] .shadow-twin-reveal__shard--b,
-.shadow-twin-reveal__field[data-stage='5'] .shadow-twin-reveal__shard--a,
-.shadow-twin-reveal__field[data-stage='5'] .shadow-twin-reveal__shard--b {
-  opacity: 0;
-}
-
-.shadow-twin-reveal__copy {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1rem;
-  opacity: 0;
-  transform: translateY(10px);
-  transition: opacity 0.8s ease, transform 0.8s ease;
-}
-
-.shadow-twin-reveal__copy.is-visible {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-.shadow-twin-reveal__copy p {
-  margin: 0;
-  font-family: 'Cinzel', Georgia, serif;
-  font-size: 1.1rem;
-}
-
-.shadow-twin-reveal__pause {
-  color: #4a5568;
-}
-
-.shadow-twin-reveal__enter {
-  margin-top: 0.5rem;
-  padding: 0.8rem 1.75rem;
-  border-radius: 999px;
-  border: none;
-  background: #0a0d16;
-  color: #f5f7fa;
-  font-family: 'Oxanium', system-ui, sans-serif;
-  font-size: 0.75rem;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  cursor: pointer;
-}

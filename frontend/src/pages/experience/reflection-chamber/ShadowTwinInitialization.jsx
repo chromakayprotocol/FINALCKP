@@ -1,22 +1,29 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '../../../context/AuthContext';
 import { useSovereign } from '../../../sovereign/runtime';
 import { uploadShadowTwinSourceImage, generateShadowTwin } from '../../../lib/supabase/shadowTwin';
 import { CURRENT_SHADOW_TWIN_PROMPT_VERSION } from './data/shadowTwinPrompt';
 import ShadowTwinUploader from './components/ShadowTwinUploader';
-import ShadowTwinReveal from './components/ShadowTwinReveal';
 import './styles/shadowTwinInit.css';
 
 /**
- * ACT II ENTRY — Shadow Twin Initialization (design guide §4-7). The first
- * screen a Seeker sees on entering Act II for the first time: full-screen,
- * no dashboard, no progress bar, no five-pillar navigation, no curriculum
- * copy — "the chamber should feel like the user has entered a system that
- * is waiting for an identity signal." ReflectionProtocolPage.jsx decides
- * whether to render this at all (only when the Seeker has no Shadow Twin
- * yet — see its own §42 "returning users" handling); once generation
- * completes, this hands off to ShadowTwinReveal and then calls
- * `onComplete` to enter the Chamber hub proper.
+ * ACT II ENTRY — Shadow Twin Initialization. The first screen a Seeker
+ * sees on entering Act II for the first time: full-screen, no dashboard,
+ * no progress bar, no five-pillar navigation, no curriculum copy — "the
+ * chamber should feel like the user has entered a system that is waiting
+ * for an identity signal." ReflectionProtocolPage.jsx decides whether to
+ * render this at all (only when the Seeker has no Shadow Twin yet — see
+ * its own "returning users" handling).
+ *
+ * The Twin itself is never shown here, generated or not — it is a hidden
+ * asset from the moment it exists, and is only ever glimpsed later via the
+ * fragment unlocks that already fire off real pillar progress
+ * (shadowTwin/useShadowTwinSync.js), not by a reveal sequence at
+ * initialization. So `onComplete` fires immediately once generation
+ * lands, with no intermediate reveal screen — and "Skip for now" is a
+ * real, equally immediate way in: entering the Chamber has never actually
+ * depended on having a Twin at all, and this screen no longer pretends
+ * otherwise.
  */
 export default function ShadowTwinInitialization({ onComplete }) {
   const { user } = useAuth();
@@ -25,7 +32,24 @@ export default function ShadowTwinInitialization({ onComplete }) {
 
   const isWorking = shadowTwin.status === 'uploading' || shadowTwin.status === 'generating';
   const hasFailed = shadowTwin.status === 'failed';
-  const isReady = shadowTwin.status === 'ready' && shadowTwin.canonicalImage;
+
+  // The Twin is hidden by design (see header comment) — the moment
+  // generation lands, move straight into the Chamber rather than showing
+  // any part of it. Guarded so a re-render after onComplete has already
+  // fired (e.g. a parent that doesn't unmount this immediately) never
+  // calls it twice.
+  const enteredRef = useRef(false);
+  useEffect(() => {
+    if (shadowTwin.status === 'ready' && shadowTwin.canonicalImage && !enteredRef.current) {
+      enteredRef.current = true;
+      onComplete?.();
+    }
+  }, [shadowTwin.status, shadowTwin.canonicalImage, onComplete]);
+
+  function handleSkip() {
+    enteredRef.current = true;
+    onComplete?.();
+  }
 
   async function handleInitialize() {
     if (!file || !user?.id || isWorking) return;
@@ -56,10 +80,6 @@ export default function ShadowTwinInitialization({ onComplete }) {
       promptVersion: CURRENT_SHADOW_TWIN_PROMPT_VERSION,
       visualIdentitySeed,
     });
-  }
-
-  if (isReady) {
-    return <ShadowTwinReveal canonicalImagePath={shadowTwin.canonicalImage.path} onEnter={onComplete} />;
   }
 
   return (
@@ -100,6 +120,10 @@ export default function ShadowTwinInitialization({ onComplete }) {
             : hasFailed
               ? 'RETRY INITIALIZATION'
               : 'INITIALIZE SHADOW TWIN'}
+        </button>
+
+        <button type="button" className="shadow-twin-init__skip" onClick={handleSkip}>
+          Skip for now
         </button>
       </div>
 

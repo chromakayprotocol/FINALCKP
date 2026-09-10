@@ -19,12 +19,11 @@ export const SHADOW_TWIN_PROMPT_V1 = Object.freeze({
   version: 'shadow-twin-v1',
   aspectRatio: '9:16',
   background: 'solid-white',
-  // The model is deliberately given interpretive freedom (design guide §47:
-  // "Don't automatically determine... This is their trauma" — the system
-  // stores a visual artifact, not a psychological diagnosis). This prompt
-  // asks for a *counterpart*, not a villain, and never asks the model to
-  // infer or depict anything about the uploaded person's psychology,
-  // history, or identity beyond their visual likeness.
+  // Superseded by V2 below — kept only so a Twin already generated under
+  // v1 (its `promptVersion` is persisted per-Twin, see
+  // sovereignActions.js's completeShadowTwinGeneration()) still resolves
+  // back to the exact text that generated it. Never edit this text in
+  // place; a wording change is a new version.
   text: `Generate a single full-body character portrait of a shadow counterpart /
 reflection-figure of the person in the reference photo, on a pure, solid
 white background, isolated with no environment, no props, no other people.
@@ -48,11 +47,74 @@ The figure should:
 Do not add any text, watermark, logo, frame, or border to the image.`,
 });
 
-export const SHADOW_TWIN_PROMPTS = Object.freeze({
-  [SHADOW_TWIN_PROMPT_V1.version]: SHADOW_TWIN_PROMPT_V1,
+// The canonical prompt as of this writing — supplied verbatim by the
+// project owner, not authored here. Do not edit this text; a future
+// change is a new version (V3), same discipline as V1 -> V2.
+export const SHADOW_TWIN_PROMPT_V2 = Object.freeze({
+  version: 'shadow-twin-v2',
+  aspectRatio: '9:16',
+  background: 'solid-white',
+  text: `Use the uploaded photograph as the primary identity reference.
+
+Create an original and deeply individualized visual interpretation of this person's Jungian Shadow Twin.
+
+The finished image must unmistakably remain the same individual. Preserve strong facial and physical identity while allowing their hidden, disowned, suppressed, unrealized, contradictory, instinctual, powerful, forbidden, or unexplored aspects to emerge through an original visual transformation.
+
+Do not interpret "Shadow" as simply evil, demonic, monstrous, or dark.
+
+Instead, creatively imagine what THIS specific person's hidden counterpart might look like if the unconscious parts of their identity were given physical form.
+
+Study the individual's face, presence, expression, posture, and overall visual energy. Let those qualities inspire the transformation, but do not mechanically reproduce or literalize any predetermined symbolic system. The Shadow Twin should feel psychologically connected to the person while remaining surprising, imaginative, and visually original.
+
+Give the concept substantial creative freedom.
+
+Do not follow a generic formula for darkness, villainy, horror, fantasy, or beauty. Do not rely on cliché symbols unless they emerge naturally from the creative interpretation of this particular individual.
+
+The transformation may express power, rebellion, desire, instinct, grief, freedom, intensity, mystery, confidence, danger, beauty, alienation, liberation, contradiction, or aspects that cannot be easily categorized.
+
+Allow unexpected visual ideas to emerge.
+
+The result should feel like an encounter with a version of the person that has always existed beneath the visible identity but has never previously been seen.
+
+The finished image must be composed in a 9:16 vertical format.
+
+Place the individual against a pure, solid white background.
+
+The white background must remain visually clean and uninterrupted, creating strong contrast and allowing the Shadow Twin itself to become the entire visual event.
+
+Do not create an environmental scene. Do not fill the background with objects, landscapes, architecture, or decorative storytelling.
+
+Within those constraints, retain broad artistic freedom over pose, framing, camera perspective, crop, expression, body language, styling, transformation, silhouette, and visual presentation.
+
+Choose whatever composition makes THIS particular Shadow Twin most visually powerful.
+
+The person may occupy the frame in an unexpected way. They may be close, distant, dominant, partially framed, full body, tightly composed, asymmetrical, confrontational, restrained, physically expressive, elegant, unsettling, beautiful, strange, powerful, or impossible to immediately categorize.
+
+Use the empty white space as part of the composition.
+
+The image should feel intentionally composed but never mechanically predetermined.
+
+Prioritize individuality over convention.
+
+Prioritize creative interpretation over cliché.
+
+Prioritize psychological depth over superficial darkness.
+
+Prioritize visual originality over generic AI aesthetics.
+
+The final image should create the immediate feeling:
+
+"This is unmistakably the same person—but this is a version of them I have never encountered before."
+
+Create a singular, iconic, visually arresting, psychologically charged portrait with strong identity fidelity, exceptional originality, and complete creative freedom within the 9:16 composition and solid white background.`,
 });
 
-export const CURRENT_SHADOW_TWIN_PROMPT_VERSION = SHADOW_TWIN_PROMPT_V1.version;
+export const SHADOW_TWIN_PROMPTS = Object.freeze({
+  [SHADOW_TWIN_PROMPT_V1.version]: SHADOW_TWIN_PROMPT_V1,
+  [SHADOW_TWIN_PROMPT_V2.version]: SHADOW_TWIN_PROMPT_V2,
+});
+
+export const CURRENT_SHADOW_TWIN_PROMPT_VERSION = SHADOW_TWIN_PROMPT_V2.version;
 
 export function shadowTwinPromptForVersion(version) {
   return SHADOW_TWIN_PROMPTS[version] ?? null;

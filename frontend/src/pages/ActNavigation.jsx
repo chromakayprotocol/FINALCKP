@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../styles/act-navigation.css';
 import {
@@ -14,6 +14,7 @@ import {
   Waveform,
 } from '@phosphor-icons/react';
 import { useAuth } from '../context/AuthContext';
+import { getDisclosureState } from '../lib/progressiveDisclosure';
 
 const acts = [
   {
@@ -27,7 +28,6 @@ const acts = [
     rgb: '255, 55, 61',
     emblem: '/emblem/act_one_module_emblem.png',
     route: '/act/1/entry',
-    status: 'Ready',
     signal: '01',
   },
   {
@@ -41,7 +41,6 @@ const acts = [
     rgb: '90, 182, 255',
     emblem: '/emblem/act_two_module_emblem.png',
     route: '/experiencemode/act-two/visualizer',
-    status: 'Calibrating',
     signal: '02',
   },
   {
@@ -55,7 +54,6 @@ const acts = [
     rgb: '255, 77, 77',
     emblem: '/emblem/act_three_module_emblem.png',
     route: '/experiencemode/sovereign/module/audio-visualizer-core',
-    status: 'Active',
     signal: '03',
   },
   {
@@ -69,22 +67,42 @@ const acts = [
     rgb: '255, 200, 87',
     emblem: '/emblem/act_four_module_emblem.png',
     route: '/act/4',
-    status: 'Sealed',
     signal: '04',
   },
 ];
 
-function ActCard({ act }) {
-  const navigate = useNavigate();
+/**
+ * Derives each Act's real status from user progression instead of a fixed
+ * label, so this roadmap reflects the same state AppShell's sidebar does.
+ */
+function getActStatus(act, { currentAct, completedActs, act3Unlocked, isAdmin }) {
+  if (act.num === 4) return isAdmin ? 'Available' : 'Sealed';
+  if (act.num === 3 && !act3Unlocked && !isAdmin) return 'Locked';
+  if (completedActs.includes(act.num)) return 'Complete';
+  if (act.num === currentAct) return 'In Progress';
+  return 'Ready';
+}
 
-  const openAct = () => navigate(act.route);
+function isActLocked(status) {
+  return status === 'Locked' || status === 'Sealed';
+}
+
+function ActCard({ act, status }) {
+  const navigate = useNavigate();
+  const locked = isActLocked(status);
+
+  const openAct = () => {
+    if (locked) return;
+    navigate(act.route);
+  };
 
   return (
     <article
-      className="act-nav-card"
+      className={`act-nav-card${locked ? ' is-locked' : ''}`}
       style={{ '--act-color': act.color, '--act-rgb': act.rgb }}
       onClick={openAct}
       data-testid={`act-card-${act.num}`}
+      aria-disabled={locked}
       tabIndex={0}
       onKeyDown={(event) => {
         if (event.key === 'Enter' || event.key === ' ') {
@@ -98,7 +116,7 @@ function ActCard({ act }) {
 
       <header className="act-nav-card__header">
         <span>Act {act.roman}</span>
-        <strong>{act.status}</strong>
+        <strong>{status}</strong>
       </header>
 
       <button
@@ -168,6 +186,25 @@ export default function ActNavigation() {
 
   const displayName = user?.name || 'Director';
   const level = user?.level || 47;
+
+  const disclosure = useMemo(() => getDisclosureState(user), [user]);
+  const progressCtx = useMemo(
+    () => ({
+      currentAct: Math.max(1, Number(user?.current_act) || 1),
+      completedActs: Array.isArray(user?.completed_acts) ? user.completed_acts : [],
+      act3Unlocked: Boolean(user?.act3_unlocked),
+      isAdmin: Boolean(user?.is_admin),
+    }),
+    [user],
+  );
+  const visibleActs = useMemo(
+    () => acts.filter((act) => disclosure.visibleActNumbers.includes(act.num)),
+    [disclosure.visibleActNumbers],
+  );
+  const actStatus = useMemo(() => {
+    const entries = visibleActs.map((act) => [act.num, getActStatus(act, progressCtx)]);
+    return Object.fromEntries(entries);
+  }, [visibleActs, progressCtx]);
 
   return (
     <main className="act-nav-page">
@@ -258,25 +295,45 @@ export default function ActNavigation() {
         </header>
 
         <nav className="act-nav-strip" aria-label="Act status overview">
-          {acts.map((act) => (
-            <button
-              key={act.num}
-              type="button"
-              style={{ '--act-color': act.color, '--act-rgb': act.rgb }}
-              onClick={() => navigate(act.route)}
-            >
-              <Circuitry size={18} aria-hidden="true" />
-              <span>{act.roman}</span>
-              {act.status === 'Sealed' ? <LockKey size={15} aria-hidden="true" /> : <i />}
-            </button>
-          ))}
+          {visibleActs.map((act) => {
+            const status = actStatus[act.num];
+            const locked = isActLocked(status);
+            return (
+              <button
+                key={act.num}
+                type="button"
+                style={{ '--act-color': act.color, '--act-rgb': act.rgb }}
+                aria-disabled={locked}
+                onClick={() => {
+                  if (locked) return;
+                  navigate(act.route);
+                }}
+              >
+                <Circuitry size={18} aria-hidden="true" />
+                <span>{act.roman}</span>
+                {locked ? <LockKey size={15} aria-hidden="true" /> : <i />}
+              </button>
+            );
+          })}
         </nav>
 
-        <div className="act-nav-roadmap" data-testid="roadmap">
-          {acts.map((act) => (
-            <ActCard key={act.num} act={act} />
+        <div
+          className="act-nav-roadmap"
+          data-testid="roadmap"
+          style={{ gridTemplateColumns: `repeat(${Math.min(visibleActs.length, 4)}, minmax(0, 1fr))` }}
+        >
+          {visibleActs.map((act) => (
+            <ActCard key={act.num} act={act} status={actStatus[act.num]} />
           ))}
         </div>
+
+        {!disclosure.fullySovereign && (
+          <p className="act-nav-disclosure-hint" data-testid="disclosure-hint">
+            {visibleActs.length < acts.length
+              ? 'More Acts reveal as you progress.'
+              : 'The full Sovereign surface unlocks as you progress.'}
+          </p>
+        )}
           </div>
         </div>
 

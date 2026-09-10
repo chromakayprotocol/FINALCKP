@@ -78,6 +78,7 @@ export default function PillarExperience({
       <PillarHeader
         pillarIndex={pillar.index}
         pillarTitle={pillar.title}
+        pillarCount={PILLARS.length}
         stageLabel={config.intro?.word}
       />
       <PillarProgress

@@ -8,6 +8,7 @@ import { buildRecordSummary } from '../utils/buildRecordSummary';
 import PillarStage from '../components/PillarStage';
 import PillarNavigation from '../components/PillarNavigation';
 import PillarIntro from '../components/PillarIntro';
+import RecognitionOverture from '../components/RecognitionOverture';
 import SituationPresentation from '../components/SituationPresentation';
 import ReflectionSorter from '../components/ReflectionSorter';
 import ConceptReveal from '../components/ConceptReveal';
@@ -78,6 +79,7 @@ export default function PortalOneStages({ config, pillar, experience, onReturn }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pillarModuleId]);
 
+  const [introPhase, setIntroPhase] = useState('gate');
   const [conceptPhase, setConceptPhase] = useState('reveal');
   const [applicationPhase, setApplicationPhase] = useState('modern');
   const [reflectionPhase, setReflectionPhase] = useState('form');
@@ -89,18 +91,26 @@ export default function PortalOneStages({ config, pillar, experience, onReturn }
 
   switch (state.currentStage) {
     case STAGES.INTRO:
-      content = (
-        <PillarIntro
-          pillar={pillar}
-          onEnter={() => {
-            sovereign.module?.advanceStep(REFLECTION_CHAMBER_STEP_IDS.ENTER);
-            setStage(STAGES.SITUATION);
-          }}
-          eyebrow={config.intro.eyebrow}
-          word={config.intro.word}
-          tagline={config.intro.tagline}
-        />
-      );
+      content =
+        introPhase === 'gate' ? (
+          <PillarIntro
+            pillar={pillar}
+            onEnter={() => {
+              // ENTER dispatches here, on the click itself — the same
+              // instant it always has — rather than after the overture,
+              // so "entering" the pillar means the same thing to the
+              // Sovereign Runtime whether or not the overture is ever
+              // watched to the end (a Seeker who skips it still entered).
+              sovereign.module?.advanceStep(REFLECTION_CHAMBER_STEP_IDS.ENTER);
+              setIntroPhase('overture');
+            }}
+            eyebrow={config.intro.eyebrow}
+            word={config.intro.word}
+            tagline={config.intro.tagline}
+          />
+        ) : (
+          <RecognitionOverture onComplete={() => setStage(STAGES.SITUATION)} />
+        );
       break;
 
     case STAGES.SITUATION:
@@ -409,7 +419,7 @@ export default function PortalOneStages({ config, pillar, experience, onReturn }
   return (
     <>
       <PillarStage
-        stageKey={`${state.currentStage}-${conceptPhase}-${applicationPhase}-${reflectionPhase}-${state.practicePhase}-${sealPhase}`}
+        stageKey={`${state.currentStage}-${introPhase}-${conceptPhase}-${applicationPhase}-${reflectionPhase}-${state.practicePhase}-${sealPhase}`}
       >
         {content}
       </PillarStage>

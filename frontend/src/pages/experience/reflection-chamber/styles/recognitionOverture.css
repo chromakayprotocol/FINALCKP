@@ -1,0 +1,233 @@
+/* Portal One — the narrated overture (RecognitionOverture.jsx).
+ *
+ * The chamber's own screen-within-a-screen: a dark reflective surface behind
+ * a glowing rounded frame, exactly the composition the reference chamber
+ * art establishes. Uses the pillar's existing --pooi-* tokens (blue = the
+ * system, purple = this pillar) rather than inventing a third palette. The
+ * `data-chamber-stage` attribute (dormant/fracture/clarity/activated) is
+ * set from narration progress in JS; everything reactive here keys off it,
+ * not off a JS animation loop.
+ */
+
+.pooi-overture {
+  grid-column: 1 / -1;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+  min-height: 100%;
+  padding: 1rem 0 2rem;
+}
+
+.pooi-overture-chamber {
+  position: relative;
+  width: min(100%, 52rem);
+  aspect-ratio: 16 / 9;
+  border-radius: 28px;
+  border: 1px solid color-mix(in srgb, var(--pooi-accent) 45%, transparent);
+  background:
+    radial-gradient(ellipse at 50% 20%, color-mix(in srgb, var(--pooi-accent) 10%, transparent) 0%, transparent 60%),
+    linear-gradient(180deg, var(--pooi-bg-secondary) 0%, var(--pooi-bg) 100%);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.03) inset,
+    0 0 32px 4px color-mix(in srgb, var(--pooi-accent) 22%, transparent);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2.5rem 3rem;
+  transition: box-shadow 1.2s ease, border-color 1.2s ease;
+}
+
+/* Dormant — the chamber is present but quiet, as arrival should feel. */
+.pooi-overture-chamber[data-chamber-stage='dormant'] {
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.03) inset,
+    0 0 18px 2px color-mix(in srgb, var(--pooi-accent) 12%, transparent);
+}
+
+/* Fracture — the first environmental reaction: a thin fissure of light. */
+.pooi-overture-chamber[data-chamber-stage='fracture'] {
+  border-color: color-mix(in srgb, var(--pooi-pillar) 40%, transparent);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.03) inset,
+    0 0 28px 3px color-mix(in srgb, var(--pooi-pillar) 24%, transparent);
+}
+
+.pooi-overture-fissure {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  background: linear-gradient(100deg, transparent 46%, color-mix(in srgb, var(--pooi-accent) 70%, white) 50%, transparent 54%);
+  transition: opacity 1.4s ease;
+}
+
+.pooi-overture-chamber[data-chamber-stage='fracture'] .pooi-overture-fissure {
+  opacity: 0.35;
+}
+
+/* Clarity — the room settles; blue reasserts itself. */
+.pooi-overture-chamber[data-chamber-stage='clarity'] {
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.03) inset,
+    0 0 34px 5px color-mix(in srgb, var(--pooi-accent) 30%, transparent);
+}
+
+/* Activated — the portal is open. */
+.pooi-overture-chamber[data-chamber-stage='activated'] {
+  border-color: color-mix(in srgb, var(--pooi-accent) 75%, transparent);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.05) inset,
+    0 0 52px 10px color-mix(in srgb, var(--pooi-accent) 45%, transparent);
+}
+
+.pooi-overture-floor {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 45%;
+  background: linear-gradient(180deg, transparent 0%, color-mix(in srgb, var(--pooi-accent) 8%, transparent) 100%);
+  pointer-events: none;
+}
+
+.pooi-overture-caption {
+  position: relative;
+  z-index: 1;
+  max-width: 34rem;
+  text-align: center;
+  color: var(--pooi-ivory);
+  font-size: 1.05rem;
+  line-height: 1.55;
+  min-height: 3.5em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: pooi-overture-cue-in 0.6s ease;
+}
+
+.pooi-overture-caption--title {
+  font-family: 'Oxanium', system-ui, sans-serif;
+  font-size: clamp(1.4rem, 3vw, 2rem);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--pooi-accent);
+  text-shadow: 0 0 24px color-mix(in srgb, var(--pooi-accent) 55%, transparent);
+}
+
+@keyframes pooi-overture-cue-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.pooi-overture-flip {
+  position: relative;
+  z-index: 1;
+  background: transparent;
+  border: 1px solid color-mix(in srgb, var(--pooi-pillar) 55%, transparent);
+  border-radius: 14px;
+  padding: 1rem 1.5rem;
+  max-width: 30rem;
+  font-family: 'Oxanium', system-ui, sans-serif;
+  font-size: 1.15rem;
+  color: var(--pooi-ivory);
+  cursor: pointer;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.pooi-overture-flip:hover {
+  background: color-mix(in srgb, var(--pooi-pillar) 12%, transparent);
+}
+
+.pooi-overture-flip-hint {
+  display: block;
+  margin-top: 0.5rem;
+  font-size: 0.65rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--pooi-muted);
+}
+
+.pooi-overture-flip.is-revealed {
+  border-color: color-mix(in srgb, var(--pooi-accent) 60%, transparent);
+  color: var(--pooi-accent);
+  cursor: default;
+}
+
+.pooi-overture-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: min(100%, 52rem);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  color: var(--pooi-faint);
+  letter-spacing: 0.04em;
+}
+
+.pooi-overture-progress {
+  flex: 1;
+  height: 2px;
+  margin: 0 1rem;
+  background: rgba(232, 238, 244, 0.12);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.pooi-overture-progress-fill {
+  height: 100%;
+  background: var(--pooi-accent);
+  transition: width 0.25s linear;
+}
+
+.pooi-overture-skip {
+  font-family: inherit;
+  background: transparent;
+  border: 1px solid var(--pooi-border);
+  color: var(--pooi-muted);
+  border-radius: 999px;
+  padding: 0.4rem 0.9rem;
+  font-size: 0.68rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.pooi-overture-skip:hover {
+  border-color: var(--pooi-accent);
+  color: var(--pooi-ivory);
+}
+
+.pooi-overture-begin {
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(7, 10, 18, 0.55);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pooi-overture-chamber,
+  .pooi-overture-fissure,
+  .pooi-overture-caption,
+  .pooi-overture-progress-fill {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .pooi-overture-chamber {
+    padding: 1.75rem 1.25rem;
+    aspect-ratio: 4 / 5;
+  }
+
+  .pooi-overture-caption {
+    font-size: 0.95rem;
+  }
+}

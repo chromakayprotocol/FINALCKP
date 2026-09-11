@@ -1,83 +1,83 @@
 @import './recUniSystem.css';
-.hme-root{height:100vh;height:100dvh;min-height:0;overflow:hidden;background-color:#030403;background-image:url('/reclamation-university/mentalism-mind-diagram.webp');background-repeat:no-repeat;background-position:68% 45%;background-size:58%;font-family:Georgia,'Times New Roman',serif}
-.hme-root::before{content:"";position:fixed;inset:0;pointer-events:none;background:rgba(1,2,2,.89)}
+.hme-root{height:100vh;height:100dvh;min-height:0;overflow:hidden;background-color:#030304;background-image:url('/reclamation-university/mentalism-mind-diagram.webp');background-repeat:no-repeat;background-position:68% 45%;background-size:58%;font-family:Georgia,'Times New Roman',serif}
+.hme-root::before{content:"";position:fixed;inset:0;pointer-events:none;background:rgba(1,1,2,.89)}
 .hme-header,.hme-shell{position:relative;z-index:1}
-.hme-header{height:100px;padding:0 30px;border-color:#594019;background:#030403}
-.hme-brand{height:100%;gap:16px;color:#d6aa58}
-.hme-brand>span{width:62px;height:62px;border:1px solid #a4772b;box-shadow:0 0 22px rgba(213,158,54,.15)}
+.hme-header{height:100px;padding:0 30px;border-color:#20175b;background:#030304}
+.hme-brand{height:100%;gap:16px;color:#6655d9}
+.hme-brand>span{width:62px;height:62px;border:1px solid #3828a7;box-shadow:0 0 22px rgba(72,50,217,.15)}
 .hme-brand>span svg{width:27px;height:27px}
 .hme-brand>strong{font:500 clamp(1.35rem,2vw,2rem)/1.05 Cinzel,Georgia,serif;letter-spacing:.13em}
-.hme-brand>i{width:1px;height:58px;margin-left:6px;background:#725522}
-.hme-brand>small{margin:0 0 0 8px;color:#c79a47;font:500 clamp(1.1rem,1.7vw,1.65rem) Cinzel,Georgia,serif;letter-spacing:.09em}
+.hme-brand>i{width:1px;height:58px;margin-left:6px;background:#2b2074}
+.hme-brand>small{margin:0 0 0 8px;color:#5544ca;font:500 clamp(1.1rem,1.7vw,1.65rem) Cinzel,Georgia,serif;letter-spacing:.09em}
 .hme-progress{grid-template-columns:auto 270px auto;gap:14px;margin-right:26px;font-family:Inter,sans-serif}
-.hme-progress>strong{color:#d7a348;font:500 1.65rem Cinzel,Georgia,serif}
-.hme-progress i{height:5px;border:1px solid #513916;background:#080806}
-.hme-progress b{background:#dfb65f;box-shadow:0 0 9px rgba(240,193,92,.35)}
+.hme-progress>strong{color:#5844db;font:500 1.65rem Cinzel,Georgia,serif}
+.hme-progress i{height:5px;border:1px solid #1c1552;background:#060608}
+.hme-progress b{background:#6e5ce2;box-shadow:0 0 9px rgba(110,88,244,.35)}
 .hme-shell{grid-template-columns:360px minmax(0,1fr);height:calc(100vh - 100px);height:calc(100dvh - 100px);min-height:0}
-.hme-tabs{min-height:0;padding:16px 28px 34px;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:#8c6425 #080704;border-right:1px solid #5c411a;background:#030403}
-.hme-tabs button{height:65px;gap:14px;padding:7px 16px;border:1px solid #463316;border-bottom:0;color:#d6c09a;font:400 1.12rem Cinzel,Georgia,serif}
-.hme-tabs button:last-child{border-bottom:1px solid #463316}
-.hme-tabs button>span{display:grid;place-items:center;flex:0 0 44px;height:44px;border:1px solid #8c6425;border-radius:50%;color:#c18d30}
+.hme-tabs{min-height:0;padding:16px 28px 34px;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:#30228f #050408;border-right:1px solid #21185e;background:#030304}
+.hme-tabs button{height:65px;gap:14px;padding:7px 16px;border:1px solid #1b1547;border-bottom:0;color:#a198d8;font:400 1.12rem Cinzel,Georgia,serif}
+.hme-tabs button:last-child{border-bottom:1px solid #1b1547}
+.hme-tabs button>span{display:grid;place-items:center;flex:0 0 44px;height:44px;border:1px solid #30228f;border-radius:50%;color:#402cc5}
 .hme-tabs button strong{font:inherit}
-.hme-tabs button:hover{background:#0b0a07;color:#f0d59d}
-.hme-tabs button.is-active{position:relative;color:#f4c867;border-color:#d49a35;background:#171107;box-shadow:inset 0 0 22px rgba(192,129,28,.18),0 0 18px rgba(222,163,57,.3)}
-.hme-tabs button.is-active::after{content:"";position:absolute;right:-9px;width:16px;height:16px;border:1px solid #e0aa45;border-radius:50%;background:#f0bd58;box-shadow:0 0 15px #f0bd58}
+.hme-tabs button:hover{background:#08070b;color:#a79bf2}
+.hme-tabs button.is-active{position:relative;color:#7863f8;border-color:#4731d8;background:#090717;box-shadow:inset 0 0 22px rgba(46,24,196,.18),0 0 18px rgba(76,53,226,.3)}
+.hme-tabs button.is-active::after{content:"";position:absolute;right:-9px;width:16px;height:16px;border:1px solid #5741e4;border-radius:50%;background:#6a54f4;box-shadow:0 0 15px #6a54f4}
 .hme-main{display:grid;grid-template-rows:142px minmax(0,1fr);min-height:0;padding:0 28px 20px 0;overflow:hidden}
-.hme-principles{height:142px;border-color:#4f3818;background:#050504}
-.hme-principles button{height:141px;gap:2px;border-right-color:#302713;color:#9c8968}
+.hme-principles{height:142px;border-color:#1e1750;background:#040405}
+.hme-principles button{height:141px;gap:2px;border-right-color:#161231;color:#6e679d}
 .hme-principles button svg{width:46px;height:46px;margin:4px 0}
 .hme-principles button span{font-size:1rem}
 .hme-principles button strong{font-size:.7rem;letter-spacing:.02em}
-.hme-principles button.is-active{background:#141008;box-shadow:inset 0 0 0 1px var(--principle-accent),inset 0 -20px 35px rgba(218,164,65,.08),0 0 18px rgba(218,159,54,.12)}
-.hme-stage{display:grid;grid-template-rows:auto minmax(0,1fr) 74px;min-height:0;border:1px solid #8f6828;background:#050604;box-shadow:inset 0 0 36px rgba(162,107,24,.07)}
+.hme-principles button.is-active{background:#090814;box-shadow:inset 0 0 0 1px var(--principle-accent),inset 0 -20px 35px rgba(82,61,222,.08),0 0 18px rgba(72,50,222,.12)}
+.hme-stage{display:grid;grid-template-rows:auto minmax(0,1fr) 74px;min-height:0;border:1px solid #332592;background:#040406;box-shadow:inset 0 0 36px rgba(39,21,165,.07)}
 .hme-lesson-title{gap:22px;padding:16px 34px 10px;border-bottom:0}
-.hme-lesson-title>span{width:62px;height:62px;border-color:#9d7129;font-size:2.2rem;box-shadow:inset 0 0 0 5px #080704,0 0 0 1px #4a3518}
-.hme-lesson-title h1{font-size:clamp(2.35rem,3.5vw,3.7rem);line-height:1;color:#d5a757;letter-spacing:.08em}
-.hme-lesson-title p{margin-top:4px;font-size:clamp(1.05rem,1.45vw,1.55rem);color:#e1d8c9}
+.hme-lesson-title>span{width:62px;height:62px;border-color:#3626a0;font-size:2.2rem;box-shadow:inset 0 0 0 5px #050408,0 0 0 1px #1d174b}
+.hme-lesson-title h1{font-size:clamp(2.35rem,3.5vw,3.7rem);line-height:1;color:#6554d8;letter-spacing:.08em}
+.hme-lesson-title p{margin-top:4px;font-size:clamp(1.05rem,1.45vw,1.55rem);color:#ccc8e2}
 .hme-screen{min-height:0;padding:4px 34px 14px;overflow:auto}
 .hme-principle-feature{display:grid;grid-template-columns:minmax(360px,.78fr) minmax(480px,1.22fr);height:100%;min-height:0;gap:24px}
 .hme-principle-copy{min-width:0;padding-top:4px}
-.hme-central-question{margin:0 0 18px;padding-bottom:17px;border-bottom:1px solid #7a5721;color:#d3a04b!important;font:italic 1rem/1.4 Georgia,serif!important}
-.hme-principle-copy h2{margin:0 0 10px;color:#dab15e;font:500 1.45rem Cinzel,Georgia,serif;letter-spacing:.08em;text-transform:uppercase}
-.hme-principle-copy>blockquote{margin:0 0 10px;padding:9px 0;border:0;border-top:1px solid #5e441d;border-bottom:1px solid #5e441d;background:none;color:#e7ddcb;font:600 1rem/1.4 Georgia,serif}
-.hme-principle-copy>p:not(.hme-central-question){margin:0 0 10px;color:#cfc3af;font:400 .9rem/1.52 Inter,serif}
-.hme-principle-copy>aside{display:flex;align-items:center;gap:15px;margin-top:13px;padding:11px 14px;border:1px solid #6b4d20;color:#d7a953}
+.hme-central-question{margin:0 0 18px;padding-bottom:17px;border-bottom:1px solid #2a1f7c;color:#5a48d6!important;font:italic 1rem/1.4 Georgia,serif!important}
+.hme-principle-copy h2{margin:0 0 10px;color:#6c5bdd;font:500 1.45rem Cinzel,Georgia,serif;letter-spacing:.08em;text-transform:uppercase}
+.hme-principle-copy>blockquote{margin:0 0 10px;padding:9px 0;border:0;border-top:1px solid #241b60;border-bottom:1px solid #241b60;background:none;color:#cecae8;font:600 1rem/1.4 Georgia,serif}
+.hme-principle-copy>p:not(.hme-central-question){margin:0 0 10px;color:#b3aed0;font:400 .9rem/1.52 Inter,serif}
+.hme-principle-copy>aside{display:flex;align-items:center;gap:15px;margin-top:13px;padding:11px 14px;border:1px solid #281e6d;color:#6250da}
 .hme-principle-copy>aside svg{flex:0 0 auto}
 .hme-principle-copy>aside em{font-size:.9rem;line-height:1.35}
 .hme-mind-figure{position:relative;min-height:0;margin:0;overflow:hidden}
 .hme-mind-figure>img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;filter:contrast(1.06) brightness(.88)}
 .hme-mind-figure figcaption{position:absolute;top:9%;right:1%;bottom:8%;display:flex;flex-direction:column;justify-content:space-around;width:190px}
-.hme-mind-figure figcaption>div{display:grid;grid-template-columns:42px 1fr;gap:10px;align-items:center;color:#d9a94f;text-shadow:0 2px 5px #000}
-.hme-mind-figure figcaption svg{width:36px;height:36px;padding:7px;border:1px solid currentColor;border-radius:50%;background:#080806}
+.hme-mind-figure figcaption>div{display:grid;grid-template-columns:42px 1fr;gap:10px;align-items:center;color:#5f4cdc;text-shadow:0 2px 5px #000}
+.hme-mind-figure figcaption svg{width:36px;height:36px;padding:7px;border:1px solid currentColor;border-radius:50%;background:#060608}
 .hme-mind-figure figcaption span{display:grid;gap:2px}
 .hme-mind-figure figcaption strong{font:600 1rem Cinzel,Georgia,serif;text-transform:uppercase}
-.hme-mind-figure figcaption small{color:#d7cbb8;font:.82rem/1.3 Inter,sans-serif}
-.hme-footer{display:grid;grid-template-columns:185px 240px minmax(220px,1fr) minmax(300px,390px);gap:0;padding:0;border-top:1px solid #5f451d;background:#050504}
-.hme-stat{display:grid;align-content:center;padding:8px 22px;border-right:1px solid #4b3718}
-.hme-stat small{color:#aaa08e;font:500 .68rem Inter,sans-serif;letter-spacing:.14em}
-.hme-stat strong{margin-top:4px;color:#d9aa4c;font:500 1rem Cinzel,Georgia,serif;text-transform:uppercase}
+.hme-mind-figure figcaption small{color:#bbb7d8;font:.82rem/1.3 Inter,sans-serif}
+.hme-footer{display:grid;grid-template-columns:185px 240px minmax(220px,1fr) minmax(300px,390px);gap:0;padding:0;border-top:1px solid #241b61;background:#040405}
+.hme-stat{display:grid;align-content:center;padding:8px 22px;border-right:1px solid #1d174c}
+.hme-stat small{color:#918dab;font:500 .68rem Inter,sans-serif;letter-spacing:.14em}
+.hme-stat strong{margin-top:4px;color:#5c48dd;font:500 1rem Cinzel,Georgia,serif;text-transform:uppercase}
 .hme-lesson-progress span{display:flex;gap:8px;align-items:center;margin-top:8px}
-.hme-lesson-progress i{width:12px;height:12px;border:1px solid #9c712a;border-radius:50%;background:#050504}
-.hme-lesson-progress i.is-complete{background:#d5a64d;box-shadow:0 0 7px rgba(222,167,67,.45)}
-.hme-footer button{align-self:center;min-width:0;margin:9px 14px;padding:12px 18px;border:1px solid #e0ad4d;background:#c8943d;color:#130d05;font:600 .98rem Cinzel,Georgia,serif;box-shadow:inset 0 0 0 3px #6d4a18,0 0 12px rgba(216,159,59,.15)}
+.hme-lesson-progress i{width:12px;height:12px;border:1px solid #36279f;border-radius:50%;background:#040405}
+.hme-lesson-progress i.is-complete{background:#5d4ad8;box-shadow:0 0 7px rgba(84,63,226,.45)}
+.hme-footer button{align-self:center;min-width:0;margin:9px 14px;padding:12px 18px;border:1px solid #5e49e4;background:#4c3acb;color:#060513;font:600 .98rem Cinzel,Georgia,serif;box-shadow:inset 0 0 0 3px #21166f,0 0 12px rgba(76,55,220,.15)}
 .hme-editorial{grid-template-columns:1fr;max-width:980px;margin:0 auto}
 @media(max-width:1180px){.hme-shell{grid-template-columns:260px minmax(0,1fr)}.hme-tabs{padding-left:14px;padding-right:14px}.hme-main{padding-right:12px}.hme-principle-feature{grid-template-columns:1fr}.hme-mind-figure{min-height:360px}.hme-footer{grid-template-columns:150px 190px 1fr}.hme-footer button{grid-column:1/-1;margin:8px}.hme-stage{grid-template-rows:auto minmax(0,1fr) 124px}}
 @media(max-width:820px){.hme-root{height:auto;min-height:100vh;overflow:visible}.hme-header{height:auto;min-height:86px}.hme-brand>strong{font-size:1rem}.hme-brand>small,.hme-brand>i{display:none}.hme-shell{display:block;height:auto}.hme-tabs{padding:10px}.hme-tabs button{height:54px}.hme-tabs button.is-active::after{display:none}.hme-main{display:block;padding:0 10px 12px}.hme-principles{height:100px}.hme-principles button{height:98px}.hme-principles button svg{width:30px;height:30px}.hme-stage{display:block}.hme-lesson-title{padding:18px}.hme-screen{overflow:visible;padding:8px 18px 22px}.hme-principle-feature{display:block}.hme-mind-figure{min-height:440px}.hme-mind-figure figcaption{right:0;width:165px}.hme-footer{display:grid;grid-template-columns:1fr 1fr}.hme-lesson-progress{grid-column:1/-1}.hme-footer button{grid-column:1/-1}}
 @media(min-width:821px) and (max-height:850px){.hme-header{height:82px}.hme-brand>span{width:52px;height:52px}.hme-brand>i{height:48px}.hme-shell{height:calc(100vh - 82px);height:calc(100dvh - 82px)}.hme-tabs{padding-top:10px;padding-bottom:10px}.hme-tabs button{height:56px}.hme-main{grid-template-rows:112px minmax(0,1fr);padding-bottom:12px}.hme-principles,.hme-principles button{height:112px}.hme-principles button svg{width:36px;height:36px}.hme-lesson-title{padding-top:10px;padding-bottom:8px}.hme-lesson-title>span{width:52px;height:52px}.hme-lesson-title h1{font-size:clamp(2rem,3vw,3rem)}}
 
 .hme-lens{display:grid;grid-template-rows:76px minmax(0,1fr);height:100%;min-height:0}
-.hme-lens>header{display:grid;grid-template-columns:.8fr 1.2fr;align-items:center;gap:34px;padding:0 10px 10px;border-bottom:1px solid #60451d}
-.hme-lens>header>p{margin:0;color:#d6a34a;font:italic .95rem/1.4 Georgia,serif}
-.hme-lens>header>div{padding-left:30px;border-left:1px solid #8c6426}
-.hme-lens>header h2{margin:0 0 6px;color:#d4a247;font:500 1.3rem Cinzel,Georgia,serif;letter-spacing:.07em;text-transform:uppercase}
-.hme-lens>header span{display:block;max-width:720px;color:#c8bdac;font:.78rem/1.35 Inter,sans-serif}
+.hme-lens>header{display:grid;grid-template-columns:.8fr 1.2fr;align-items:center;gap:34px;padding:0 10px 10px;border-bottom:1px solid #241b62}
+.hme-lens>header>p{margin:0;color:#5a46da;font:italic .95rem/1.4 Georgia,serif}
+.hme-lens>header>div{padding-left:30px;border-left:1px solid #31238f}
+.hme-lens>header h2{margin:0 0 6px;color:#5743d8;font:500 1.3rem Cinzel,Georgia,serif;letter-spacing:.07em;text-transform:uppercase}
+.hme-lens>header span{display:block;max-width:720px;color:#afabc9;font:.78rem/1.35 Inter,sans-serif}
 .hme-lens-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(3,minmax(0,1fr));gap:8px 12px;min-height:0;padding-top:8px}
-.hme-lens-grid article{display:grid;grid-template-columns:29% minmax(0,1fr);min-height:0;overflow:hidden;border:1px solid #8a6327;background:#050604;box-shadow:inset 0 0 0 3px #100d08}
-.hme-lens-grid article>img{width:100%;height:100%;min-height:0;object-fit:cover;border-right:1px solid #3e3018;filter:brightness(.83) contrast(1.08) saturate(.9)}
+.hme-lens-grid article{display:grid;grid-template-columns:29% minmax(0,1fr);min-height:0;overflow:hidden;border:1px solid #32258c;background:#040406;box-shadow:inset 0 0 0 3px #090810}
+.hme-lens-grid article>img{width:100%;height:100%;min-height:0;object-fit:cover;border-right:1px solid #1c173f;filter:brightness(.83) contrast(1.08) saturate(.9)}
 .hme-lens-grid article>div{min-width:0;padding:7px 11px 6px}
-.hme-lens-grid h3{margin:0 0 4px;color:#e2d7c5;font:500 .92rem/1.12 Cinzel,Georgia,serif;letter-spacing:.04em;text-transform:uppercase}
-.hme-lens-grid p{margin:0 0 3px;color:#c9bdab;font:400 clamp(.59rem,.66vw,.72rem)/1.28 Inter,sans-serif}
-.hme-lens-grid p strong{margin-right:4px;color:#d8a43e;font:700 .66rem Cinzel,Georgia,serif;letter-spacing:.04em;text-transform:uppercase}
+.hme-lens-grid h3{margin:0 0 4px;color:#c8c4e3;font:500 .92rem/1.12 Cinzel,Georgia,serif;letter-spacing:.04em;text-transform:uppercase}
+.hme-lens-grid p{margin:0 0 3px;color:#aeaaca;font:400 clamp(.59rem,.66vw,.72rem)/1.28 Inter,sans-serif}
+.hme-lens-grid p strong{margin-right:4px;color:#503adc;font:700 .66rem Cinzel,Georgia,serif;letter-spacing:.04em;text-transform:uppercase}
 .hme-stage-principle .hme-screen{padding-bottom:76px}
 .hme-stage-principle .hme-footer{position:relative;grid-template-columns:185px 240px minmax(0,1fr)}
 .hme-stage-principle .hme-footer>button{position:absolute;right:14px;top:-68px;width:min(390px,38%);height:54px;margin:0}

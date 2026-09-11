@@ -483,6 +483,26 @@
   box-shadow: inset 0 0 38px rgba(var(--act-rgb), 0.08), 0 8px 22px rgba(var(--act-rgb), 0.08);
 }
 
+.act-nav-card.is-locked {
+  cursor: not-allowed;
+  opacity: 0.62;
+}
+
+.act-nav-card.is-locked:hover,
+.act-nav-card.is-locked:focus-visible {
+  transform: none;
+  box-shadow: inset 0 0 35px rgba(var(--act-rgb), 0.025);
+}
+
+.act-nav-disclosure-hint {
+  margin: 10px 2px 0;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(220, 226, 223, 0.55);
+}
+
 .act-nav-card__circuit,
 .act-nav-card__scan {
   position: absolute;

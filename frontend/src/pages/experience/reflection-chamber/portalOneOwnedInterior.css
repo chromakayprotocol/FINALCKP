@@ -123,6 +123,14 @@
   letter-spacing: 0.08em;
 }
 
+.pooi-header-orientation {
+  margin-top: 0.2rem;
+  font-size: 0.6rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--pooi-muted);
+}
+
 .pooi-header-portal {
   font-size: 0.65rem;
   letter-spacing: 0.18em;

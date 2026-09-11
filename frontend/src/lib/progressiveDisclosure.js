@@ -55,3 +55,15 @@ export function getDisclosureLabel(disclosure) {
   if (disclosure.expanding) return "Sovereign Surface Expanding";
   return "Sovereign Entry";
 }
+
+/**
+ * Whether a Sovereign Mode module should appear in module pickers (the
+ * Sovereign Mode carousel, University links, etc). Only Reclamation
+ * University is gated today, using the same `showUniversity` rule
+ * AppShell's sidebar already applies — everything else stays visible so
+ * this never grows into a second, per-screen disclosure matrix.
+ */
+export function isSovereignModuleVisible(moduleId, disclosure) {
+  if (moduleId === "reclamation-university") return disclosure.showUniversity;
+  return true;
+}

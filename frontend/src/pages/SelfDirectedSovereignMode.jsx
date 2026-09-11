@@ -13,6 +13,7 @@ import {
   Radio,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { getDisclosureState, isSovereignModuleVisible } from '../lib/progressiveDisclosure';
 import './SelfDirectedSovereignMode.css';
 
 const MODULES = [
@@ -171,17 +172,28 @@ export default function SelfDirectedSovereignMode() {
   const [interactionIntensity, setInteractionIntensity] = useState(0);
   const settleTimer = useRef();
 
-  const activeModule = MODULES[activeIndex];
+  const disclosure = useMemo(() => getDisclosureState(user), [user]);
+
+  const modules = useMemo(
+    () => MODULES.filter((module) => isSovereignModuleVisible(module.id, disclosure)),
+    [disclosure],
+  );
+
+  useEffect(() => {
+    setActiveIndex((current) => Math.min(current, modules.length - 1));
+  }, [modules.length]);
+
+  const activeModule = modules[activeIndex];
   const userName = user?.name || user?.email?.split('@')[0] || 'Supabase';
 
   const cards = useMemo(
     () =>
-      MODULES.map((module, index) => ({
+      modules.map((module, index) => ({
         module,
         index,
-        offset: getCircularOffset(index, activeIndex, MODULES.length),
+        offset: getCircularOffset(index, activeIndex, modules.length),
       })),
-    [activeIndex],
+    [activeIndex, modules],
   );
 
   const animateSelection = useCallback(() => {
@@ -196,13 +208,13 @@ export default function SelfDirectedSovereignMode() {
 
   const selectModule = useCallback((index) => {
     animateSelection();
-    setActiveIndex((index + MODULES.length) % MODULES.length);
-  }, [animateSelection]);
+    setActiveIndex((index + modules.length) % modules.length);
+  }, [animateSelection, modules.length]);
 
   const rotate = useCallback((direction) => {
     animateSelection();
-    setActiveIndex((current) => (current + direction + MODULES.length) % MODULES.length);
-  }, [animateSelection]);
+    setActiveIndex((current) => (current + direction + modules.length) % modules.length);
+  }, [animateSelection, modules.length]);
 
   const handlePointerMove = useCallback((event) => {
     const bounds = event.currentTarget.getBoundingClientRect();

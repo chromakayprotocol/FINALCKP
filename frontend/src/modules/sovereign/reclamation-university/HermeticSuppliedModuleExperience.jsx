@@ -52,7 +52,7 @@ const TAB_STEP_IDS = [
 ];
 
 const PRINCIPLES = [
-  ["I", "Mentalism", Brain, "#d7a64a"],
+  ["I", "Mentalism", Brain, "#5a46db"],
   ["II", "Correspondence", Globe2, "#4e8fb4"],
   ["III", "Vibration", Activity, "#e13b2f"],
   ["IV", "Polarity", CircleDot, "#d9c8a2"],

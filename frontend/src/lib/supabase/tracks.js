@@ -114,7 +114,7 @@ async function getVisualizerTracksByPlaylist(slug) {
   }
 
   const ids = playlistRows.map((row) => row.track_id);
-  const [tracksResult, coversResult, backgroundsResult] = await Promise.all([
+  const [tracksResult, coversResult, backgroundsResult, timedLyricsResult, protocolResult] = await Promise.all([
     supabase.from('tracks').select(TRACK_COLUMNS).in('id', ids),
     supabase
       .from('track_cover_art')
@@ -128,6 +128,15 @@ async function getVisualizerTracksByPlaylist(slug) {
       .in('track_id', ids)
       .eq('is_active', true)
       .order('updated_at', { ascending: false }),
+    supabase
+      .from('track_lyrics')
+      .select('track_id, line_order, line_text, start_ms, end_ms')
+      .in('track_id', ids)
+      .order('line_order', { ascending: true }),
+    supabase
+      .from('lyrics_protocol')
+      .select('track_id, lyrics_full, lyrics_clean, primary_light_code, lyric_summary, display_mode')
+      .in('track_id', ids),
   ]);
 
   if (tracksResult.error) {
@@ -137,12 +146,18 @@ async function getVisualizerTracksByPlaylist(slug) {
 
   if (coversResult.error) console.error('Unable to load assigned track cover art.', coversResult.error);
   if (backgroundsResult.error) console.error('Unable to load assigned viewport backgrounds.', backgroundsResult.error);
+  if (timedLyricsResult.error) console.error('Unable to load timed lyrics for the visualizer queue.', timedLyricsResult.error);
+  if (protocolResult.error) console.error('Unable to load the lyric protocol for the visualizer queue.', protocolResult.error);
 
   const tracksById = new Map((tracksResult.data || []).map((row) => [row.id, row]));
   const coversByTrack = groupAssetsByTrack(coversResult.data);
   const backgroundsByTrack = groupAssetsByTrack(backgroundsResult.data);
+  const protocolByTrack = new Map((protocolResult.data || []).map((row) => [row.track_id, row]));
   return playlistRows
-    .map((item) => normalizeTrack(tracksById.get(item.track_id), item.position, null, {
+    .map((item) => normalizeTrack(tracksById.get(item.track_id), item.position, {
+      timedLyrics: timedLyricsResult.data || [],
+      protocol: protocolByTrack.get(item.track_id) || null,
+    }, {
       coverArt: coversByTrack[item.track_id],
       viewportBackground: backgroundsByTrack[item.track_id],
     }))

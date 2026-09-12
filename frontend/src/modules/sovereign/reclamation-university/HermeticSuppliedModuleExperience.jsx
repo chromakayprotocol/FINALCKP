@@ -6,7 +6,7 @@ import {
 } from "lucide-react";
 import { useSovereign, SOVEREIGN_STEP_IDS } from "../../../sovereign/runtime";
 import suppliedCopy from "../../../data/hermeticSuppliedModules.txt?raw";
-import InteractiveExperience from "./InteractiveExperience";
+import InteractiveExperience from "./InteractiveExperience.jsx";
 import "./hermeticMaterialExperience.css";
 import "./hermeticReferenceExperience.css";
 import "./interactiveExperience.css";

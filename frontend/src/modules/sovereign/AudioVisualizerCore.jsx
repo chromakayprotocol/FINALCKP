@@ -42,6 +42,7 @@ export default function AudioVisualizerCore({
 }) {
   const audioRef = useRef(null);
   const shellRef = useRef(null);
+  const hasAdvancedRef = useRef(false);
   const [track, setTrack] = useState(activeTrackData || null);
   const [requirements, setRequirements] = useState(null);
   const [elapsed, setElapsed] = useState(0);
@@ -97,6 +98,50 @@ export default function AudioVisualizerCore({
     audio.muted = isMuted;
     audio.playbackRate = playbackRate;
   }, [volume, isMuted, playbackRate, playbackTrack?.audio_url]);
+
+
+  useEffect(() => {
+    hasAdvancedRef.current = false;
+  }, [playbackTrack?.audio_url]);
+
+
+  // Brute-force watchdog: the browser's own `ended`/`timeupdate` events can
+  // stall for minutes on flaky streamed audio, so this doesn't wait politely
+  // for them. Every second it forces playback to resume if it silently
+  // stopped, and forces an advance to the next track if the track is
+  // effectively done or has stopped making progress at all.
+  useEffect(() => {
+    if (!isPlaying || !playbackTrack?.audio_url) return undefined;
+    let lastTime = -1;
+    let stalledTicks = 0;
+    const watchdog = window.setInterval(() => {
+      const audio = audioRef.current;
+      if (!audio) return;
+
+      if (audio.duration && audio.duration - audio.currentTime < 1) {
+        handleTrackEnded();
+        return;
+      }
+
+      if (audio.paused) {
+        audio.play().catch(() => {});
+      }
+
+      if (audio.currentTime === lastTime) {
+        stalledTicks += 1;
+      } else {
+        stalledTicks = 0;
+      }
+      lastTime = audio.currentTime;
+
+      if (stalledTicks >= 8) {
+        stalledTicks = 0;
+        handleTrackEnded();
+      }
+    }, 1000);
+    return () => window.clearInterval(watchdog);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isPlaying, playbackTrack?.audio_url]);
 
 
   useEffect(() => {
@@ -189,6 +234,12 @@ export default function AudioVisualizerCore({
     }
   };
 
+
+  const handleTrackEnded = () => {
+    if (hasAdvancedRef.current) return;
+    hasAdvancedRef.current = true;
+    selectRelative(1, true);
+  };
 
   const selectRelative = (direction, fromEnded = false) => {
     if (!queue.length) return;
@@ -379,13 +430,19 @@ export default function AudioVisualizerCore({
           }
         }}
         onLoadedMetadata={(event) => setDuration(event.currentTarget.duration || 0)}
-        onTimeUpdate={(event) => setElapsed(event.currentTarget.currentTime)}
+        onTimeUpdate={(event) => {
+          const media = event.currentTarget;
+          setElapsed(media.currentTime);
+          if (isPlaying && media.duration && media.duration - media.currentTime < .35) {
+            handleTrackEnded();
+          }
+        }}
         onPlaying={() => {
           start().catch((error) => {
             console.warn('Audio analysis unavailable; playback will continue.', error);
           });
         }}
-        onEnded={() => selectRelative(1, true)}
+        onEnded={handleTrackEnded}
       />
     </section>
   );

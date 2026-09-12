@@ -182,6 +182,37 @@
   font-weight: 500;
 }
 
+.rpp-track-codex-cta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  background: var(--rpp-surface);
+  border: 1px solid var(--rpp-border);
+  border-radius: 14px;
+  padding: 1.1rem 1.35rem;
+  margin-bottom: 1.5rem;
+}
+
+.rpp-track-codex-cta h3 {
+  margin: 0 0 0.25rem;
+  font-size: 0.95rem;
+  color: var(--rpp-ivory);
+}
+
+.rpp-track-codex-cta p {
+  margin: 0;
+  max-width: 34rem;
+  font-size: 0.82rem;
+  line-height: 1.4;
+  color: var(--rpp-muted);
+}
+
+.rpp-track-codex-cta .rpp-cta {
+  flex-shrink: 0;
+}
+
 .rpp-pillar {
   background: var(--rpp-surface);
   border: 1px solid var(--rpp-border);

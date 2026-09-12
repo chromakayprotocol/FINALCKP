@@ -30,6 +30,7 @@ import ShadowTwinInitialization from './experience/reflection-chamber/ShadowTwin
 import ShadowTwinIntegration from './experience/reflection-chamber/components/ShadowTwinIntegration';
 import { useShadowTwinSync } from './experience/reflection-chamber/shadowTwin/useShadowTwinSync';
 import { useShadowTwinArchive } from './experience/reflection-chamber/shadowTwin/useShadowTwinArchive';
+import TrackCodexGallery from './experience/reflection-chamber/TrackCodexGallery';
 import './ReflectionProtocolPage.css';
 
 const NEXUS_PATH = '/experiencemode/sovereign/reclamation-university/nexus';
@@ -77,6 +78,7 @@ function ReflectionProtocolPageInner() {
   const [launchedPillarId, setLaunchedPillarId] = useState(null);
   const [completedPillarIds, setCompletedPillarIds] = useState([]);
   const [enteredChamber, setEnteredChamber] = useState(false);
+  const [trackCodexOpen, setTrackCodexOpen] = useState(false);
 
   const activePillar = useMemo(
     () => PILLARS.find((p) => p.id === activePillarId) ?? PILLARS[0],
@@ -153,6 +155,10 @@ function ReflectionProtocolPageInner() {
     );
   }
 
+  if (trackCodexOpen) {
+    return <TrackCodexGallery onReturn={() => setTrackCodexOpen(false)} />;
+  }
+
   return (
     <div className="rpp">
       <header className="rpp-top">
@@ -219,6 +225,16 @@ function ReflectionProtocolPageInner() {
           </button>
         ))}
       </nav>
+
+      <section className="rpp-track-codex-cta">
+        <div>
+          <h3>The Track Codex</h3>
+          <p>Eighteen transmissions from The Reflection Chamber album — listen, and extract each track&rsquo;s Shadow and Light Code.</p>
+        </div>
+        <button type="button" className="rpp-cta" onClick={() => setTrackCodexOpen(true)}>
+          Enter the Codex
+        </button>
+      </section>
 
       {activePillar && (
         <article className="rpp-pillar" key={activePillar.id}>

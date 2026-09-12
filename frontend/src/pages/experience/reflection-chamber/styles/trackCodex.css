@@ -1,0 +1,311 @@
+/* Track Codex — one HUD screen per Act Two track, built on the shared
+ * --pooi- and --h20- tokens (portalOneOwnedInterior.css) rather than a new
+ * palette. This gallery isn't a pillar (no purple accent) — it's the album
+ * itself, so it stays in the "system" blue the way the Chamber hub does.
+ * Type follows the documented three-voice rule (chromaFrame.css): Cinzel
+ * (--ckp-sigil) for titles, Spectral (--ckp-script) for the read panels,
+ * JetBrains Mono (--ckp-signal) for the counter/eyebrow telemetry.
+ */
+
+.track-codex-pillar {
+  overflow: hidden;
+}
+
+.tcx-scene {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: #050810;
+}
+
+.tcx-bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 30%;
+}
+
+.tcx-veil {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at 50% 38%, transparent 0%, rgba(3, 6, 14, 0.35) 62%, rgba(3, 6, 14, 0.82) 100%),
+    linear-gradient(180deg, rgba(3, 6, 14, 0.55) 0%, transparent 18%, transparent 55%, rgba(3, 6, 14, 0.6) 100%);
+  pointer-events: none;
+}
+
+.tcx-topbar {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.25rem 0;
+  font-family: var(--ckp-signal, 'JetBrains Mono', monospace);
+}
+
+.tcx-return {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: rgba(5, 10, 20, 0.55);
+  border: 1px solid var(--pooi-border);
+  color: var(--pooi-ivory);
+  border-radius: 999px;
+  padding: 0.45rem 0.9rem;
+  font-size: 0.75rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.tcx-return:hover {
+  border-color: color-mix(in srgb, var(--pooi-accent) 60%, transparent);
+  background: rgba(5, 10, 20, 0.8);
+}
+
+.tcx-counter {
+  color: var(--pooi-muted);
+  font-size: 0.7rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.tcx-hud {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 34rem) minmax(0, 1fr);
+  align-items: center;
+  gap: 1.5rem;
+  height: 100%;
+  padding: 3.25rem 2rem 14rem;
+}
+
+.tcx-panel {
+  background: linear-gradient(160deg, rgba(8, 14, 28, 0.72), rgba(8, 14, 28, 0.42));
+  border: 1px solid color-mix(in srgb, var(--pooi-accent) 35%, transparent);
+  border-radius: 4px;
+  clip-path: polygon(14px 0, 100% 0, 100% calc(100% - 14px), calc(100% - 14px) 100%, 0 100%, 0 14px);
+  padding: 1.4rem 1.5rem;
+  backdrop-filter: blur(6px);
+  box-shadow: 0 0 24px 2px color-mix(in srgb, var(--pooi-accent) 14%, transparent);
+  max-height: min(64vh, 34rem);
+  overflow-y: auto;
+}
+
+.tcx-panel-title {
+  margin: 0 0 0.9rem;
+  font-family: var(--ckp-sigil, 'Cinzel', serif);
+  font-size: clamp(1rem, 1.6vw, 1.35rem);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--pooi-accent);
+  text-shadow: 0 0 12px color-mix(in srgb, var(--pooi-accent) 55%, transparent);
+}
+
+.tcx-panel-title::after {
+  content: '';
+  display: block;
+  margin-top: 0.6rem;
+  height: 1px;
+  background: linear-gradient(90deg, color-mix(in srgb, var(--pooi-accent) 60%, transparent), transparent);
+}
+
+.tcx-panel-body {
+  margin: 0;
+  font-family: var(--ckp-script, 'Spectral', serif);
+  font-size: clamp(0.85rem, 1.1vw, 0.98rem);
+  line-height: 1.65;
+  color: var(--pooi-ivory);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.tcx-panel-body span {
+  text-shadow: 0 0 10px color-mix(in srgb, var(--pooi-accent) 45%, transparent);
+}
+
+.tcx-code {
+  margin-bottom: 1.1rem;
+}
+
+.tcx-code:last-child {
+  margin-bottom: 0;
+}
+
+.tcx-code-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--ckp-signal, 'JetBrains Mono', monospace);
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--pooi-muted);
+  margin-bottom: 0.4rem;
+}
+
+.tcx-code--shadow .tcx-code-label {
+  color: color-mix(in srgb, var(--pooi-ivory) 70%, var(--pooi-accent));
+}
+
+.tcx-code--light .tcx-code-label {
+  color: var(--pooi-accent);
+}
+
+.tcx-code-quote {
+  margin: 0;
+  font-family: var(--ckp-script, 'Spectral', serif);
+  font-style: italic;
+  font-size: clamp(0.85rem, 1.1vw, 0.98rem);
+  line-height: 1.55;
+  color: var(--pooi-ivory);
+}
+
+.tcx-alcove {
+  display: flex;
+  justify-content: center;
+}
+
+.tcx-floor {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 42%;
+  z-index: 1;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding-bottom: 2.5rem;
+  -webkit-mask-image: linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.9) 30%, black 60%);
+  mask-image: linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.9) 30%, black 60%);
+  pointer-events: none;
+}
+
+.tcx-floor-lines {
+  margin: 0;
+  max-width: 46rem;
+  text-align: center;
+  font-family: var(--ckp-sigil, 'Cinzel', serif);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: clamp(0.7rem, 1.35vw, 1rem);
+  line-height: 1.9;
+  color: color-mix(in srgb, var(--pooi-accent) 85%, white);
+  text-shadow: 0 0 16px color-mix(in srgb, var(--pooi-accent) 70%, transparent);
+  transform: scaleY(-1);
+  filter: blur(0.2px);
+}
+
+.tcx-floor-lines span {
+  display: inline-block;
+  animation: tcx-ripple 5.5s ease-in-out infinite;
+}
+
+@keyframes tcx-ripple {
+  0%, 100% { transform: translateY(0); opacity: 0.55; }
+  50% { transform: translateY(-3px); opacity: 0.95; }
+}
+
+.tcx-nav {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 1.5rem;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.25rem;
+}
+
+.tcx-nav-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.4rem;
+  height: 2.4rem;
+  border-radius: 50%;
+  border: 1px solid color-mix(in srgb, var(--pooi-accent) 50%, transparent);
+  background: rgba(5, 10, 20, 0.6);
+  color: var(--pooi-ivory);
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.tcx-nav-btn:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--pooi-accent) 22%, rgba(5, 10, 20, 0.6));
+  border-color: var(--pooi-accent);
+}
+
+.tcx-nav-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.tcx-nav-title {
+  font-family: var(--ckp-signal, 'JetBrains Mono', monospace);
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--pooi-muted);
+  max-width: 16rem;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tcx-loading,
+.tcx-empty {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  font-family: var(--ckp-script, 'Spectral', serif);
+  color: var(--pooi-muted);
+  text-align: center;
+  padding: 2rem;
+}
+
+@media (max-width: 1024px) {
+  .tcx-hud {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto auto;
+    padding: 5.5rem 1.25rem 15rem;
+    overflow-y: auto;
+    gap: 1rem;
+  }
+
+  .tcx-panel {
+    max-height: none;
+  }
+
+  .tcx-alcove {
+    order: -1;
+  }
+}
+
+@media (max-width: 640px) {
+  .tcx-floor-lines {
+    max-width: 90%;
+  }
+
+  .tcx-nav-title {
+    max-width: 9rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tcx-floor-lines span {
+    animation: none;
+  }
+}

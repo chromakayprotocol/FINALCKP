@@ -82,7 +82,7 @@
   align-items: center;
   gap: 1.5rem;
   height: 100%;
-  padding: 3.25rem 2rem 14rem;
+  padding: 3.25rem 2rem 17rem;
 }
 
 .tcx-panel {
@@ -95,6 +95,13 @@
   box-shadow: 0 0 24px 2px color-mix(in srgb, var(--pooi-accent) 14%, transparent);
   max-height: min(64vh, 34rem);
   overflow-y: auto;
+  transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+}
+
+.tcx-panel:hover {
+  transform: translateY(-3px);
+  border-color: color-mix(in srgb, var(--pooi-accent) 60%, transparent);
+  box-shadow: 0 0 34px 5px color-mix(in srgb, var(--pooi-accent) 24%, transparent);
 }
 
 .tcx-panel-title {
@@ -126,8 +133,62 @@
   letter-spacing: 0.02em;
 }
 
-.tcx-panel-body span {
+.tcx-line {
   text-shadow: 0 0 10px color-mix(in srgb, var(--pooi-accent) 45%, transparent);
+  opacity: 0.85;
+  transition: opacity 0.5s ease, text-shadow 0.5s ease, color 0.5s ease;
+}
+
+/* Before playback starts, lines sit at a uniform, readable idle opacity.
+   Once the shared AudioProvider reports this track playing (see
+   TrackCodexScreen's lineState()), lines light up in sequence following
+   elapsed / duration -- a karaoke-style sync initiated purely by pressing
+   Play on the PortalAudioPlayer above, no separate control needed. */
+.tcx-panel-body.is-idle .tcx-line {
+  opacity: 0.85;
+}
+
+.tcx-panel-body.is-synced .tcx-line.is-upcoming {
+  opacity: 0.3;
+}
+
+.tcx-panel-body.is-synced .tcx-line.is-past {
+  opacity: 0.55;
+}
+
+.tcx-panel-body.is-synced .tcx-line.is-active {
+  opacity: 1;
+  color: #fff;
+  text-shadow: 0 0 16px color-mix(in srgb, var(--pooi-accent) 80%, white);
+}
+
+.tcx-locked {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  color: var(--pooi-faint);
+  font-family: var(--ckp-script, 'Spectral', serif);
+  font-style: italic;
+  font-size: 0.85rem;
+  animation: tcx-locked-pulse 2.6s ease-in-out infinite;
+}
+
+.tcx-locked p {
+  margin: 0;
+}
+
+@keyframes tcx-locked-pulse {
+  0%, 100% { opacity: 0.55; }
+  50% { opacity: 0.9; }
+}
+
+.tcx-reveal {
+  animation: tcx-reveal-in 0.6s ease;
+}
+
+@keyframes tcx-reveal-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .tcx-code {
@@ -165,6 +226,20 @@
   font-size: clamp(0.85rem, 1.1vw, 0.98rem);
   line-height: 1.55;
   color: var(--pooi-ivory);
+  transition: color 0.3s ease;
+}
+
+.tcx-code-quote--locked {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--pooi-faint);
+  opacity: 0.7;
+  animation: tcx-locked-pulse 2.6s ease-in-out infinite;
+}
+
+.tcx-code:hover .tcx-code-quote:not(.tcx-code-quote--locked) {
+  color: #fff;
 }
 
 .tcx-alcove {
@@ -188,7 +263,32 @@
   pointer-events: none;
 }
 
+/* An ambient current across the water, always present at low intensity so
+   the floor never sits dead-still -- and once the Light Code is reached
+   (data-alive="true", see TrackCodexScreen's floorAlive), a second,
+   brighter sweep layers in and the ripple below speeds up, so reaching
+   full integration reads as the chamber's water visibly coming alive. */
+.tcx-floor::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(100deg, transparent 35%, color-mix(in srgb, var(--pooi-accent) 16%, transparent) 50%, transparent 65%);
+  animation: tcx-flow 9s linear infinite;
+  pointer-events: none;
+}
+
+.tcx-floor[data-alive='true']::before {
+  background: linear-gradient(100deg, transparent 30%, color-mix(in srgb, var(--pooi-accent) 38%, transparent) 50%, transparent 70%);
+  animation-duration: 4.5s;
+}
+
+@keyframes tcx-flow {
+  0% { transform: translateX(-35%); }
+  100% { transform: translateX(35%); }
+}
+
 .tcx-floor-lines {
+  position: relative;
   margin: 0;
   max-width: 46rem;
   text-align: center;
@@ -206,11 +306,115 @@
 .tcx-floor-lines span {
   display: inline-block;
   animation: tcx-ripple 5.5s ease-in-out infinite;
+  transition: opacity 0.5s ease, text-shadow 0.5s ease;
 }
 
+.tcx-floor-lines span.is-idle {
+  opacity: 0.55;
+}
+
+.tcx-floor-lines span.is-upcoming {
+  opacity: 0.3;
+}
+
+.tcx-floor-lines span.is-past {
+  opacity: 0.5;
+}
+
+.tcx-floor-lines span.is-active {
+  opacity: 1;
+  text-shadow: 0 0 22px color-mix(in srgb, var(--pooi-accent) 90%, white);
+}
+
+/* Alive state: faster, higher-amplitude ripple and a brighter base glow. */
+.tcx-floor-lines.is-alive span {
+  animation-duration: 3s;
+}
+
+.tcx-floor-lines.is-alive {
+  text-shadow: 0 0 24px color-mix(in srgb, var(--pooi-accent) 90%, white);
+}
+
+/* Movement only -- brightness is governed separately by the is-idle/
+   is-upcoming/is-past/is-active state classes above, so the water keeps
+   moving continuously while playback sync still reads clearly. */
 @keyframes tcx-ripple {
-  0%, 100% { transform: translateY(0); opacity: 0.55; }
-  50% { transform: translateY(-3px); opacity: 0.95; }
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+
+.tcx-cta-row {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 4.75rem;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.tcx-progress {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.tcx-progress-dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.22);
+  transition: background 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease;
+}
+
+.tcx-progress-dot.is-filled {
+  background: var(--pooi-accent);
+  box-shadow: 0 0 10px 1px color-mix(in srgb, var(--pooi-accent) 70%, transparent);
+  transform: scale(1.15);
+}
+
+.tcx-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--ckp-signal, 'JetBrains Mono', monospace);
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--pooi-bg);
+  background: var(--pooi-accent);
+  border: none;
+  border-radius: 999px;
+  padding: 0.65rem 1.35rem;
+  cursor: pointer;
+  box-shadow: 0 0 18px 2px color-mix(in srgb, var(--pooi-accent) 55%, transparent);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.tcx-cta:hover {
+  transform: translateY(-2px) scale(1.03);
+  box-shadow: 0 0 30px 6px color-mix(in srgb, var(--pooi-accent) 70%, transparent);
+}
+
+.tcx-back-btn {
+  background: transparent;
+  border: 1px solid var(--pooi-border);
+  color: var(--pooi-muted);
+  border-radius: 999px;
+  padding: 0.55rem 1rem;
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-family: var(--ckp-signal, 'JetBrains Mono', monospace);
+  cursor: pointer;
+  transition: color 0.2s ease, border-color 0.2s ease;
+}
+
+.tcx-back-btn:hover {
+  color: var(--pooi-ivory);
+  border-color: color-mix(in srgb, var(--pooi-accent) 55%, transparent);
 }
 
 .tcx-nav {
@@ -280,7 +484,7 @@
   .tcx-hud {
     grid-template-columns: 1fr;
     grid-template-rows: auto auto auto;
-    padding: 5.5rem 1.25rem 15rem;
+    padding: 5.5rem 1.25rem 18.5rem;
     overflow-y: auto;
     gap: 1rem;
   }
@@ -302,10 +506,29 @@
   .tcx-nav-title {
     max-width: 9rem;
   }
+
+  .tcx-cta-row {
+    bottom: 4.5rem;
+    flex-wrap: wrap;
+    padding: 0 1rem;
+  }
+
+  .tcx-cta {
+    font-size: 0.7rem;
+    padding: 0.55rem 1.1rem;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .tcx-floor-lines span {
+  .tcx-floor-lines span,
+  .tcx-floor::before,
+  .tcx-locked,
+  .tcx-code-quote--locked {
     animation: none;
+  }
+
+  .tcx-panel:hover,
+  .tcx-cta:hover {
+    transform: none;
   }
 }

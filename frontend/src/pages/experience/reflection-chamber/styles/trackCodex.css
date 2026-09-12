@@ -299,7 +299,6 @@
   line-height: 1.9;
   color: color-mix(in srgb, var(--pooi-accent) 85%, white);
   text-shadow: 0 0 16px color-mix(in srgb, var(--pooi-accent) 70%, transparent);
-  transform: scaleY(-1);
   filter: blur(0.2px);
 }
 

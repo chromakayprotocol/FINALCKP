@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { Pause, Play, Repeat, Shuffle, SkipBack, SkipForward } from "lucide-react";
 import { useAudio } from "../../context/audioprovider";
 import "./PortalAudioPlayer.css";
 
@@ -11,14 +12,19 @@ function fmtTime(seconds) {
 }
 
 /**
- * A stone-archway "portal" chrome around the shared transport, keyed to the
- * violet channel (Sonic Surfaces — the auditory medium, chromaChannels.js).
+ * A stone-archway "portal" console around the shared transport, built to
+ * match the reference mockup exactly: cover art filling the frame with the
+ * artist/track overlaid on its corners, a plain progress bar (not a
+ * waveform), and a five-icon transport row (shuffle / prev / play / next /
+ * repeat) — no volume slider, no eyebrow header, no tracklist by default.
  * Reads/drives playback through the app-wide AudioProvider so it stays in
  * sync with whatever else is listening to `useAudio()`.
  */
-export default function PortalAudioPlayer({ tracks = [], title = "Guided Listen" }) {
+export default function PortalAudioPlayer({ tracks = [], title = "Guided Listen", showTracklist = false }) {
   const audio = useAudio();
   const [activeIndex, setActiveIndex] = useState(0);
+  const [shuffle, setShuffle] = useState(false);
+  const [repeat, setRepeat] = useState(false);
 
   const activeTrack = audio?.currentTrack || tracks[activeIndex];
   const isCurrent = audio?.currentTrack
@@ -28,7 +34,6 @@ export default function PortalAudioPlayer({ tracks = [], title = "Guided Listen"
   const duration = isCurrent ? Number(audio?.duration) || 0 : Number(activeTrack?.duration_seconds) || 0;
   const currentTime = isCurrent ? Number(audio?.currentTime) || 0 : 0;
   const progress = duration > 0 ? Math.min(100, (currentTime / duration) * 100) : 0;
-  const volume = Number(audio?.volume ?? 0.78);
 
   const canGoPrev = tracks.length > 1;
   const canGoNext = tracks.length > 1;
@@ -63,124 +68,116 @@ export default function PortalAudioPlayer({ tracks = [], title = "Guided Listen"
     audio?.seek?.(ratio * duration);
   };
 
-  const handleVolume = (event) => {
-    audio?.setVolume?.(Number(event.target.value));
+  const toggleRepeat = () => {
+    setRepeat((prev) => {
+      const next = !prev;
+      if (audio?.audioElement) audio.audioElement.loop = next;
+      return next;
+    });
   };
 
-  const bars = useMemo(() => {
-    // Deterministic pseudo-waveform so the bar heights don't reshuffle on
-    // every render — real amplitude data can replace this later.
-    return Array.from({ length: 48 }, (_, i) => {
-      const wave = Math.sin(i * 0.7) * 0.5 + Math.sin(i * 0.31) * 0.3;
-      return 18 + Math.abs(wave) * 82;
-    });
-  }, []);
+  const coverUrl = activeTrack?.cover_url || activeTrack?.cover_image_url || null;
+
+  const artistLabel = activeTrack?.artist || activeTrack?.subtitle || "The Chroma Key Protocol";
+  const titleLabel = activeTrack?.title || activeTrack?.name || title;
+
+  const trackListItems = useMemo(() => tracks, [tracks]);
 
   return (
     <div className="pap-root" style={{ "--pap-progress": `${progress}%` }}>
-      <div className="pap-arch">
-        <div className="pap-arch-glow pap-arch-glow--left" />
-        <div className="pap-arch-glow pap-arch-glow--right" />
-
-        <div className="pap-inner">
-          <div className="pap-header">
-            <span className="pap-eyebrow">Sonic Surfaces</span>
-            <span className="pap-title">{title}</span>
-          </div>
-
-          <div className="pap-nowplaying">
-            <div className="pap-art" aria-hidden="true">
-              <div className={`pap-art-ring ${isPlaying ? "is-live" : ""}`} />
-              <div className="pap-art-mark">&#9835;</div>
+      <div className="pap-frame">
+        <div className="pap-art">
+          {coverUrl ? (
+            <img className="pap-art-image" src={coverUrl} alt="" />
+          ) : (
+            <div className="pap-art-fallback" aria-hidden="true">
+              <span className={`pap-art-ring ${isPlaying ? "is-live" : ""}`} />
+              <span className="pap-art-mark">&#9835;</span>
             </div>
-            <div className="pap-meta">
-              <div className="pap-track-name">{activeTrack?.title || activeTrack?.name || "No track loaded"}</div>
-              <div className="pap-track-sub">{activeTrack?.subtitle || activeTrack?.artist || "The Chroma Key Protocol"}</div>
-            </div>
-          </div>
-
-          <div className="pap-waveform" onClick={handleSeek} role="presentation">
-            {bars.map((h, i) => (
-              <span
-                key={i}
-                className="pap-bar"
-                style={{
-                  height: `${h}%`,
-                  opacity: (i / bars.length) * 100 <= progress ? 1 : 0.28,
-                }}
-              />
-            ))}
-            <div className="pap-waveform-cursor" />
-          </div>
-
-          <div className="pap-time-row">
-            <span>{fmtTime(currentTime)}</span>
-            <span>{fmtTime(duration)}</span>
-          </div>
-
-          <div className="pap-transport">
-            <button
-              type="button"
-              className="pap-btn pap-btn--ghost"
-              onClick={handlePrev}
-              disabled={!canGoPrev}
-              aria-label="Previous track"
-            >
-              &#9198;
-            </button>
-            <button
-              type="button"
-              className="pap-btn pap-btn--main"
-              onClick={handlePlayPause}
-              aria-label={isPlaying ? "Pause" : "Play"}
-            >
-              {isPlaying ? "⏸" : "▶"}
-            </button>
-            <button
-              type="button"
-              className="pap-btn pap-btn--ghost"
-              onClick={handleNext}
-              disabled={!canGoNext}
-              aria-label="Next track"
-            >
-              &#9197;
-            </button>
-          </div>
-
-          <div className="pap-volume-row">
-            <span className="pap-volume-icon" aria-hidden="true">&#128266;</span>
-            <input
-              type="range"
-              min="0"
-              max="1"
-              step="0.01"
-              value={volume}
-              onChange={handleVolume}
-              className="pap-volume-slider"
-              aria-label="Volume"
-            />
-          </div>
-
-          {tracks.length > 0 && (
-            <ol className="pap-tracklist">
-              {tracks.map((track, index) => {
-                const active = index === activeIndex;
-                return (
-                  <li key={track.id || index} className={active ? "is-active" : ""}>
-                    <button type="button" onClick={() => handleSelect(index)}>
-                      <span className="pap-track-index">{String(index + 1).padStart(2, "0")}</span>
-                      <span className="pap-track-title">{track.title || track.name}</span>
-                      <span className="pap-track-duration">
-                        {track.duration || fmtTime(track.duration_seconds)}
-                      </span>
-                    </button>
-                  </li>
-                );
-              })}
-            </ol>
           )}
+          <div className="pap-art-veil" aria-hidden="true" />
+          <span className="pap-art-label pap-art-label--artist">{artistLabel}</span>
+          <span className="pap-art-label pap-art-label--title">{titleLabel}</span>
+        </div>
+
+        <div className="pap-time-row">
+          <span>{fmtTime(currentTime)}</span>
+          <span>{fmtTime(duration)}</span>
+        </div>
+
+        <div className="pap-progress" onClick={handleSeek} role="presentation">
+          <div className="pap-progress-track">
+            <div className="pap-progress-fill" />
+            <div className="pap-progress-handle" />
+          </div>
+        </div>
+
+        <div className="pap-transport">
+          <button
+            type="button"
+            className={`pap-btn pap-btn--icon${shuffle ? " is-active" : ""}`}
+            onClick={() => setShuffle((v) => !v)}
+            aria-pressed={shuffle}
+            aria-label="Shuffle"
+          >
+            <Shuffle size={16} />
+          </button>
+          <button
+            type="button"
+            className="pap-btn pap-btn--icon"
+            onClick={handlePrev}
+            disabled={!canGoPrev}
+            aria-label="Previous track"
+          >
+            <SkipBack size={18} />
+          </button>
+          <button
+            type="button"
+            className="pap-btn pap-btn--main"
+            onClick={handlePlayPause}
+            aria-label={isPlaying ? "Pause" : "Play"}
+          >
+            {isPlaying ? <Pause size={20} /> : <Play size={20} />}
+          </button>
+          <button
+            type="button"
+            className="pap-btn pap-btn--icon"
+            onClick={handleNext}
+            disabled={!canGoNext}
+            aria-label="Next track"
+          >
+            <SkipForward size={18} />
+          </button>
+          <button
+            type="button"
+            className={`pap-btn pap-btn--icon${repeat ? " is-active" : ""}`}
+            onClick={toggleRepeat}
+            aria-pressed={repeat}
+            aria-label="Repeat"
+          >
+            <Repeat size={16} />
+          </button>
         </div>
       </div>
+
+      {showTracklist && trackListItems.length > 1 && (
+        <ol className="pap-tracklist">
+          {trackListItems.map((track, index) => {
+            const active = index === activeIndex;
+            return (
+              <li key={track.id || index} className={active ? "is-active" : ""}>
+                <button type="button" onClick={() => handleSelect(index)}>
+                  <span className="pap-track-index">{String(index + 1).padStart(2, "0")}</span>
+                  <span className="pap-track-title">{track.title || track.name}</span>
+                  <span className="pap-track-duration">
+                    {track.duration || fmtTime(track.duration_seconds)}
+                  </span>
+                </button>
+              </li>
+            );
+          })}
+        </ol>
+      )}
     </div>
   );
 }

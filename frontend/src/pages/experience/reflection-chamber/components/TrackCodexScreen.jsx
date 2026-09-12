@@ -88,19 +88,10 @@ export default function TrackCodexScreen({
 
   return (
     <div className="tcx-scene">
-      <img className="tcx-bg" src={CHAMBER_BG} alt="" aria-hidden="true" />
-      <div className="tcx-veil" aria-hidden="true" />
+      <div className="tcx-frame">
+        <img className="tcx-bg" src={CHAMBER_BG} alt="" aria-hidden="true" />
+        <div className="tcx-veil" aria-hidden="true" />
 
-      <header className="tcx-topbar">
-        <button type="button" className="tcx-return" onClick={onReturn}>
-          <ArrowLeft size={14} /> Chamber
-        </button>
-        <span className="tcx-counter">
-          Track {String(index + 1).padStart(2, '0')} / {String(total).padStart(2, '0')}
-        </span>
-      </header>
-
-      <div className="tcx-hud">
         <aside className="tcx-panel tcx-panel--left" aria-label="The Seeker observes">
           <h2 className="tcx-panel-title">The Seeker Observes</h2>
           {stage >= STAGE_SEEKER ? (
@@ -153,18 +144,27 @@ export default function TrackCodexScreen({
             )}
           </div>
         </aside>
+
+        <div className="tcx-floor" data-alive={floorAlive ? 'true' : 'false'} aria-hidden="true">
+          <p className={`tcx-floor-lines${floorAlive ? ' is-alive' : ''}`}>
+            {lyricLines.map((line, i) => (
+              <span key={i} className={`is-${lineState(i)}`} style={{ animationDelay: `${i * 0.35}s` }}>
+                {line}
+                {i < lyricLines.length - 1 ? '  •  ' : ''}
+              </span>
+            ))}
+          </p>
+        </div>
       </div>
 
-      <div className="tcx-floor" data-alive={floorAlive ? 'true' : 'false'} aria-hidden="true">
-        <p className={`tcx-floor-lines${floorAlive ? ' is-alive' : ''}`}>
-          {lyricLines.map((line, i) => (
-            <span key={i} className={`is-${lineState(i)}`} style={{ animationDelay: `${i * 0.35}s` }}>
-              {line}
-              {i < lyricLines.length - 1 ? '  •  ' : ''}
-            </span>
-          ))}
-        </p>
-      </div>
+      <header className="tcx-topbar">
+        <button type="button" className="tcx-return" onClick={onReturn}>
+          <ArrowLeft size={14} /> Chamber
+        </button>
+        <span className="tcx-counter">
+          Track {String(index + 1).padStart(2, '0')} / {String(total).padStart(2, '0')}
+        </span>
+      </header>
 
       <div className="tcx-cta-row">
         {stage > 0 && (

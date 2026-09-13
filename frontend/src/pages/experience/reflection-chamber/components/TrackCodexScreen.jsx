@@ -94,21 +94,23 @@ export default function TrackCodexScreen({
 
         <aside className="tcx-panel tcx-panel--left" aria-label="The Seeker observes">
           <h2 className="tcx-panel-title">The Seeker Observes</h2>
-          {stage >= STAGE_SEEKER ? (
-            <p className={`tcx-panel-body tcx-reveal${hasStarted ? ' is-synced' : ' is-idle'}`}>
-              {lyricLines.map((line, i) => (
-                <span key={i} className={`tcx-line is-${lineState(i)}`}>
-                  {line}
-                  <br />
-                </span>
-              ))}
-            </p>
-          ) : (
-            <div className="tcx-locked">
-              <Lock size={16} />
-              <p>Press Next to receive the transmission.</p>
-            </div>
-          )}
+          <div className="tcx-panel-content">
+            {stage >= STAGE_SEEKER ? (
+              <p className={`tcx-panel-body tcx-reveal${hasStarted ? ' is-synced' : ' is-idle'}`}>
+                {lyricLines.map((line, i) => (
+                  <span key={i} className={`tcx-line is-${lineState(i)}`}>
+                    {line}
+                    <br />
+                  </span>
+                ))}
+              </p>
+            ) : (
+              <div className="tcx-locked">
+                <Lock size={16} />
+                <p>Press Next to receive the transmission.</p>
+              </div>
+            )}
+          </div>
         </aside>
 
         <div className="tcx-alcove">
@@ -118,30 +120,32 @@ export default function TrackCodexScreen({
         <aside className="tcx-panel tcx-panel--right" aria-label="Extract the codes">
           <h2 className="tcx-panel-title">Extract the Codes</h2>
 
-          <div className="tcx-code tcx-code--shadow">
-            <span className="tcx-code-label">
-              <Moon size={14} /> Shadow Code
-            </span>
-            {stage >= STAGE_SHADOW ? (
-              <p className="tcx-code-quote tcx-reveal">&ldquo;{entry.shadowCodeQuote}&rdquo;</p>
-            ) : (
-              <p className="tcx-code-quote tcx-code-quote--locked">
-                <Lock size={12} /> Locked
-              </p>
-            )}
-          </div>
+          <div className="tcx-panel-content">
+            <div className="tcx-code tcx-code--shadow">
+              <span className="tcx-code-label">
+                <Moon size={14} /> Shadow Code
+              </span>
+              {stage >= STAGE_SHADOW ? (
+                <p className="tcx-code-quote tcx-reveal">&ldquo;{entry.shadowCodeQuote}&rdquo;</p>
+              ) : (
+                <p className="tcx-code-quote tcx-code-quote--locked">
+                  <Lock size={12} /> Locked
+                </p>
+              )}
+            </div>
 
-          <div className="tcx-code tcx-code--light">
-            <span className="tcx-code-label">
-              <Sun size={14} /> Light Code
-            </span>
-            {stage >= STAGE_LIGHT ? (
-              <p className="tcx-code-quote tcx-reveal">&ldquo;{entry.lightCodeQuote}&rdquo;</p>
-            ) : (
-              <p className="tcx-code-quote tcx-code-quote--locked">
-                <Lock size={12} /> Locked
-              </p>
-            )}
+            <div className="tcx-code tcx-code--light">
+              <span className="tcx-code-label">
+                <Sun size={14} /> Light Code
+              </span>
+              {stage >= STAGE_LIGHT ? (
+                <p className="tcx-code-quote tcx-reveal">&ldquo;{entry.lightCodeQuote}&rdquo;</p>
+              ) : (
+                <p className="tcx-code-quote tcx-code-quote--locked">
+                  <Lock size={12} /> Locked
+                </p>
+              )}
+            </div>
           </div>
         </aside>
 

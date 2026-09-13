@@ -274,10 +274,10 @@
 /* The alcove: measured to the marble archway's own opening in the art. */
 .tcx-alcove {
   position: absolute;
-  left: 39.8%;
-  top: 24.8%;
-  width: 20.4%;
-  height: 31%;
+  left: 32%;
+  top: 12%;
+  width: 36%;
+  height: 53.5%;
   z-index: 2;
   display: flex;
 }

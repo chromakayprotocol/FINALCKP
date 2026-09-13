@@ -3,6 +3,9 @@ import { Pause, Play, Repeat, Shuffle, SkipBack, SkipForward } from "lucide-reac
 import { useAudio } from "../../context/audioprovider";
 import "./PortalAudioPlayer.css";
 
+const FRAME_IMAGE = "/reclamation-university/Reflection Chamber/player_stone_frame.png";
+const DEFAULT_COVER = "/reclamation-university/Reflection Chamber/musiq_matrix_portrait.webp";
+
 function fmtTime(seconds) {
   const value = Number(seconds);
   if (!Number.isFinite(value) || value < 0) return "0:00";
@@ -85,79 +88,76 @@ export default function PortalAudioPlayer({ tracks = [], title = "Guided Listen"
 
   return (
     <div className="pap-root" style={{ "--pap-progress": `${progress}%` }}>
-      <div className="pap-frame">
-        <div className="pap-art">
-          {coverUrl ? (
-            <img className="pap-art-image" src={coverUrl} alt="" />
-          ) : (
-            <div className="pap-art-fallback" aria-hidden="true">
-              <span className={`pap-art-ring ${isPlaying ? "is-live" : ""}`} />
-              <span className="pap-art-mark">&#9835;</span>
+      <div className="pap-frame-wrap">
+        <div className="pap-content">
+          <div className="pap-art">
+            <img className="pap-art-image" src={coverUrl || DEFAULT_COVER} alt="" />
+            <div className="pap-art-veil" aria-hidden="true" />
+            <span className="pap-art-label pap-art-label--artist">{artistLabel}</span>
+            <span className="pap-art-label pap-art-label--title">{titleLabel}</span>
+          </div>
+
+          <div className="pap-time-row">
+            <span>{fmtTime(currentTime)}</span>
+            <span>{fmtTime(duration)}</span>
+          </div>
+
+          <div className="pap-progress" onClick={handleSeek} role="presentation">
+            <div className="pap-progress-track">
+              <div className="pap-progress-fill" />
+              <div className="pap-progress-handle" />
             </div>
-          )}
-          <div className="pap-art-veil" aria-hidden="true" />
-          <span className="pap-art-label pap-art-label--artist">{artistLabel}</span>
-          <span className="pap-art-label pap-art-label--title">{titleLabel}</span>
-        </div>
+          </div>
 
-        <div className="pap-time-row">
-          <span>{fmtTime(currentTime)}</span>
-          <span>{fmtTime(duration)}</span>
-        </div>
-
-        <div className="pap-progress" onClick={handleSeek} role="presentation">
-          <div className="pap-progress-track">
-            <div className="pap-progress-fill" />
-            <div className="pap-progress-handle" />
+          <div className="pap-transport">
+            <button
+              type="button"
+              className={`pap-btn pap-btn--icon${shuffle ? " is-active" : ""}`}
+              onClick={() => setShuffle((v) => !v)}
+              aria-pressed={shuffle}
+              aria-label="Shuffle"
+            >
+              <Shuffle size={16} />
+            </button>
+            <button
+              type="button"
+              className="pap-btn pap-btn--icon"
+              onClick={handlePrev}
+              disabled={!canGoPrev}
+              aria-label="Previous track"
+            >
+              <SkipBack size={18} />
+            </button>
+            <button
+              type="button"
+              className="pap-btn pap-btn--main"
+              onClick={handlePlayPause}
+              aria-label={isPlaying ? "Pause" : "Play"}
+            >
+              {isPlaying ? <Pause size={20} /> : <Play size={20} />}
+            </button>
+            <button
+              type="button"
+              className="pap-btn pap-btn--icon"
+              onClick={handleNext}
+              disabled={!canGoNext}
+              aria-label="Next track"
+            >
+              <SkipForward size={18} />
+            </button>
+            <button
+              type="button"
+              className={`pap-btn pap-btn--icon${repeat ? " is-active" : ""}`}
+              onClick={toggleRepeat}
+              aria-pressed={repeat}
+              aria-label="Repeat"
+            >
+              <Repeat size={16} />
+            </button>
           </div>
         </div>
 
-        <div className="pap-transport">
-          <button
-            type="button"
-            className={`pap-btn pap-btn--icon${shuffle ? " is-active" : ""}`}
-            onClick={() => setShuffle((v) => !v)}
-            aria-pressed={shuffle}
-            aria-label="Shuffle"
-          >
-            <Shuffle size={16} />
-          </button>
-          <button
-            type="button"
-            className="pap-btn pap-btn--icon"
-            onClick={handlePrev}
-            disabled={!canGoPrev}
-            aria-label="Previous track"
-          >
-            <SkipBack size={18} />
-          </button>
-          <button
-            type="button"
-            className="pap-btn pap-btn--main"
-            onClick={handlePlayPause}
-            aria-label={isPlaying ? "Pause" : "Play"}
-          >
-            {isPlaying ? <Pause size={20} /> : <Play size={20} />}
-          </button>
-          <button
-            type="button"
-            className="pap-btn pap-btn--icon"
-            onClick={handleNext}
-            disabled={!canGoNext}
-            aria-label="Next track"
-          >
-            <SkipForward size={18} />
-          </button>
-          <button
-            type="button"
-            className={`pap-btn pap-btn--icon${repeat ? " is-active" : ""}`}
-            onClick={toggleRepeat}
-            aria-pressed={repeat}
-            aria-label="Repeat"
-          >
-            <Repeat size={16} />
-          </button>
-        </div>
+        <img className="pap-frame-chrome" src={FRAME_IMAGE} alt="" aria-hidden="true" />
       </div>
 
       {showTracklist && trackListItems.length > 1 && (

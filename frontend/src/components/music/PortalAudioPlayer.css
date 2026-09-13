@@ -9,29 +9,56 @@
 .pap-root {
   --pap-key: var(--pooi-accent, var(--h20-sky, #38bdf8));
   --pap-key-bright: color-mix(in srgb, var(--pap-key) 55%, white);
+  position: relative;
   width: 100%;
   height: 100%;
-  display: flex;
-  flex-direction: column;
   font-family: var(--ckp-signal, "JetBrains Mono", monospace);
   color: var(--ckp-read, #dcd5c8);
 }
 
-.pap-frame {
-  position: relative;
-  flex: 1 1 auto;
-  min-height: 0;
+/* The real stone-arch frame asset (player_stone_frame.png, 1106x704) sits
+   on top of everything else as a transparent-centered overlay -- the
+   content below is positioned to its actual interior window, measured
+   directly from the PNG's alpha channel by sampling alpha down each leg's
+   center (not just its inner edge, which reads antialiased pixels as
+   "empty" well before the leg actually ends): left 10.3%, top 16.9%,
+   right 90.4%, bottom 98% of the frame's own canvas. This replaces an
+   earlier CSS-drawn console box that never looked like more than a
+   placeholder. .pap-root is deliberately NOT a flex column here -- a
+   percentage-height flex child on .pap-frame-wrap was silently resolving
+   short, which is why the transport row used to spill out past the
+   frame's own legs. */
+.pap-frame-wrap {
+  position: absolute;
+  inset: 0;
+}
+
+.pap-content {
+  position: absolute;
+  left: 17%;
+  top: 23%;
+  width: 66%;
+  height: 74%;
+  z-index: 1;
   display: flex;
   flex-direction: column;
+}
+
+.pap-frame-chrome {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 2;
+  pointer-events: none;
+  object-fit: fill;
 }
 
 .pap-art {
   position: relative;
   flex: 1 1 auto;
   min-height: 0;
-  border-radius: 4px;
   overflow: hidden;
-  background: radial-gradient(circle at 50% 35%, color-mix(in srgb, var(--pap-key) 20%, transparent), #050810 75%);
 }
 
 .pap-art-image {
@@ -40,39 +67,6 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
-}
-
-.pap-art-fallback {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.pap-art-ring {
-  width: 22%;
-  aspect-ratio: 1;
-  max-width: 4.5rem;
-  border-radius: 50%;
-  border: 1px solid color-mix(in srgb, var(--pap-key) 55%, transparent);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.pap-art-ring.is-live {
-  animation: pap-pulse 1.8s ease-in-out infinite;
-}
-
-@keyframes pap-pulse {
-  0%, 100% { transform: scale(1); opacity: 0.5; }
-  50% { transform: scale(1.12); opacity: 1; }
-}
-
-.pap-art-mark {
-  font-size: clamp(1.1rem, 2.2vw, 1.6rem);
-  color: var(--pap-key-bright);
 }
 
 .pap-art-veil {
@@ -84,24 +78,27 @@
 
 .pap-art-label {
   position: absolute;
-  top: 0.6em;
-  max-width: 46%;
+  top: 0.5em;
+  max-width: 42%;
   font-family: var(--ckp-sigil, "Cinzel", Georgia, serif);
-  font-size: clamp(0.55rem, 1.05vw, 0.85rem);
-  line-height: 1.3;
-  letter-spacing: 0.06em;
+  font-size: clamp(0.5rem, 0.85vw, 0.7rem);
+  line-height: 1.25;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
   color: var(--ckp-ivory, #f1ece2);
-  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.7);
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.8);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .pap-art-label--artist {
-  left: 0.7em;
+  left: 1em;
   text-align: left;
 }
 
 .pap-art-label--title {
-  right: 0.7em;
+  right: 1em;
   text-align: right;
 }
 

@@ -72,6 +72,80 @@
   cursor: default;
 }
 
+/* ── 2026 production-master narrative ─────────────────────────────── */
+.pooi .fw-production-context {
+  width: min(100%, 46rem);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  text-align: left;
+}
+
+.pooi .fw-production-snapshot,
+.pooi .fw-production-block p {
+  margin: 0;
+  color: var(--pooi-ivory);
+  line-height: 1.65;
+}
+
+.pooi .fw-production-snapshot {
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 1.05rem;
+}
+
+.pooi .fw-production-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--pooi-border);
+  background: var(--pooi-surface);
+}
+
+.pooi .fw-life-domains {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.pooi .fw-life-domains span {
+  padding: 0.35rem 0.55rem;
+  border: 1px solid var(--pooi-border);
+  font-family: 'Oxanium', system-ui, sans-serif;
+  font-size: 0.62rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--pooi-muted);
+}
+
+.pooi .fw-evidence-quote {
+  margin: 0.75rem 0 0;
+  padding-left: 0.75rem;
+  border-left: 1px solid var(--h20-sky);
+  color: var(--pooi-muted);
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 0.85rem;
+  font-style: italic;
+  line-height: 1.55;
+}
+
+.pooi .fw-production-turn {
+  border-color: color-mix(in srgb, var(--h20-sky) 45%, var(--pooi-border));
+}
+
+.pooi .fw-production-reflection {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.pooi .fw-production-reflection h3 {
+  margin: 0;
+  font-family: 'Cinzel', Georgia, serif;
+  color: var(--pooi-ivory);
+  font-size: 1.25rem;
+}
+
 /* ── Shared prompt pattern (recognition, recode, application, synthesis) ── */
 .pooi .fw-question-kicker {
   font-family: 'Oxanium', system-ui, sans-serif;

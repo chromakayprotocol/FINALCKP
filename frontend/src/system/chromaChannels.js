@@ -212,7 +212,7 @@ export const PROTOCOL_SURFACES = Object.freeze([
     channel: 'azure',
     route: '/experiencemode/act-two/visualizer',
     status: SURFACE_STATUS.LIVE,
-    summary: 'Five pillars of governed feeling, scored to the visualizer.',
+    summary: 'Five stages of shadow integration across twenty sonic artifacts.',
   },
   {
     id: 'act-three',

@@ -49,9 +49,78 @@ export const REQUIRED_TABLES = [
   // failure this whole script exists to catch.
   'shadow_twins',
   'shadow_twin_fragments',
+  // Act II 2026 production master. These are read directly by the live
+  // Reflection Chamber Track Codex; their absence must block deployment.
+  'act_two_sonic_artifacts',
+  'act_two_stages',
 ];
 
 export const SCHEMA_CACHE_MISS = 'PGRST205';
+
+const REFLECTION_ARTIFACT_REQUIRED_FIELDS = [
+  'stage_number',
+  'what_you_bring',
+  'shadow_code_quote',
+  'light_code_quote',
+  'make_the_turn',
+  'life_domains',
+  'where_this_shows_up',
+  'jungian_lens',
+  'reflection_title',
+  'reflection_prompt',
+  'movement_criteria',
+  'handoff',
+  'source_edition',
+];
+
+export function validateReflectionChamberRows(rows) {
+  if (!Array.isArray(rows) || rows.length !== 20) {
+    return { ok: false, problem: `expected 20 Reflection Chamber artifacts, received ${Array.isArray(rows) ? rows.length : 'non-array'}` };
+  }
+
+  for (let index = 0; index < rows.length; index += 1) {
+    const row = rows[index];
+    const expectedOrder = index + 1;
+    if (row.chamber_order !== expectedOrder) {
+      return { ok: false, problem: `expected chamber_order ${expectedOrder}, received ${row.chamber_order}` };
+    }
+    if (!Number.isInteger(row.stage_number) || row.stage_number < 1 || row.stage_number > 5) {
+      return { ok: false, problem: `artifact ${expectedOrder} has invalid stage_number ${row.stage_number}` };
+    }
+    for (const field of REFLECTION_ARTIFACT_REQUIRED_FIELDS) {
+      const value = row[field];
+      if (value == null || value === '' || (Array.isArray(value) && value.length === 0)) {
+        return { ok: false, problem: `artifact ${expectedOrder} is missing ${field}` };
+      }
+    }
+    if (row.source_edition !== '2026') {
+      return { ok: false, problem: `artifact ${expectedOrder} has source_edition ${row.source_edition}` };
+    }
+  }
+
+  return { ok: true };
+}
+
+export function validateReflectionStages(rows) {
+  if (!Array.isArray(rows) || rows.length !== 5) {
+    return { ok: false, problem: `expected 5 Reflection Chamber stages, received ${Array.isArray(rows) ? rows.length : 'non-array'}` };
+  }
+
+  for (let index = 0; index < rows.length; index += 1) {
+    const stage = rows[index];
+    const expectedNumber = index + 1;
+    if (stage.stage_number !== expectedNumber) {
+      return { ok: false, problem: `expected stage_number ${expectedNumber}, received ${stage.stage_number}` };
+    }
+    for (const field of ['stage_name', 'core_question', 'stage_intent', 'gate_question']) {
+      if (!stage[field]) {
+        return { ok: false, problem: `stage ${expectedNumber} is missing ${field}` };
+      }
+    }
+  }
+
+  return { ok: true };
+}
 
 /**
  * Distinguishes a real PostgREST answer from something else that merely
@@ -224,6 +293,46 @@ async function main() {
     const result = evaluateTable(table, response, body);
     console.log(`  ${result.ok ? 'ok    ' : 'FAIL  '} ${table} (${result.label})`);
     if (!result.ok) problems.push(result.problem);
+  }
+
+  if (!problems.length) {
+    const artifactSelect = [
+      'chamber_order',
+      ...REFLECTION_ARTIFACT_REQUIRED_FIELDS,
+    ].join(',');
+
+    const [artifactResponse, stageResponse] = await Promise.all([
+      fetch(
+        `${base}/rest/v1/act_two_sonic_artifacts?select=${artifactSelect}&order=chamber_order.asc`,
+        { headers }
+      ),
+      fetch(
+        `${base}/rest/v1/act_two_stages?select=stage_number,stage_name,core_question,stage_intent,gate_question&order=stage_number.asc`,
+        { headers }
+      ),
+    ]);
+
+    const [artifactBody, stageBody] = await Promise.all([
+      artifactResponse.text(),
+      stageResponse.text(),
+    ]);
+
+    const artifactClassified = classifyResponse(artifactResponse, artifactBody);
+    const stageClassified = classifyResponse(stageResponse, stageBody);
+
+    if (artifactClassified.kind !== 'rows') {
+      problems.push('act_two_sonic_artifacts: production-master rows were not readable through PostgREST.');
+    } else {
+      const validation = validateReflectionChamberRows(artifactClassified.payload);
+      if (!validation.ok) problems.push(`act_two_sonic_artifacts: ${validation.problem}`);
+    }
+
+    if (stageClassified.kind !== 'rows') {
+      problems.push('act_two_stages: five-stage architecture was not readable through PostgREST.');
+    } else {
+      const validation = validateReflectionStages(stageClassified.payload);
+      if (!validation.ok) problems.push(`act_two_stages: ${validation.problem}`);
+    }
   }
 
   if (problems.length) {

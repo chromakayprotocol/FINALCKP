@@ -57,7 +57,7 @@ export default function TrackCodexScreen({
     [track],
   );
 
-  const lyricLines = entry.chapterLyrics;
+  const lyricLines = entry.chapterLyrics?.length ? entry.chapterLyrics : [entry.artifact_snapshot].filter(Boolean);
 
   const isActiveTrack = audio?.currentTrack?.id === track.id;
   const duration = isActiveTrack ? Number(audio?.duration) || 0 : 0;
@@ -96,7 +96,8 @@ export default function TrackCodexScreen({
           <ArrowLeft size={14} /> Chamber
         </button>
         <span className="tcx-counter">
-          Track {String(index + 1).padStart(2, '0')} / {String(total).padStart(2, '0')}
+          Stage {entry.stage_number} · {entry.stage?.stage_name || entry.artifact_stage} · Track{' '}
+          {String(index + 1).padStart(2, '0')} / {String(total).padStart(2, '0')}
         </span>
       </header>
 
@@ -132,7 +133,12 @@ export default function TrackCodexScreen({
               <Moon size={14} /> Shadow Code
             </span>
             {stage >= STAGE_SHADOW ? (
-              <p className="tcx-code-quote tcx-reveal">&ldquo;{entry.shadowCodeQuote}&rdquo;</p>
+              <div className="tcx-reveal">
+                <p className="tcx-code-quote">&ldquo;{entry.shadowCodeQuote}&rdquo;</p>
+                {entry.shadowEvidenceQuote && (
+                  <p className="tcx-code-evidence">{entry.shadowEvidenceQuote}</p>
+                )}
+              </div>
             ) : (
               <p className="tcx-code-quote tcx-code-quote--locked">
                 <Lock size={12} /> Locked
@@ -145,13 +151,25 @@ export default function TrackCodexScreen({
               <Sun size={14} /> Light Code
             </span>
             {stage >= STAGE_LIGHT ? (
-              <p className="tcx-code-quote tcx-reveal">&ldquo;{entry.lightCodeQuote}&rdquo;</p>
+              <div className="tcx-reveal">
+                <p className="tcx-code-quote">&ldquo;{entry.lightCodeQuote}&rdquo;</p>
+                {entry.lightEvidenceQuote && (
+                  <p className="tcx-code-evidence">{entry.lightEvidenceQuote}</p>
+                )}
+              </div>
             ) : (
               <p className="tcx-code-quote tcx-code-quote--locked">
                 <Lock size={12} /> Locked
               </p>
             )}
           </div>
+
+          {stage >= STAGE_LIGHT && entry.isStageBoundary && entry.stage?.gate_question && (
+            <div className="tcx-code tcx-code--gate tcx-reveal">
+              <span className="tcx-code-label">Stage Gate</span>
+              <p className="tcx-code-quote">{entry.stage.gate_question}</p>
+            </div>
+          )}
         </aside>
       </div>
 

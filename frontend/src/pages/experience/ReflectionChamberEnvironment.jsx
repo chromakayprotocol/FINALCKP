@@ -46,10 +46,14 @@ const PORTALS = [
   { pillarId: 'open-frequency', color: '#e08030', dim: '#8a4d15', left: '78.3%', top: '59.6%', width: '7%', height: '26.5%' },
 ];
 
-const PILLAR_BY_ID = Object.fromEntries(PILLARS.map((pillar) => [pillar.id, pillar]));
-
-export default function ReflectionChamberEnvironment({ activePillarId, onSelectPillar, pillarStatus = {} }) {
+export default function ReflectionChamberEnvironment({
+  activePillarId,
+  onSelectPillar,
+  pillarStatus = {},
+  pillars = PILLARS,
+}) {
   const { shadowTwin } = useSovereign();
+  const pillarById = Object.fromEntries(pillars.map((pillar) => [pillar.id, pillar]));
 
   return (
     <div className="rce-scene">
@@ -76,9 +80,9 @@ export default function ReflectionChamberEnvironment({ activePillarId, onSelectP
         <p className="rce-heading-subtitle">Speculum Interioris</p>
       </div>
 
-      <div className="rce-portals" role="tablist" aria-label="Five pillars of the Reflection Chamber">
+      <div className="rce-portals" role="tablist" aria-label="Five stages of the Reflection Chamber">
         {PORTALS.map(({ pillarId, color, dim, left, top, width, height }) => {
-          const pillar = PILLAR_BY_ID[pillarId];
+          const pillar = pillarById[pillarId];
           if (!pillar) return null;
           const isActive = activePillarId === pillarId;
           const status = pillarStatus[pillarId];

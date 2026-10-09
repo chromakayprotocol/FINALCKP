@@ -1,61 +1,48 @@
-import { useEffect, useMemo, useState } from 'react';
-import { getActTwoTracks } from '../../../lib/supabase/tracks';
-import { TRACK_CODEX_ORDER, getTrackCodexEntry } from '../../../data/reflectionChamberTrackCodex';
+import { useEffect, useState } from 'react';
+import { getActTwoReflectionChamberCodex } from '../../../lib/supabase/tracks';
 import { useLockBodyScroll } from './hooks/useLockBodyScroll';
 import TrackCodexScreen from './components/TrackCodexScreen';
 import './portalOneOwnedInterior.css';
 import './styles/trackCodex.css';
 
 /**
- * The Track Codex — one HUD screen per Act Two track (PortalAudioPlayer +
- * "Seeker Observes" / "Extract the Codes" panels + floor lyrics), paged
- * through like the five pillars are: a single fixed-viewport takeover
- * launched from the Chamber hub, no per-track route.
+ * The Track Codex — one HUD screen per definitive Act II sonic artifact.
  *
- * Not a sixth pillar and not a ScreenSequence config — this is a passive
- * listen-and-read gallery over the album, not an interactive Jungian-stage
- * engine. Audio/duration/short code names come from Supabase
- * (getActTwoTracks); the lyric excerpt and Shadow/Light Code mantras come
- * from the static reflectionChamberTrackCodex.js (Supabase has no column
- * for that prose yet).
+ * Supabase is the source of truth for:
+ *   - authoritative 20-artifact order
+ *   - five-stage architecture + gate questions
+ *   - production-master Shadow/Light Codes and narrative fields
+ *   - track media / lyrics / duration
+ *
+ * This remains a passive listen-and-read gallery rather than a sixth pillar,
+ * but it no longer depends on the legacy static reflectionChamberTrackCodex
+ * dataset.
  */
 export default function TrackCodexGallery({ onReturn }) {
-  const [tracks, setTracks] = useState(null); // null = loading
+  const [screens, setScreens] = useState(null); // null = loading
   const [activeIndex, setActiveIndex] = useState(0);
   useLockBodyScroll();
 
   useEffect(() => {
     let active = true;
-    getActTwoTracks().then((rows) => {
-      if (active) setTracks(rows || []);
+    getActTwoReflectionChamberCodex().then((rows) => {
+      if (active) setScreens(rows || []);
     });
     return () => {
       active = false;
     };
   }, []);
 
-  const screens = useMemo(() => {
-    if (!tracks) return [];
-    const byTitle = new Map(tracks.map((row) => [row.title, row]));
-    return TRACK_CODEX_ORDER
-      .map((title) => {
-        const track = byTitle.get(title);
-        const entry = getTrackCodexEntry(title);
-        return track && entry ? { track, entry } : null;
-      })
-      .filter(Boolean);
-  }, [tracks]);
-
-  const total = screens.length;
+  const total = screens?.length || 0;
   const safeIndex = total ? Math.min(activeIndex, total - 1) : 0;
-  const current = screens[safeIndex];
+  const current = total ? screens[safeIndex] : null;
 
   const goPrev = () => setActiveIndex((i) => (i - 1 + total) % total);
   const goNext = () => setActiveIndex((i) => (i + 1) % total);
 
   return (
     <div className="pooi track-codex-pillar">
-      {tracks === null && (
+      {screens === null && (
         <div className="tcx-scene">
           <div className="tcx-loading" aria-busy="true">
             Tuning the chamber&rsquo;s frequency&hellip;
@@ -63,10 +50,10 @@ export default function TrackCodexGallery({ onReturn }) {
         </div>
       )}
 
-      {tracks !== null && !current && (
+      {screens !== null && !current && (
         <div className="tcx-scene">
           <div className="tcx-empty">
-            The Chamber&rsquo;s archive hasn&rsquo;t synced these transmissions yet.
+            The Chamber&rsquo;s production master is unavailable.
             <br />
             <button type="button" className="tcx-return" onClick={onReturn} style={{ marginTop: '1.25rem' }}>
               Return to Chamber

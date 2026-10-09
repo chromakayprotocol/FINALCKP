@@ -229,6 +229,26 @@
   transition: color 0.3s ease;
 }
 
+.tcx-code-evidence {
+  margin: 0.55rem 0 0;
+  padding-left: 0.65rem;
+  border-left: 1px solid color-mix(in srgb, var(--pooi-accent) 45%, transparent);
+  font-family: var(--ckp-script, 'Spectral', serif);
+  font-size: 0.78rem;
+  line-height: 1.45;
+  color: var(--pooi-muted);
+}
+
+.tcx-code--gate {
+  margin-top: 1.15rem;
+  padding-top: 0.9rem;
+  border-top: 1px solid color-mix(in srgb, var(--pooi-accent) 30%, transparent);
+}
+
+.tcx-code--gate .tcx-code-label {
+  color: var(--pooi-accent);
+}
+
 .tcx-code-quote--locked {
   display: flex;
   align-items: center;

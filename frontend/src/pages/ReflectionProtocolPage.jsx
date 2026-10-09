@@ -305,6 +305,7 @@ function ReflectionProtocolPageInner() {
                     {open && (
                       <div className="rpp-code-body">
                         {code.track && <p className="rpp-track">Track · {code.track}</p>}
+                        {code.code && <p className="rpp-code-statement">{code.code}</p>}
                         <p>{code.body}</p>
                         {code.diagnostic && (
                           <div className="rpp-prompt rpp-prompt--diag">
@@ -332,6 +333,7 @@ function ReflectionProtocolPageInner() {
                     </button>
                     {open && (
                       <div className="rpp-code-body">
+                        {code.code && <p className="rpp-code-statement">{code.code}</p>}
                         <p>{code.body}</p>
                         {code.instructional && (
                           <div className="rpp-prompt rpp-prompt--inst">

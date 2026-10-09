@@ -16,7 +16,7 @@
  * real progress, which is exactly the failure mode this split prevents.
  *
  * Exception: Reflection Protocol is live — Act II Water / Reflection Chamber
- * five-pillar module (see reflectionChamberModuleData.js + ReflectionProtocolPage).
+ * five-stage / twenty-artifact production master (see ReflectionProtocolPage).
  */
 
 // Locally hosted Nexus art (frontend/public/reclamation-university/Nexus) —
@@ -35,7 +35,7 @@ export const hermeticHallImage = `${NEXUS_BASE}/Nexus_Hermetic_Hall.png`;
 // "Understand the Code"; Crucible = Sovereignty's red "Reclaim Your Power")
 // plus a new fourth, gold Reclamation Protocol for later synthesis/graduation
 // content. Fracture uses facultySlug → foundations. Reflection uses a dedicated
-// route to the Act II five-pillar Reflection Chamber module.
+// route to the Act II five-stage Reflection Chamber production master.
 export const universityProtocols = [
   {
     id: 'fracture',
@@ -55,7 +55,7 @@ export const universityProtocols = [
     statLabel: 'Spiritual Mastery',
     position: 'top-right',
     available: true,
-    // Dedicated Act II Water module — five pillars of governed feeling.
+    // Dedicated Act II Water module — five stages / twenty sonic artifacts.
     route: '/experiencemode/sovereign/reclamation-university/reflection-protocol',
   },
   {

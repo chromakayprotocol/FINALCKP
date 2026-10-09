@@ -10,6 +10,8 @@ import PillarIntro from '../components/PillarIntro';
 import PillarBridge from '../components/PillarBridge';
 import PillarRecord from '../components/PillarRecord';
 import PillarSeal from '../components/PillarSeal';
+import TrackScreen from '../components/track-synthesis/TrackScreen';
+import SynthesisScreen from '../components/track-synthesis/SynthesisScreen';
 
 /**
  * The config-driven screen engine.
@@ -66,6 +68,10 @@ const SHARED_RENDERERS = {
       />
     );
   },
+
+  track: TrackScreen,
+
+  synthesis: SynthesisScreen,
 
   seal: ({ config, pillar, onReturn }) => (
     <PillarSeal

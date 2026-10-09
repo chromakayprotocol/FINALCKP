@@ -4,19 +4,16 @@
  * Route: /experiencemode/sovereign/reclamation-university/reflection-protocol
  * Entered from University Nexus → Reflection Protocol logo.
  *
- * Renders the five-pillar Protocol of Governed Feeling from
- * reflectionChamberModuleData.js (uniform scaffold with Act I).
+ * Renders the definitive five-stage / twenty-artifact 2026 production
+ * master from Supabase while preserving the Chamber's stable portal IDs
+ * for progress and Shadow Twin continuity.
  */
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, LayoutDashboard, ChevronDown, ChevronUp } from 'lucide-react';
 import {
   REFLECTION_META,
-  ACT_LEVEL_PAIR,
   PILLARS,
-  EXIT_CRITERIA,
-  CADENCE,
-  CLOSING,
 } from '../data/reflectionChamberModuleData';
 import { useAuth } from '../context/AuthContext';
 import { SovereignProvider, useSovereign } from '../sovereign/runtime';
@@ -31,6 +28,8 @@ import ShadowTwinIntegration from './experience/reflection-chamber/components/Sh
 import { useShadowTwinSync } from './experience/reflection-chamber/shadowTwin/useShadowTwinSync';
 import { useShadowTwinArchive } from './experience/reflection-chamber/shadowTwin/useShadowTwinArchive';
 import TrackCodexGallery from './experience/reflection-chamber/TrackCodexGallery';
+import { getActTwoReflectionChamberCodex } from '../lib/supabase/tracks';
+import { buildProductionPillars } from './experience/reflection-chamber/data/productionMasterAdapter';
 import './ReflectionProtocolPage.css';
 
 const NEXUS_PATH = '/experiencemode/sovereign/reclamation-university/nexus';
@@ -79,10 +78,28 @@ function ReflectionProtocolPageInner() {
   const [completedPillarIds, setCompletedPillarIds] = useState([]);
   const [enteredChamber, setEnteredChamber] = useState(false);
   const [trackCodexOpen, setTrackCodexOpen] = useState(false);
+  const [productionCodex, setProductionCodex] = useState(null);
+
+  useEffect(() => {
+    let active = true;
+    getActTwoReflectionChamberCodex().then((rows) => {
+      if (active) setProductionCodex(rows || []);
+    });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const productionPillars = useMemo(
+    () => buildProductionPillars(productionCodex || [], PILLARS),
+    [productionCodex],
+  );
+  const productionReady = productionPillars.length === 5;
+  const livePillars = productionReady ? productionPillars : PILLARS;
 
   const activePillar = useMemo(
-    () => PILLARS.find((p) => p.id === activePillarId) ?? PILLARS[0],
-    [activePillarId]
+    () => livePillars.find((p) => p.id === activePillarId) ?? livePillars[0],
+    [activePillarId, livePillars]
   );
 
   const toggleCode = (key) => {
@@ -138,10 +155,32 @@ function ReflectionProtocolPageInner() {
     );
   }
 
+  if (productionCodex === null) {
+    return (
+      <div className="rpp-loading" aria-busy="true" aria-label="Loading Reflection Chamber production master" />
+    );
+  }
+
+  if (!productionReady) {
+    return (
+      <div className="rpp">
+        <section className="rpp-closing">
+          <h1>The Reflection Chamber</h1>
+          <p>The 2026 production master could not be loaded. The legacy curriculum has been disabled rather than shown as current.</p>
+          <button type="button" className="rpp-cta" onClick={() => navigate(NEXUS_PATH)}>
+            Return to Nexus
+          </button>
+        </section>
+      </div>
+    );
+  }
+
   if (LaunchedPortal) {
     return (
       <LaunchedPortal
         completedPillarIds={completedPillarIds}
+        productionCodex={productionCodex}
+        productionPillars={livePillars}
         onReturnToChamber={(completed) => {
           if (completed) {
             setCompletedPillarIds((prev) =>
@@ -190,30 +229,24 @@ function ReflectionProtocolPageInner() {
       </header>
 
       <section className="rpp-hero">
-        <p className="rpp-thesis">{REFLECTION_META.thesis}</p>
-        <p className="rpp-hinge">{REFLECTION_META.hinge}</p>
-        <div className="rpp-pair">
-          <div className="rpp-pair-card rpp-pair-card--shadow">
-            <span className="rpp-pair-label">Shadow of Act II</span>
-            <strong>{ACT_LEVEL_PAIR.shadow.name}</strong>
-            <p>{ACT_LEVEL_PAIR.shadow.body}</p>
-          </div>
-          <div className="rpp-pair-card rpp-pair-card--light">
-            <span className="rpp-pair-label">Light of Act II</span>
-            <strong>{ACT_LEVEL_PAIR.light.name}</strong>
-            <p>{ACT_LEVEL_PAIR.light.body}</p>
-          </div>
-        </div>
+        <p className="rpp-thesis">
+          A learner-facing journey in which each chamber earns the next: see clearly, test the story,
+          place responsibility, live the insight, and direct what becomes possible afterward.
+        </p>
+        <p className="rpp-hinge">
+          Five stages. Twenty sonic artifacts. Each stage closes with a gate before the next begins.
+        </p>
       </section>
 
       <ReflectionChamberEnvironment
+        pillars={livePillars}
         activePillarId={activePillarId}
         onSelectPillar={handleSelectPillar}
         pillarStatus={Object.fromEntries(completedPillarIds.map((id) => [id, 'complete']))}
       />
 
-      <nav className="rpp-pillars-nav" aria-label="Five pillars">
-        {PILLARS.map((pillar) => (
+      <nav className="rpp-pillars-nav" aria-label="Five stages">
+        {livePillars.map((pillar) => (
           <button
             key={pillar.id}
             type="button"
@@ -229,7 +262,7 @@ function ReflectionProtocolPageInner() {
       <section className="rpp-track-codex-cta">
         <div>
           <h3>The Track Codex</h3>
-          <p>Eighteen transmissions from The Reflection Chamber album — listen, and extract each track&rsquo;s Shadow and Light Code.</p>
+          <p>Twenty transmissions from the 2026 Reflection Chamber production master — listen, and extract each artifact&rsquo;s Shadow and Light Code.</p>
         </div>
         <button type="button" className="rpp-cta" onClick={() => setTrackCodexOpen(true)}>
           Enter the Codex
@@ -333,19 +366,8 @@ function ReflectionProtocolPageInner() {
         </article>
       )}
 
-      <section className="rpp-exit">
-        <h3>Exit Criteria · Before Act III Fire</h3>
-        <ul>
-          {EXIT_CRITERIA.map((c) => (
-            <li key={c.slice(0, 32)}>{c}</li>
-          ))}
-        </ul>
-        <p className="rpp-cadence-note">{CADENCE.order}</p>
-      </section>
-
       <section className="rpp-closing">
-        <p>{CLOSING.transmission}</p>
-        <p className="rpp-welcome">{CLOSING.welcome}</p>
+        <p>{productionCodex[productionCodex.length - 1]?.entry?.handoff}</p>
         <button type="button" className="rpp-cta" onClick={() => navigate(NEXUS_PATH)}>
           Return to Nexus
         </button>

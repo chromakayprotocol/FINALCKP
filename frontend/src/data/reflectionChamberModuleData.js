@@ -1,11 +1,15 @@
 /* Reclamation University / Chroma Key Protocol
  * Act II — The Reflection Chamber (Element: Water)
- * Protocol of Governed Feeling
  *
- * Production module data. Uniform five-pillar scaffold with Act I (Earth).
- * Shadow Codes = diagnostic naming of permeable patterns.
- * Light Codes = instructional rewrite toward governed current.
- * Consumed by experience layers / protocol engine.
+ * LEGACY COMPATIBILITY SCAFFOLD.
+ *
+ * The live 2026 curriculum is public.act_two_sonic_artifacts +
+ * public.act_two_stages and is adapted at runtime by
+ * reflection-chamber/data/productionMasterAdapter.js.
+ *
+ * The exports in this file remain only where stable portal IDs, presentation
+ * metadata, historical tests, or non-production fallback mechanics still
+ * require them. Do not add new curriculum here.
  */
 
 export const REFLECTION_META = {

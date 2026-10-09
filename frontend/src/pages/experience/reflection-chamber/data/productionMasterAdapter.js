@@ -39,10 +39,7 @@ export function buildProductionPillars(codex, fallbackPillars = []) {
       layer: `Stage ${stageNumber}`,
       summary: stage.stage_intent,
       parallelTo: null,
-      teaching: [
-        stage.stage_intent,
-        ...rows.map(({ entry }) => entry.make_the_turn),
-      ],
+      teaching: [stage.stage_intent],
       tracks: rows.map(({ track }) => track.title),
       shadow: rows.map(({ track, entry }) => ({
         name: entry.sonic_artifact_name,

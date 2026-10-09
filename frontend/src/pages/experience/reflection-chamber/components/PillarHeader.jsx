@@ -6,12 +6,12 @@ export default function PillarHeader({ pillarIndex, pillarTitle, pillarCount, st
         <span className="pooi-header-act">Act II / H₂O</span>
         {pillarCount ? (
           <span className="pooi-header-orientation">
-            Act II · Reflection Chamber · Pillar {pillarIndex} of {pillarCount}
+            Act II · Reflection Chamber · Stage {pillarIndex} of {pillarCount}
           </span>
         ) : null}
       </div>
       <div className="pooi-header-right">
-        <span className="pooi-header-portal">Portal {String(pillarIndex).padStart(2, '0')}</span>
+        <span className="pooi-header-portal">Stage {String(pillarIndex).padStart(2, '0')}</span>
         <span className="pooi-header-title">{pillarTitle}</span>
         {stageLabel && <span className="pooi-header-stage">{stageLabel}</span>}
       </div>

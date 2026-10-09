@@ -1,8 +1,10 @@
+import { useMemo } from 'react';
 import { useAuth } from '../../../context/AuthContext';
 import { useSovereign } from '../../../sovereign/runtime';
 import { PILLARS } from '../../../data/reflectionChamberModuleData';
 import { usePillarExperience } from './state/usePillarExperience';
 import { useLockBodyScroll } from './hooks/useLockBodyScroll';
+import { buildProductionPortalConfig } from './data/productionMasterAdapter';
 
 import PillarHeader from './components/PillarHeader';
 import PillarProgress from './components/PillarProgress';
@@ -57,10 +59,20 @@ export default function PillarExperience({
   onReturnToChamber,
   completedPillarIds = [],
   renderers,
+  productionCodex = [],
+  productionPillars = [],
 }) {
   const { user } = useAuth();
   const { shadowTwin } = useSovereign();
-  const pillar = PILLARS.find((p) => p.id === config.pillarId);
+  const fallbackPillar = PILLARS.find((p) => p.id === config.pillarId);
+  const pillar =
+    productionPillars.find((p) => p.id === config.pillarId) ||
+    fallbackPillar;
+  const runtimePillars = productionPillars.length === 5 ? productionPillars : PILLARS;
+  const runtimeConfig = useMemo(
+    () => buildProductionPortalConfig(config, pillar, productionCodex),
+    [config, pillar, productionCodex],
+  );
   const experience = usePillarExperience(config.pillarId, user?.id);
   useLockBodyScroll();
 
@@ -71,18 +83,18 @@ export default function PillarExperience({
     onReturnToChamber?.(true);
   };
 
-  const Body = config.screens ? ScreenSequence : PortalOneStages;
+  const Body = runtimeConfig.screens ? ScreenSequence : PortalOneStages;
 
   return (
     <div className={`pooi${config.themeClass ? ` ${config.themeClass}` : ''}`}>
       <PillarHeader
         pillarIndex={pillar.index}
         pillarTitle={pillar.title}
-        pillarCount={PILLARS.length}
-        stageLabel={config.intro?.word}
+        pillarCount={runtimePillars.length}
+        stageLabel={runtimeConfig.intro?.word}
       />
       <PillarProgress
-        pillars={PILLARS}
+        pillars={runtimePillars}
         activePillarId={pillar.id}
         completedPillarIds={completedPillarIds}
       />
@@ -103,7 +115,7 @@ export default function PillarExperience({
         )}
         <div className="pooi-stage-layout__content">
           <Body
-            config={config}
+            config={runtimeConfig}
             pillar={pillar}
             experience={experience}
             onReturn={handleReturn}

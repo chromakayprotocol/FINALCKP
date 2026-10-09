@@ -15,6 +15,8 @@ import {
   SCHEMA_CACHE_MISS,
   classifyResponse,
   evaluateTable,
+  validateReflectionChamberRows,
+  validateReflectionStages,
 } from '../../../scripts/verify-supabase-schema.mjs';
 
 const response = (status, contentType) => ({
@@ -115,5 +117,50 @@ describe('required table list', () => {
 
   test('also covers sovereign_module_state, which backs two of the four Nexus tracks', () => {
     expect(REQUIRED_TABLES).toContain('sovereign_module_state');
+  });
+
+  test('covers the two authoritative Reflection Chamber production tables', () => {
+    expect(REQUIRED_TABLES).toContain('act_two_sonic_artifacts');
+    expect(REQUIRED_TABLES).toContain('act_two_stages');
+  });
+});
+
+describe('Reflection Chamber production-master validation', () => {
+  test('accepts exactly 20 populated artifacts ordered 1..20', () => {
+    const rows = Array.from({ length: 20 }, (_, index) => ({
+      chamber_order: index + 1,
+      stage_number: Math.min(5, Math.floor(index / 4) + 1),
+      what_you_bring: 'present',
+      shadow_code_quote: 'present',
+      light_code_quote: 'present',
+      make_the_turn: 'present',
+      life_domains: ['Relationships'],
+      where_this_shows_up: 'present',
+      jungian_lens: 'present',
+      reflection_title: 'present',
+      reflection_prompt: 'present',
+      movement_criteria: 'present',
+      handoff: 'present',
+      source_edition: '2026',
+    }));
+
+    expect(validateReflectionChamberRows(rows)).toEqual({ ok: true });
+    expect(validateReflectionChamberRows(rows.slice(0, 19)).ok).toBe(false);
+    expect(validateReflectionChamberRows(rows.map((row, index) => (
+      index === 0 ? { ...row, reflection_prompt: null } : row
+    ))).ok).toBe(false);
+  });
+
+  test('accepts exactly five complete stage definitions', () => {
+    const rows = Array.from({ length: 5 }, (_, index) => ({
+      stage_number: index + 1,
+      stage_name: 'Stage',
+      core_question: 'Question',
+      stage_intent: 'Intent',
+      gate_question: 'Gate',
+    }));
+
+    expect(validateReflectionStages(rows)).toEqual({ ok: true });
+    expect(validateReflectionStages(rows.slice(0, 4)).ok).toBe(false);
   });
 });

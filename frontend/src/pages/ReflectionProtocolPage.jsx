@@ -205,7 +205,7 @@ function ReflectionProtocolPageInner() {
           <span className="rpp-eyebrow">Reclamation University · Protocol</span>
           <h1 className="rpp-title">{REFLECTION_META.act}</h1>
           <p className="rpp-meta-line">
-            Act {REFLECTION_META.roman} · {REFLECTION_META.element} · {REFLECTION_META.protocol}
+            Act {REFLECTION_META.roman} · {REFLECTION_META.element} · Production Master · 20 Sonic Artifacts · Five Stages of Shadow Integration
           </p>
         </div>
         <div className="rpp-actions">

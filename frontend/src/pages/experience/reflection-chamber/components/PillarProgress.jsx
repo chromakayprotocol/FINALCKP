@@ -1,13 +1,13 @@
 const ROMAN = ['I', 'II', 'III', 'IV', 'V'];
 
 /**
- * The Reflection Chamber's own five-pillar progress — "I am working
- * through the first of five Pillars," not "I am on level one." No XP, no
- * score, just position among the five.
+ * The Reflection Chamber's five-stage progress. Internal portal IDs remain
+ * stable for persisted Sovereign/Shadow Twin state, while the user-facing
+ * sequence follows the 2026 production master.
  */
 export default function PillarProgress({ pillars, activePillarId, completedPillarIds = [] }) {
   return (
-    <div className="pooi-progress" role="list" aria-label="Reflection Chamber pillars">
+    <div className="pooi-progress" role="list" aria-label="Reflection Chamber stages">
       {pillars.map((pillar, i) => {
         const isActive = pillar.id === activePillarId;
         const isComplete = completedPillarIds.includes(pillar.id);

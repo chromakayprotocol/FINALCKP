@@ -86,6 +86,49 @@ const TRACK_COLUMNS = `
   )
 `;
 
+const REFLECTION_CHAMBER_ARTIFACT_COLUMNS = `
+  id,
+  track_id,
+  chamber_order,
+  sonic_artifact_name,
+  artifact_snapshot,
+  artifact_stage,
+  shadow_code,
+  light_code,
+  behavioral_test,
+  stage_number,
+  what_you_bring,
+  shadow_code_quote,
+  light_code_quote,
+  make_the_turn,
+  life_domains,
+  where_this_shows_up,
+  jungian_lens,
+  reflection_title,
+  reflection_prompt,
+  movement_criteria,
+  handoff,
+  source_edition
+`;
+
+const REFLECTION_CHAMBER_STAGE_COLUMNS = `
+  stage_number,
+  stage_name,
+  core_question,
+  stage_intent,
+  gate_question
+`;
+
+function getCodexLyricExcerpt(track, maxLines = 8) {
+  const lines = String(track?.lyrics || track?.display_text || '')
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter((line) => line && !/^\[[^\]]+\]$/.test(line));
+
+  return lines.slice(0, maxLines);
+}
+
+
 async function getVisualizerTracksByPlaylist(slug) {
   const supabase = getSovereignSupabase();
   if (!supabase) return [];
@@ -170,6 +213,107 @@ export async function getActThreeTracks() {
 
 export async function getActTwoTracks() {
   return getVisualizerTracksByPlaylist(ACT_TWO_VISUALIZER_PLAYLIST_SLUG);
+}
+
+export async function getActTwoReflectionChamberCodex() {
+  const supabase = getSovereignSupabase();
+  if (!supabase) return [];
+
+  const [artifactsResult, stagesResult] = await Promise.all([
+    supabase
+      .from('act_two_sonic_artifacts')
+      .select(REFLECTION_CHAMBER_ARTIFACT_COLUMNS)
+      .order('chamber_order', { ascending: true }),
+    supabase
+      .from('act_two_stages')
+      .select(REFLECTION_CHAMBER_STAGE_COLUMNS)
+      .order('stage_number', { ascending: true }),
+  ]);
+
+  if (artifactsResult.error) {
+    console.error('Unable to load the Reflection Chamber production master.', artifactsResult.error);
+    return [];
+  }
+
+  if (stagesResult.error) {
+    console.error('Unable to load the Reflection Chamber stage architecture.', stagesResult.error);
+    return [];
+  }
+
+  const artifacts = artifactsResult.data || [];
+  if (!artifacts.length) return [];
+
+  const ids = artifacts.map((artifact) => artifact.track_id);
+  const [tracksResult, coversResult, backgroundsResult, timedLyricsResult, protocolResult] = await Promise.all([
+    supabase.from('tracks').select(TRACK_COLUMNS).in('id', ids),
+    supabase
+      .from('track_cover_art')
+      .select('track_id, source_url, r2_object_key, alt_text, is_active, updated_at')
+      .in('track_id', ids)
+      .eq('is_active', true)
+      .order('updated_at', { ascending: false }),
+    supabase
+      .from('visualizer_viewport_backgrounds')
+      .select('track_id, source_url, r2_object_key, alt_text, media_type, focal_x, focal_y, overlay_config, is_active, updated_at')
+      .in('track_id', ids)
+      .eq('is_active', true)
+      .order('updated_at', { ascending: false }),
+    supabase
+      .from('track_lyrics')
+      .select('track_id, line_order, line_text, start_ms, end_ms')
+      .in('track_id', ids)
+      .order('line_order', { ascending: true }),
+    supabase
+      .from('lyrics_protocol')
+      .select('track_id, lyrics_full, lyrics_clean, primary_light_code, lyric_summary, display_mode')
+      .in('track_id', ids),
+  ]);
+
+  if (tracksResult.error) {
+    console.error('Unable to load Reflection Chamber track media.', tracksResult.error);
+    return [];
+  }
+
+  if (coversResult.error) console.error('Unable to load Reflection Chamber cover art.', coversResult.error);
+  if (backgroundsResult.error) console.error('Unable to load Reflection Chamber backgrounds.', backgroundsResult.error);
+  if (timedLyricsResult.error) console.error('Unable to load Reflection Chamber timed lyrics.', timedLyricsResult.error);
+  if (protocolResult.error) console.error('Unable to load Reflection Chamber lyric protocol.', protocolResult.error);
+
+  const tracksById = new Map((tracksResult.data || []).map((row) => [row.id, row]));
+  const stagesByNumber = new Map((stagesResult.data || []).map((row) => [row.stage_number, row]));
+  const coversByTrack = groupAssetsByTrack(coversResult.data || []);
+  const backgroundsByTrack = groupAssetsByTrack(backgroundsResult.data || []);
+  const protocolByTrack = new Map((protocolResult.data || []).map((row) => [row.track_id, row]));
+
+  return artifacts
+    .map((artifact, index) => {
+      const rawTrack = tracksById.get(artifact.track_id);
+      if (!rawTrack) return null;
+
+      const track = normalizeTrack(rawTrack, artifact.chamber_order, {
+        timedLyrics: timedLyricsResult.data || [],
+        protocol: protocolByTrack.get(artifact.track_id) || null,
+      }, {
+        coverArt: coversByTrack[artifact.track_id],
+        viewportBackground: backgroundsByTrack[artifact.track_id],
+      });
+
+      const nextArtifact = artifacts[index + 1] || null;
+      return {
+        track,
+        entry: {
+          ...artifact,
+          stage: stagesByNumber.get(artifact.stage_number) || null,
+          chapterLyrics: getCodexLyricExcerpt(track),
+          shadowCodeQuote: artifact.shadow_code,
+          lightCodeQuote: artifact.light_code,
+          shadowEvidenceQuote: artifact.shadow_code_quote,
+          lightEvidenceQuote: artifact.light_code_quote,
+          isStageBoundary: !nextArtifact || nextArtifact.stage_number !== artifact.stage_number,
+        },
+      };
+    })
+    .filter(Boolean);
 }
 
 export async function getTrackById(trackId) {
